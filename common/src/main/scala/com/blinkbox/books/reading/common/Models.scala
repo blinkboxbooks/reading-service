@@ -28,4 +28,4 @@ case class Book(
   }
 }
 
-case class Link(isbn: String, userId: Int, name: String, link: URI)
+case class Link(name: String, link: URI)

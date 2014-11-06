@@ -2,11 +2,13 @@ package com.blinkbox.books.reading.common.persistence
 
 import java.net.URI
 
-import com.blinkbox.books.reading.common.{Link, ReadingPosition, Book, CFI}
+import com.blinkbox.books.reading.common.{ReadingPosition, CFI}
 
 import scala.slick.driver.JdbcProfile
 import com.blinkbox.books.slick.TablesContainer
 
+import scala.slick.lifted
+import scala.slick.lifted.MappedProjection
 
 trait LibraryTables[Profile <: JdbcProfile] extends TablesContainer[Profile] {
 
@@ -15,35 +17,28 @@ trait LibraryTables[Profile <: JdbcProfile] extends TablesContainer[Profile] {
   implicit lazy val cfiColumnType = MappedColumnType.base[CFI, String](_.value, CFI)
   implicit lazy val urlColumnType = MappedColumnType.base[URI, String](_.toString, new URI(_))
 
-  lazy val books = TableQuery[Books]
-
-  class Books(tag: Tag) extends Table[Book](tag, "library_items") {
+  class LibraryItems(tag: Tag) extends Table[LibraryItem](tag, "library_items") {
 
     def isbn = column[String]("isbn", O.NotNull)
     def userId = column[Int]("user_id", O.NotNull)
     def sample = column[Boolean]("sample", O.NotNull)
-    def cfi = column[CFI]("cfi")
-    def readingPercentage = column[Int]("reading_percentage")
-
+    def cfi = column[Option[CFI]]("cfi")
+    def progress = column[Option[Int]]("progress")
     def pk = primaryKey("library_items_id", (isbn, userId))
 
-    def readingPosition = (cfi, readingPercentage) <> (ReadingPosition.tupled, ReadingPosition.unapply)
-
-    def * = (isbn, userId, sample, readingPosition) <> (Book.tupled, Book.unapply)
+    def * = (isbn, userId, sample, cfi, progress) <> (LibraryItem.tupled, LibraryItem.unapply)
   }
 
-  class Links(tag: Tag) extends Table[Link](tag, "tags") {
+  lazy val libraryItems = TableQuery[LibraryItems]
 
-    def isbn = column[String]("isbn", O.NotNull)
-    def userId = column[Int]("user_id", O.NotNull)
-    def name = column[String]("name", O.NotNull)
-    def link = column[URI]("link", O.NotNull)
+  private def getLibraryItem(userId: Column[Int], isbn: Column[String]): lifted.Query[LibraryItems, LibraryItem, Seq] =
+    libraryItems.filter(b => b.isbn === isbn && b.userId === userId)
 
-    def bookForeignKey = (isbn, userId)
+  def getLibraryItemBy = Compiled(getLibraryItem _)
+}
 
-    def book = foreignKey("book_fk", (isbn, userId), books)(t => (t.isbn, t.userId))
-
-    override def * = (isbn, name, link) <> (Link.tupled, Link.unapply)
+object LibraryTables {
+  def apply[Profile <: JdbcProfile](_driver: Profile) = new LibraryTables[Profile] {
+    override val driver = _driver
   }
-
 }
