@@ -1,0 +1,330 @@
+swagger: 2
+info:
+  title: Reading Service API
+  description: Manages user's library
+  version: 0.0.1
+host: localhost
+schemes:
+  - https
+produces:
+  - application/vnd.blinkbox.books.v2+json
+paths:
+  my/library:
+    get:
+      parameters:
+        - name: compact
+          in: query
+          description: If set, the endpoint returns a minimal representation of user's library.
+          required: false
+          type: boolean
+        - name: count
+          in: query
+          description: size of the page
+          required: false
+          type: integer
+          format: int32
+        - name: offset
+          in: query
+          description: starting position
+          required: false
+          type: integer
+          format: int32
+      summary: User's library
+      description: The library endpoint returns information about user's library. The response includes all user's books and bookmarks that are not archived.
+      responses:
+        200:
+          description: A map of library items
+          schema:
+            $ref: Books
+  my/library/archived:
+    get:
+      summary: Archived books in user's library
+      description: Returns all the books in user's library that are archived.
+      parameters:
+        - name: count
+          in: query
+          description: size of the page
+          required: false
+          type: integer
+          format: int32
+        - name: offset
+          in: query
+          description: starting position
+          required: false
+          type: integer
+          format: int32
+      responses:
+        200:
+          description: A map of library items
+          schema:
+            $ref: Books
+  my/library/owned:
+    get:
+      summary: Books that user owns
+      description: Returns all the books in the library that the user owns. Samples are not included in the response. This endpoint is intended to be used by the website to check whether any of the books it displays is part of the library. TODO - decide if this needs to be paged.
+      responses:
+        200:
+          description: A map of library items
+          schema:
+            type: array
+            items:
+              type: string
+              description: ISBNs of owned books.
+  my/library/{isbn}:
+    get:
+      parameters:
+        - name: isbn
+          in: path
+          description: ISBN
+          required: true
+          type: string
+      description: Returns book details
+      responses:
+        200:
+          description: Book details
+          schema:
+            type: object
+            $ref: Book
+        404:
+         description: The book is not in the library
+    post:
+      parameters:
+        - name: isbn
+          in: path
+          description: ISBN
+          required: true
+          type: string
+      description: Add book sample to the library
+      responses:
+        200:
+          description: The book is already in the library
+        201:
+          description: The book was addes to the library
+    patch:
+      parameters:
+        - name: isbn
+          in: path
+          description: ISBN
+          required: true
+          type: string
+        - name: archived
+          in: body
+          required: true
+          schema:
+            type: boolean
+      description: Archive/Unarchive the book
+      responses:
+        200:
+          description: Book was successfully archived/unarchived
+        404:
+          description: Library does not have the specified book
+  my/library/bookmarks/{id}:
+    post:
+      parameters:
+        - name: id
+          in: path
+          description: GUID
+          required: true
+          type: string
+        - name: body
+          in: body
+          schema:
+            $ref: BookmarkRequest
+      responses:
+        200:
+          description: Bookmark successfully added
+    delete:
+      parameters:
+        - name: id
+          in: path
+          description: GUID of a bookmark to be deleted
+          required: true
+          type: string
+      responses:
+        200:
+          description: Bookmark successfully deleted
+  my/library/changes:
+    post:
+      description: Submit local changes to the library
+      parameters:
+        - name: body
+          in: body
+          schema:
+            $ref: SyncRequest
+      responses:
+        200:
+          description: A list of library actions that brings the local library up to date with the remote replica.
+          schema:
+            $ref: SyncResult
+definitions:
+  Books:
+    properties:
+      items:
+        type: object
+        additionalProperties:
+          title: Books in the library
+          schema:
+            $ref: Book
+  Book:
+    description: A book
+    oneOf:
+      - type: object
+        description: A minimal representation of a book
+        properties:
+          isbn:
+            type: string
+            description: ISBN
+            required: true
+          sampleOnly:
+            type: string
+            description: indicates whether the library contains only the sample of the book
+            required: true
+      - type: object
+        description: Full representation of a book
+        properties:
+          isbn:
+            type: string
+            description: ISBN
+            required: true
+          sampleOnly:
+            type: string
+            description: indicates whether the library contains only the sample of the book
+            required: true
+          archived:
+            type: boolean
+            description: indicates whether the book is archived
+            required: true
+          mediaOnDevice:
+            type: boolean
+            description: indicates whether the ePub should be on the device
+            required: true
+          readingStatus:
+            enum:
+              - NOTSTARTED
+              - READING
+              - FINISHED
+            required: true
+          readingPosition:
+            type: object
+            $ref: ReadingPosition
+          bookmarks:
+            description: Map[bookmark_type, [Bookmark]]
+            type: object
+            additionalProperties:
+              title: Bookmarks
+              type: array
+              items: Bookmark
+            required: true
+          links:
+            type: object
+            additionalProperties:
+              title: Links to related resources
+              schema:
+                $ref: Link
+            required: true
+  Bookmark:
+    description: Bookmark representation
+    properties:
+      guid:
+        type: string
+      cfi:
+        type: string
+      name:
+        type: string
+        required: false
+      preview:
+        type: string
+        required: false
+  ReadingPosition:
+    description: Current reading postion
+    properties:
+      cfi:
+        type: string
+      percentage:
+        type: integer
+        format: int32
+  Link:
+    description: Resource link
+    properties:
+      url:
+        type: string
+        description: The URL of the resource
+    additionalProperties:
+      title:
+        type: string
+  BookmarkRequest:
+    properties:
+      isbn:
+        type: string
+      bookmark:
+        type:
+          $ref: Bookmark
+  SyncRequest:
+    properties:
+      since:
+        description: The changes happend after this time.
+        type: string
+        format: date-time
+      items:
+        description: A list of library events since the $since date
+        required: true
+        type: array
+        items:
+          $ref: LibraryEvent
+  SyncResult:
+    properties:
+      syncTime:
+        description: Indicates when the synchronisation happened with the remote replica. Clients must use this timestamp as the "since" parameter in the subsequent synchronisation request
+        type: string
+        format: date-time
+      items:
+        description: A list of library actions that the client needs to apply to the local replica to bring it up to date.
+        type: array
+        items:
+          $ref: LibraryEvent
+  LibraryEvent:
+    description: Library action
+    properties:
+      createdAt:
+        description: The time when this action happened
+        type: string
+        format: date-time
+      action:
+        oneOf:
+          - AddBook
+          - RemoveBook
+          - UpdateBook
+          - AddBookmark
+          - RemoveBookmark
+          - TurnPage
+  AddBook:
+    properties:
+      book:
+        type: Book
+  RemoveBook:
+    properties:
+      isbn:
+        type: string
+  UpdateBook:
+    properties:
+      property:
+        enum:
+          - SAMPLE
+          - ON_DEVICE
+          - READING_STATUS
+          - READING_POSITION
+          - LINKS
+      value:
+        type: object
+  AddBookmark:
+    properties:
+      isbn:
+        type: string
+      bookmark:
+        type: Bookmark
+  RemoveBookmark:
+    properties:
+      guid:
+        type: string
+  TurnPage:
+    description: page turn
