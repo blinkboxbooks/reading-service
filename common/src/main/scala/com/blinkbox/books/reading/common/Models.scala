@@ -16,7 +16,6 @@ case class CFI(value: String)
 case class Book(
   isbn: String,
   sample: Boolean,
-  onDevice: Boolean = false,
   readingPosition: Option[ReadingPosition] = None,
   links: Map[String, URI] = Map.empty[String, URI]) {
 
