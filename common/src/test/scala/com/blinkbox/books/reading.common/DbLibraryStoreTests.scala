@@ -3,6 +3,7 @@ package com.blinkbox.books.reading.common
 import com.blinkbox.books.reading.common.persistence.{LibraryItem, DbLibraryStore, LibraryTables}
 import com.blinkbox.books.slick.{DatabaseComponent, TablesContainer, H2DatabaseSupport}
 import com.blinkbox.books.test.{FailHelper, MockitoSyrup}
+import com.blinkbox.books.time.{StoppedClock, TimeSupport}
 import org.h2.jdbc.JdbcSQLException
 import org.junit.runner.RunWith
 import org.scalatest.FlatSpec
@@ -16,9 +17,11 @@ import scala.slick.jdbc.JdbcBackend.Database
 import scala.concurrent.ExecutionContext.Implicits.global
 
 @RunWith(classOf[JUnitRunner])
-class DbLibraryStoreTests extends FlatSpec with MockitoSyrup with ScalaFutures with FailHelper {
+class DbLibraryStoreTests extends FlatSpec with MockitoSyrup with ScalaFutures with FailHelper with TimeSupport {
 
   implicit override val patienceConfig = PatienceConfig(timeout = Span(3000, Millis), interval = Span(100, Millis))
+
+  override implicit val clock = StoppedClock()
 
   "Library store" should "retrieve a book in users library" in new PopulatedDbFixture {
     db.withSession { implicit session =>
@@ -51,9 +54,14 @@ class DbLibraryStoreTests extends FlatSpec with MockitoSyrup with ScalaFutures w
   class PopulatedDbFixture extends EmptyDbFixture {
     import tables.driver.simple._
 
-    val libItem1 = LibraryItem("1", 1, sample = false)
-    val libItem2 = LibraryItem("2", 1, sample = false)
-    val libItem3 = LibraryItem("1", 2, sample = false)
+    val createdAt = clock.now()
+    val updatedAt = clock.now()
+    val cfi = CFI("some cfi")
+    val percentage = 0
+
+    val libItem1 = LibraryItem("1", 1, sample = false, cfi, percentage, createdAt, updatedAt)
+    val libItem2 = LibraryItem("2", 1, sample = false, cfi, percentage, createdAt, updatedAt)
+    val libItem3 = LibraryItem("1", 2, sample = false, cfi, percentage, createdAt, updatedAt)
 
     db.withSession { implicit session =>
       tables.libraryItems ++= List(libItem1, libItem2, libItem3)

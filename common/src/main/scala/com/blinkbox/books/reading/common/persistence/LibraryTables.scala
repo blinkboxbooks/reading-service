@@ -2,13 +2,13 @@ package com.blinkbox.books.reading.common.persistence
 
 import java.net.URI
 
-import com.blinkbox.books.reading.common.{ReadingPosition, CFI}
+import com.blinkbox.books.reading.common.CFI
+import org.joda.time.DateTime
 
 import scala.slick.driver.JdbcProfile
 import com.blinkbox.books.slick.TablesContainer
 
 import scala.slick.lifted
-import scala.slick.lifted.MappedProjection
 
 trait LibraryTables[Profile <: JdbcProfile] extends TablesContainer[Profile] {
 
@@ -22,11 +22,13 @@ trait LibraryTables[Profile <: JdbcProfile] extends TablesContainer[Profile] {
     def isbn = column[String]("isbn", O.NotNull)
     def userId = column[Int]("user_id", O.NotNull)
     def sample = column[Boolean]("sample", O.NotNull)
-    def cfi = column[Option[CFI]]("cfi")
-    def progress = column[Option[Int]]("progress")
+    def progressCfi = column[CFI]("progress_cfi")
+    def progressPercentage = column[Int]("progress_percentage")
+    def createdAt = column[DateTime]("created_at")
+    def updatedAt = column[DateTime]("updated_at")
     def pk = primaryKey("library_items_id", (isbn, userId))
 
-    def * = (isbn, userId, sample, cfi, progress) <> (LibraryItem.tupled, LibraryItem.unapply)
+    def * = (isbn, userId, sample, progressCfi, progressPercentage, createdAt, updatedAt) <> (LibraryItem.tupled, LibraryItem.unapply)
   }
 
   lazy val libraryItems = TableQuery[LibraryItems]
