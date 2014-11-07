@@ -15,7 +15,6 @@ case class CFI(value: String)
 
 case class Book(
   isbn: String,
-  userId: Int,
   sample: Boolean,
   onDevice: Boolean = false,
   readingPosition: Option[ReadingPosition] = None,
