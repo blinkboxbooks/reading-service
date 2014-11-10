@@ -2,10 +2,10 @@ package com.blinkbox.books.reading
 
 import akka.actor.{Props, ActorSystem}
 import com.blinkbox.books.auth.{ZuulElevationChecker, ZuulTokenDecoder, ZuulTokenDeserializer}
-import com.blinkbox.books.clients.catalogue.{CatalogueServiceClient, CatalogueService}
+import com.blinkbox.books.clients.catalogue.CatalogueServiceClient
 import com.blinkbox.books.config.{ApiConfig, Configuration}
 import com.blinkbox.books.logging.Loggers
-import com.blinkbox.books.reading.common.persistence.{LibraryStore, DbLibraryStore, DefaultDatabaseComponent}
+import com.blinkbox.books.reading.common.persistence.{DbLibraryStore, DefaultDatabaseComponent}
 import com.blinkbox.books.slick.MySQLDatabaseSupport
 import com.blinkbox.books.spray.{BearerTokenAuthenticator, HttpServer, url2uri}
 import com.typesafe.scalalogging.slf4j.StrictLogging

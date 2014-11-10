@@ -1,7 +1,6 @@
 package com.blinkbox.books.reading.common.persistence
 
 import com.blinkbox.books.config.DatabaseConfig
-import com.blinkbox.books.reading.common.Book
 import com.blinkbox.books.slick.{DatabaseComponent, TablesContainer, MySQLDatabaseSupport, DatabaseSupport}
 import com.typesafe.scalalogging.slf4j.StrictLogging
 

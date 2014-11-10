@@ -5,6 +5,7 @@ import java.net.URI
 import com.blinkbox.books.reading.common.CFI
 import org.joda.time.DateTime
 
+import scala.slick.ast.ColumnOption.DBType
 import scala.slick.driver.JdbcProfile
 import com.blinkbox.books.slick.TablesContainer
 
@@ -19,7 +20,7 @@ trait LibraryTables[Profile <: JdbcProfile] extends TablesContainer[Profile] {
 
   class LibraryItems(tag: Tag) extends Table[LibraryItem](tag, "library_items") {
 
-    def isbn = column[String]("isbn", O.NotNull)
+    def isbn = column[String]("isbn", DBType("CHAR(13)"))
     def userId = column[Int]("user_id", O.NotNull)
     def sample = column[Boolean]("sample", O.NotNull)
     def progressCfi = column[CFI]("progress_cfi")
