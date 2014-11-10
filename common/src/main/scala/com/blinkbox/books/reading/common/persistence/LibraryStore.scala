@@ -10,6 +10,7 @@ import scala.slick.jdbc.JdbcBackend.Database
 
 trait LibraryStore {
   def getBook(userId: Int, isbn: String): Future[Option[LibraryItem]]
+  def getBookMedia(isbn: String): Future[Option[Map[MediaType, LibraryItemLink]]]
 }
 
 class DbLibraryStore[DB <: DatabaseSupport](db: DB#Database, tables: LibraryTables[DB#Profile], exceptionFilter: DB#ExceptionFilter)(implicit val ec: ExecutionContext) extends LibraryStore with StrictLogging {
@@ -20,6 +21,13 @@ class DbLibraryStore[DB <: DatabaseSupport](db: DB#Database, tables: LibraryTabl
   override def getBook(userId: Int, isbn: String): Future[Option[LibraryItem]] = Future {
     db.withSession { implicit session =>
       tables.getLibraryItemBy(userId, isbn).firstOption
+    }
+  }
+
+  override def getBookMedia(isbn: String): Future[Option[Map[MediaType, LibraryItemLink]]] = Future {
+    db.withSession { implicit session =>
+      val links = tables.getLibraryItemLinkFor(isbn).list
+      if (links.isEmpty) None else Some(links.groupBy(_.`type`).transform((mediaType, links) => links.head))
     }
   }
 }

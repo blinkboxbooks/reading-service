@@ -1,6 +1,8 @@
 package com.blinkbox.books.reading.common
 
-import com.blinkbox.books.reading.common.persistence.{LibraryItem, DbLibraryStore, LibraryTables}
+import java.net.URI
+
+import com.blinkbox.books.reading.common.persistence._
 import com.blinkbox.books.slick.{DatabaseComponent, TablesContainer, H2DatabaseSupport}
 import com.blinkbox.books.test.{FailHelper, MockitoSyrup}
 import com.blinkbox.books.time.{StoppedClock, TimeSupport}
@@ -39,11 +41,27 @@ class DbLibraryStoreTests extends FlatSpec with MockitoSyrup with ScalaFutures w
     }
   }
 
+  it should "retrieve book media links for a valid isbn" in new PopulatedDbFixture {
+    db.withSession { implicit session =>
+      whenReady(libraryStore.getBookMedia(ISBN1)) { media =>
+        assert(media == Some(Map(FullEpub -> libItem1EpubLink, EpubKey -> libItem1EpubKeyLink)))
+      }
+    }
+  }
+
+  it should "return None when there are no media links for a book" in new PopulatedDbFixture {
+    db.withSession { implicit session =>
+      whenReady(libraryStore.getBookMedia("nonexistent-book")) { media =>
+        assert(media == None)
+      }
+    }
+  }
+
   class EmptyDbFixture extends TestDbComponent {
     import tables.driver.simple._
 
     db.withSession { implicit session =>
-      val ddl = tables.libraryItems.ddl
+      val ddl = tables.libraryItems.ddl ++ tables.libraryItemMedia.ddl
       try { ddl.drop } catch { case _: JdbcSQLException => /* Do nothing */ }
       ddl.create
     }
@@ -66,8 +84,15 @@ class DbLibraryStoreTests extends FlatSpec with MockitoSyrup with ScalaFutures w
     val libItem2 = LibraryItem(ISBN2, 1, sample = false, cfi, percentage, createdAt, updatedAt)
     val libItem3 = LibraryItem(ISBN1, 2, sample = false, cfi, percentage, createdAt, updatedAt)
 
+    val libItem1EpubLink = LibraryItemLink(ISBN1, FullEpub, new URI("http://media.blinkboxbooks.com/9780/141/909/837/8c9771c05e504f836e8118804e02f64c.epub"))
+    val libItem2EpubLink = LibraryItemLink(ISBN2, FullEpub, new URI("http://media.blinkboxbooks.com/9780/141/909/838/6e8118804e02f64c8c9771c05e504f83.epub"))
+
+    val libItem1EpubKeyLink = LibraryItemLink(ISBN1, EpubKey, new URI("https://keys.mobcastdev.com/9780/141/909/837/e237e27468c6b37a5679fab718a893e6.epub.9780141909837.key"))
+    val libItem2EpubKeyLink = LibraryItemLink(ISBN2, EpubKey, new URI("https://keys.mobcastdev.com/9780/141/909/838/5679fab718a893e6e237e27468c6b37a.epub.9780141909838.key"))
+
     db.withSession { implicit session =>
       tables.libraryItems ++= List(libItem1, libItem2, libItem3)
+      tables.libraryItemMedia ++= List(libItem1EpubLink, libItem1EpubKeyLink, libItem2EpubLink, libItem2EpubKeyLink)
     }
   }
 
