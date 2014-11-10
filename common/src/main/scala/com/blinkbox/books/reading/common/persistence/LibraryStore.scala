@@ -19,7 +19,7 @@ class DbLibraryStore[DB <: DatabaseSupport](db: DB#Database, tables: LibraryTabl
 
   override def getBook(userId: Int, isbn: String): Future[Option[LibraryItem]] = Future {
     db.withSession { implicit session =>
-      tables.getLibraryItemBy(userId, isbn).list.headOption
+      tables.getLibraryItemBy(userId, isbn).firstOption
     }
   }
 }

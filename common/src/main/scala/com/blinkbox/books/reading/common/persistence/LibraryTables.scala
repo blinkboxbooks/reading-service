@@ -37,7 +37,7 @@ trait LibraryTables[Profile <: JdbcProfile] extends TablesContainer[Profile] {
   private def getLibraryItem(userId: Column[Int], isbn: Column[String]): lifted.Query[LibraryItems, LibraryItem, Seq] =
     libraryItems.filter(b => b.isbn === isbn && b.userId === userId)
 
-  def getLibraryItemBy = Compiled(getLibraryItem _)
+  lazy val getLibraryItemBy = Compiled(getLibraryItem _)
 }
 
 object LibraryTables {

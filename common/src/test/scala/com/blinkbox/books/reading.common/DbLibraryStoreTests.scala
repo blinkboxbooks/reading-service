@@ -23,17 +23,17 @@ class DbLibraryStoreTests extends FlatSpec with MockitoSyrup with ScalaFutures w
 
   override implicit val clock = StoppedClock()
 
-  "Library store" should "retrieve a book in users library" in new PopulatedDbFixture {
+  "Library store" should "retrieve a book in user's library" in new PopulatedDbFixture {
     db.withSession { implicit session =>
-      whenReady(libraryStore.getBook(2, "1")) { item =>
+      whenReady(libraryStore.getBook(2, ISBN1)) { item =>
         assert(item == Some(libItem3))
       }
     }
   }
 
-  it should "return None for a book that is not in users library" in new PopulatedDbFixture {
+  it should "return None for a book that is not in user's library" in new PopulatedDbFixture {
     db.withSession { implicit session =>
-      whenReady(libraryStore.getBook(1, "3")) { item =>
+      whenReady(libraryStore.getBook(1, "nonexistent-isbn")) { item =>
        assert(item == None)
       }
     }
@@ -59,9 +59,12 @@ class DbLibraryStoreTests extends FlatSpec with MockitoSyrup with ScalaFutures w
     val cfi = CFI("some cfi")
     val percentage = 0
 
-    val libItem1 = LibraryItem("1", 1, sample = false, cfi, percentage, createdAt, updatedAt)
-    val libItem2 = LibraryItem("2", 1, sample = false, cfi, percentage, createdAt, updatedAt)
-    val libItem3 = LibraryItem("1", 2, sample = false, cfi, percentage, createdAt, updatedAt)
+    val ISBN1 = "9780141909837"
+    val ISBN2 = "9780141909838"
+
+    val libItem1 = LibraryItem(ISBN1, 1, sample = false, cfi, percentage, createdAt, updatedAt)
+    val libItem2 = LibraryItem(ISBN2, 1, sample = false, cfi, percentage, createdAt, updatedAt)
+    val libItem3 = LibraryItem(ISBN1, 2, sample = false, cfi, percentage, createdAt, updatedAt)
 
     db.withSession { implicit session =>
       tables.libraryItems ++= List(libItem1, libItem2, libItem3)
