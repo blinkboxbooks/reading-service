@@ -1,16 +1,17 @@
 package com.blinkbox.books.reading.common.persistence
 
 import com.blinkbox.books.config.DatabaseConfig
-import com.blinkbox.books.slick.{DatabaseComponent, TablesContainer, MySQLDatabaseSupport, DatabaseSupport}
+import com.blinkbox.books.reading.common.Link
+import com.blinkbox.books.slick.{DatabaseComponent, DatabaseSupport, MySQLDatabaseSupport, TablesContainer}
 import com.typesafe.scalalogging.slf4j.StrictLogging
 
-import scala.concurrent.{Future, ExecutionContext}
+import scala.concurrent.{ExecutionContext, Future}
 import scala.slick.driver.MySQLDriver
 import scala.slick.jdbc.JdbcBackend.Database
 
 trait LibraryStore {
   def getBook(userId: Int, isbn: String): Future[Option[LibraryItem]]
-  def getBookMedia(isbn: String): Future[Option[Map[MediaType, LibraryItemLink]]]
+  def getBookMedia(isbn: String): Future[Option[List[Link]]]
 }
 
 class DbLibraryStore[DB <: DatabaseSupport](db: DB#Database, tables: LibraryTables[DB#Profile], exceptionFilter: DB#ExceptionFilter)(implicit val ec: ExecutionContext) extends LibraryStore with StrictLogging {
@@ -24,10 +25,10 @@ class DbLibraryStore[DB <: DatabaseSupport](db: DB#Database, tables: LibraryTabl
     }
   }
 
-  override def getBookMedia(isbn: String): Future[Option[Map[MediaType, LibraryItemLink]]] = Future {
+  override def getBookMedia(isbn: String): Future[Option[List[Link]]] = Future {
     db.withSession { implicit session =>
       val links = tables.getLibraryItemLinkFor(isbn).list
-      if (links.isEmpty) None else Some(links.groupBy(_.`type`).transform((mediaType, links) => links.head))
+      if (links.isEmpty) None else Some(links.map(l => Link(l.`type`, l.uri)))
     }
   }
 }

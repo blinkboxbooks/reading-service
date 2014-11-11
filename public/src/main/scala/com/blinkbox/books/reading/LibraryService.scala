@@ -1,9 +1,7 @@
 package com.blinkbox.books.reading
 
-import java.net.URI
-
-import com.blinkbox.books.clients.catalogue.{BookDetails, CatalogueService}
-import com.blinkbox.books.reading.common.{ReadingPosition, Book}
+import com.blinkbox.books.clients.catalogue.{CatalogueInfo, CatalogueService}
+import com.blinkbox.books.reading.common._
 import com.blinkbox.books.reading.common.persistence.{LibraryItem, LibraryStore}
 import com.typesafe.scalalogging.slf4j.StrictLogging
 
@@ -12,31 +10,34 @@ import scala.concurrent.Future
 import scala.concurrent.ExecutionContext.Implicits.global
 
 trait LibraryService {
-  def getBook(isbn: String, userId: Int): Future[Option[Book]]
+  def getBook(isbn: String, userId: Int): Future[Option[BookDetails]]
 }
 
 class DefaultLibraryService(
   libraryStore: LibraryStore,
   catalogueService: CatalogueService) extends LibraryService with StrictLogging {
 
-  override def getBook(isbn: String, userId: Int): Future[Option[Book]] = for {
+  override def getBook(isbn: String, userId: Int): Future[Option[BookDetails]] = for {
       libItem <- libraryStore.getBook(userId, isbn)
-      bookDetails <- catalogueService.getBookDetails(isbn)
-  } yield buildBookOptional(libItem, bookDetails)
+      itemMediaLinks <- libraryStore.getBookMedia(isbn)
+      catalogueInfo <- catalogueService.getInfoFor(isbn)
+  } yield buildBookDetailsOptional(libItem, itemMediaLinks, catalogueInfo)
 
-  def buildBook(libItem: LibraryItem, bookDetails: BookDetails): Book = {
+  def buildBookDetails(libItem: LibraryItem, itemMediaLinks: List[Link], catalogueInfo: CatalogueInfo): BookDetails = {
     val readingPosition = ReadingPosition(libItem.progressCfi, libItem.progressPercentage)
-    val links = Map.empty[String, URI]
-    Book(libItem.isbn, libItem.sample, readingPosition, links)
+    val linksFromCatalogue = List(Link(CoverImage, catalogueInfo.coverImageUrl), Link(SampleEpub, catalogueInfo.sampleEpubUrl))
+    val links = linksFromCatalogue ++ itemMediaLinks
+    BookDetails(libItem.isbn, libItem.createdAt, libItem.sample, readingPosition, links)
   }
 
-  def buildBookOptional = lift(buildBook)
+  def buildBookDetailsOptional = lift(buildBookDetails)
 
-  def lift[A, B, C](f: (A, B) => C): (Option[A], Option[B]) => Option[C] = (a: Option[A], b: Option[B]) => map2(a, b)(f)
+  private def lift[A, B, C, D](f: (A, B, C) => D): (Option[A], Option[B], Option[C]) => Option[D] = (a: Option[A], b: Option[B], c: Option[C]) => map3(a, b, c)(f)
 
-  def map2[A, B, C](a: Option[A], b: Option[B])(f: (A, B) => C): Option[C] =
+  private def map3[A, B, C, D](a: Option[A], b: Option[B], c: Option[C])(f: (A, B, C) => D): Option[D] =
     for {
       aa <- a
       bb <- b
-    } yield f(aa, bb)
+      cc <- c
+    } yield f(aa, bb, cc)
 }

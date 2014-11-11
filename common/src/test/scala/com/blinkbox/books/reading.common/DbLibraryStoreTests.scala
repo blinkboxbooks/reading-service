@@ -44,7 +44,8 @@ class DbLibraryStoreTests extends FlatSpec with MockitoSyrup with ScalaFutures w
   it should "retrieve book media links for a valid isbn" in new PopulatedDbFixture {
     db.withSession { implicit session =>
       whenReady(libraryStore.getBookMedia(ISBN1)) { media =>
-        assert(media == Some(Map(FullEpub -> libItem1EpubLink, EpubKey -> libItem1EpubKeyLink)))
+        val expectedLinks = List(Link(libItem1EpubKeyLink.`type`, libItem1EpubKeyLink.uri), Link(libItem1EpubLink.`type`, libItem1EpubLink.uri))
+        assert(media == Some(expectedLinks))
       }
     }
   }

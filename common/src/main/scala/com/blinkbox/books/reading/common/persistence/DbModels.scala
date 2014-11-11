@@ -2,7 +2,7 @@ package com.blinkbox.books.reading.common.persistence
 
 import java.net.URI
 
-import com.blinkbox.books.reading.common.CFI
+import com.blinkbox.books.reading.common.{LibraryMediaLinkType, CFI}
 import org.joda.time.DateTime
 
 case class LibraryItem(
@@ -15,9 +15,4 @@ case class LibraryItem(
   updatedAt: DateTime
 )
 
-sealed trait MediaType
-object EpubKey extends MediaType
-object FullEpub extends MediaType
-
-
-case class LibraryItemLink(isbn: String, `type`: MediaType, uri: URI)
+case class LibraryItemLink(isbn: String, `type`: LibraryMediaLinkType, uri: URI)

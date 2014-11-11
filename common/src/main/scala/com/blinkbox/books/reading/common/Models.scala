@@ -13,17 +13,14 @@ case class ReadingPosition(cfi: CFI, percentage: Int) {
 
 case class CFI(value: String)
 
-case class Book(
-  isbn: String,
-  isSample: Boolean,
-  readingPosition: ReadingPosition,
-  links: Map[String, URI] = Map.empty[String, URI]) {
+trait Relation
 
-  def readingStatus: ReadingStatus = readingPosition match {
-    case ReadingPosition(_, 0) => NotStarted
-    case ReadingPosition(_, 100) => Finished
-    case _ => Reading
-  }
-}
+case class Link(rel: Relation, url: URI)
 
-case class Link(name: String, link: URI)
+sealed trait LinkType extends Relation
+case object CoverImage extends LinkType
+case object SampleEpub extends LinkType
+
+sealed trait LibraryMediaLinkType extends LinkType
+case object EpubKey extends LibraryMediaLinkType
+case object FullEpub extends LibraryMediaLinkType

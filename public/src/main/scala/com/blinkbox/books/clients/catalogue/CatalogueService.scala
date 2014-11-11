@@ -4,12 +4,12 @@ import java.net.URI
 
 import scala.concurrent.Future
 
-case class BookDetails(coverImage: URI)
+case class CatalogueInfo(coverImageUrl: URI, sampleEpubUrl: URI)
 
 trait CatalogueService {
-  def getBookDetails(isbn: String): Future[Option[BookDetails]]
+  def getInfoFor(isbn: String): Future[Option[CatalogueInfo]]
 }
 
 class CatalogueServiceClient extends CatalogueService {
-  override def getBookDetails(isbn: String): Future[Option[BookDetails]] = ???
+  override def getInfoFor(isbn: String): Future[Option[CatalogueInfo]] = ???
 }

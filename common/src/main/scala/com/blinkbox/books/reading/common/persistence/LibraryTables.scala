@@ -2,7 +2,7 @@ package com.blinkbox.books.reading.common.persistence
 
 import java.net.URI
 
-import com.blinkbox.books.reading.common.CFI
+import com.blinkbox.books.reading.common.{FullEpub, EpubKey, LibraryMediaLinkType, CFI}
 import org.joda.time.DateTime
 
 import scala.slick.ast.ColumnOption.DBType
@@ -17,7 +17,7 @@ trait LibraryTables[Profile <: JdbcProfile] extends TablesContainer[Profile] {
 
   implicit lazy val cfiColumnType = MappedColumnType.base[CFI, String](_.value, CFI)
   implicit lazy val urlColumnType = MappedColumnType.base[URI, String](_.toString, new URI(_))
-  implicit lazy val MediaTypeColumnType = MappedColumnType.base[MediaType, String](
+  implicit lazy val LibraryMediaTypeColumnType = MappedColumnType.base[LibraryMediaLinkType, String](
     {
       case EpubKey => "EpubKey"
       case FullEpub => "FullEpub"
@@ -44,7 +44,7 @@ trait LibraryTables[Profile <: JdbcProfile] extends TablesContainer[Profile] {
 
   class LibraryItemMedia(tag: Tag) extends Table[LibraryItemLink](tag, "library_item_links") {
     def isbn = column[String]("isbn", DBType("CHAR(13)"))
-    def linkType = column[MediaType]("media_type")
+    def linkType = column[LibraryMediaLinkType]("media_type")
     def uri = column[URI]("uri")
     def pk = primaryKey("library_item_links_isbn", (isbn, linkType))
 

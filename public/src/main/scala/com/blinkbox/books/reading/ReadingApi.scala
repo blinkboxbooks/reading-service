@@ -4,7 +4,7 @@ import akka.actor.ActorRefFactory
 import com.blinkbox.books.auth.User
 import com.blinkbox.books.auth.Elevation.Unelevated
 import com.blinkbox.books.config.ApiConfig
-import com.blinkbox.books.reading.common.{CFI, ReadingPosition}
+import com.blinkbox.books.reading.common._
 import com.blinkbox.books.spray.Directives.rootPath
 import com.blinkbox.books.spray.MonitoringDirectives.monitor
 import com.blinkbox.books.spray.v2.JsonFormats
@@ -24,7 +24,7 @@ class ReadingApi(
 
   val log = LoggerFactory.getLogger(classOf[ReadingApi])
 
-  implicit override val jsonFormats = JsonFormats.blinkboxFormat() + ReadingPositionSerializer
+  implicit override val jsonFormats = JsonFormats.blinkboxFormat() + ReadingPositionSerializer + MediaTypeSerializer + BookDetailsSerializer
 
   val getBookDetails = get {
     path("my" / "library" / Isbn) { isbn =>
@@ -46,6 +46,7 @@ class ReadingApi(
 object ReadingApi {
   import org.json4s._
   import org.json4s.JsonDSL._
+  import org.json4s.FieldSerializer._
 
   /** Matcher for ISBN. */
   val Isbn = """^(\d{13})$""".r
@@ -54,5 +55,23 @@ object ReadingApi {
     (PartialFunction.empty, {
       case ReadingPosition(CFI(cfi), position) => ("cfi" -> cfi) ~ ("percentage" -> position)
     })
+  )
+
+  object MediaTypeSerializer extends CustomSerializer[LinkType](_ => ({
+    case JString("CoverImage") => CoverImage
+    case JString("EpubSample") => SampleEpub
+    case JString("EpubFull") => FullEpub
+    case JString("EpubKey") => EpubKey
+    case JNull => null
+  }, {
+    case CoverImage => JString("CoverImage")
+    case SampleEpub => JString("EpubSample")
+    case FullEpub => JString("EpubFull")
+    case EpubKey => JString("EpubKey")
+  }))
+
+  val BookDetailsSerializer = FieldSerializer[BookDetails](
+    renameTo("createdAt", "addedDate"),
+    renameFrom("addedDate", "createdAt")
   )
 }

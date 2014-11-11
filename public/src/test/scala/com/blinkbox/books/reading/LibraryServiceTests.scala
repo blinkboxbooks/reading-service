@@ -1,0 +1,91 @@
+package com.blinkbox.books.reading
+
+import java.net.URI
+
+import com.blinkbox.books.clients.catalogue.{CatalogueInfo, CatalogueService}
+import com.blinkbox.books.reading.common._
+import com.blinkbox.books.reading.common.persistence.{LibraryItem, LibraryStore}
+import com.blinkbox.books.test.{FailHelper, MockitoSyrup}
+import com.blinkbox.books.time.{StoppedClock, TimeSupport}
+import org.junit.runner.RunWith
+import org.scalatest.FlatSpec
+
+import org.mockito.Mockito._
+import org.mockito.Matchers._
+import org.scalatest.concurrent.ScalaFutures
+import org.scalatest.junit.JUnitRunner
+
+import scala.concurrent.Future
+
+@RunWith(classOf[JUnitRunner])
+class LibraryServiceTests extends FlatSpec with MockitoSyrup with ScalaFutures with FailHelper {
+
+  "Library service" should "return book details" in new TestFixture {
+    when(catalogueService.getInfoFor(ISBN)).thenReturn(Future.successful(Some(CatalogueInfo(coverImageLink.url, sampleEpubLink.url))))
+    when(libraryStore.getBook(any[Int], any[String])).thenReturn(Future.successful(Some(TestLibraryItem)))
+    when(libraryStore.getBookMedia(ISBN)).thenReturn(Future.successful(Some(List(fullEpubLink, epubKeyLink))))
+
+    whenReady(service.getBook(ISBN, User)) { res =>
+      assert(res == Some(TestBookDetails))
+    }
+
+    verify(catalogueService).getInfoFor(ISBN)
+    verify(libraryStore).getBook(User, ISBN)
+    verify(libraryStore).getBookMedia(ISBN)
+
+    verifyNoMoreInteractions(catalogueService)
+    verifyNoMoreInteractions(libraryStore)
+  }
+
+  it should "return None if user does not have it in his library" in new TestFixture {
+    when(catalogueService.getInfoFor(ISBN)).thenReturn(Future.successful(Some(CatalogueInfo(coverImageLink.url, sampleEpubLink.url))))
+    when(libraryStore.getBook(any[Int], any[String])).thenReturn(Future.successful(None))
+    when(libraryStore.getBookMedia(ISBN)).thenReturn(Future.successful(Some(List(fullEpubLink, epubKeyLink))))
+
+    whenReady(service.getBook(ISBN, User)) { res =>
+      assert(res == None)
+    }
+
+    verify(catalogueService).getInfoFor(ISBN)
+    verify(libraryStore).getBook(User, ISBN)
+    verify(libraryStore).getBookMedia(ISBN)
+
+    verifyNoMoreInteractions(catalogueService)
+    verifyNoMoreInteractions(libraryStore)
+  }
+
+  ignore should "return None if library does not have book media" in new TestFixture {
+    // or shouldn't it?
+  }
+
+  ignore should "return None if catalogue does not have book info" in new TestFixture {
+    // or shouldn't it
+  }
+
+  class TestFixture extends TimeSupport {
+    val clock = StoppedClock()
+
+    val User = 1
+    val ISBN = "9780141909837"
+    val Progress = ReadingPosition(CFI("someCfi"), 15)
+
+    val fullEpubLink = Link(FullEpub, new URI("http://media.blinkboxbooks.com/9780/141/909/837/8c9771c05e504f836e8118804e02f64c.epub"))
+    val sampleEpubLink = Link(SampleEpub, new URI("http://media.blinkboxbooks.com/9780/141/909/837/8c9771c05e504f836e8118804e02f64c.sample.epub"))
+    val epubKeyLink = Link(EpubKey, new URI("https://keys.mobcastdev.com/9780/141/909/837/e237e27468c6b37a5679fab718a893e6.epub.9780141909837.key"))
+    val coverImageLink = Link(CoverImage, new URI("http://internal-media.mobcastdev.com/9780/141/909/837/1d067c7c7b1ef88ad580e99549e05ceb.png"))
+
+    val links = List(
+      coverImageLink,
+      sampleEpubLink,
+      fullEpubLink,
+      epubKeyLink
+    )
+    val TestLibraryItem = LibraryItem(ISBN, User, sample = false, Progress.cfi, Progress.percentage, clock.now(), clock.now())
+    val TestBookDetails = BookDetails(ISBN, clock.now(), isSample = false, Progress, links)
+
+    val catalogueService = mock[CatalogueService]
+    val libraryStore = mock[LibraryStore]
+
+    val service = new DefaultLibraryService(libraryStore, catalogueService)
+  }
+}
