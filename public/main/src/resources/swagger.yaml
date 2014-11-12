@@ -46,6 +46,39 @@ paths:
           description: A map of library items
           schema:
             $ref: Books
+    post:
+          parameters:
+            - name: isbn
+              in: body
+              description: ISBN
+              required: true
+              type: string
+          description: Add book sample to the library
+          responses:
+            200:
+              description: The book is already in the library
+            201:
+              description: The book was added to the library
+            404:
+              description: The book does not exist
+    patch:
+      parameters:
+        - name: isbn
+          in: body
+          description: ISBN
+          required: true
+          type: string
+        - name: archived
+          in: body
+          required: true
+          schema:
+            type: boolean
+      description: Archive/Unarchive the book
+      responses:
+        200:
+          description: Book was successfully archived/unarchived
+        404:
+          description: Library does not have the specified book
   /my/library/{isbn}:
     get:
       parameters:
@@ -63,63 +96,6 @@ paths:
             $ref: Book
         404:
          description: The book is not in the library
-    post:
-      parameters:
-        - name: isbn
-          in: path
-          description: ISBN
-          required: true
-          type: string
-      description: Add book sample to the library
-      responses:
-        200:
-          description: The book is already in the library
-        201:
-          description: The book was added to the library
-        404:
-          description: The book does not exist
-    patch:
-      parameters:
-        - name: isbn
-          in: path
-          description: ISBN
-          required: true
-          type: string
-        - name: archived
-          in: body
-          required: true
-          schema:
-            type: boolean
-      description: Archive/Unarchive the book
-      responses:
-        200:
-          description: Book was successfully archived/unarchived
-        404:
-          description: Library does not have the specified book
-  /my/library/bookmarks:
-    post:
-      parameters:
-        - name: body
-          in: body
-          schema:
-            $ref: BookmarkRequest
-      responses:
-        201:
-          description: Bookmark successfully added
-  /my/library/bookmarks/{id}:
-    delete:
-      parameters:
-        - name: id
-          in: path
-          description: GUID of a bookmark to be deleted
-          # required: true
-          type: string
-      responses:
-        200:
-          description: Bookmark successfully deleted
-        404:
-          description: Bookmark does not exist
-
 definitions:
   Books:
     properties:
@@ -274,14 +250,3 @@ definitions:
     additionalProperties:
       title:
         type: string
-  BookmarkRequest:
-    type: object
-    required:
-      - isbn
-      - bookmark
-    additionalProperties: false
-    properties:
-      isbn:
-        type: string
-      bookmark:
-        $ref: Bookmark
