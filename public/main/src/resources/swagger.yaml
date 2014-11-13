@@ -14,7 +14,7 @@ paths:
       parameters:
         - name: Authorization
           in: header
-          description: The bearer token from the Auth server describing the user. Critical elevation is required.
+          description: The bearer token from the Auth server describing the user. A user does not need to be in an elevated state.
           type: string
           required: true
           format: "/^Bearer .+/"
@@ -45,7 +45,7 @@ paths:
       parameters:
         - name: Authorization
           in: header
-          description: The bearer token from the Auth server describing the user. Critical elevation is required.
+          description: The bearer token from the Auth server describing the user. A user does not need to be in an elevated state.
           type: string
           required: true
           format: "/^Bearer .+/"
@@ -74,7 +74,7 @@ paths:
       parameters:
         - name: Authorization
           in: header
-          description: The bearer token from the Auth server describing the user. Critical elevation is required.
+          description: The bearer token from the Auth server describing the user. A user does not need to be in an elevated state.
           type: string
           required: true
           format: "/^Bearer .+/"
@@ -105,7 +105,7 @@ paths:
       parameters:
         - name: Authorization
           in: header
-          description: The bearer token from the Auth server describing the user. Critical elevation is required.
+          description: The bearer token from the Auth server describing the user. A user does not need to be in an elevated state.
           type: string
           required: true
           format: "/^Bearer .+/"
@@ -129,7 +129,7 @@ paths:
       parameters:
         - name: Authorization
           in: header
-          description: The bearer token from the Auth server describing the user. Critical elevation is required.
+          description: The bearer token from the Auth server describing the user. A user does not need to be in an elevated state.
           type: string
           required: true
           format: "/^Bearer .+/"
@@ -160,7 +160,7 @@ paths:
       parameters:
         - name: Authorization
           in: header
-          description: The bearer token from the Auth server describing the user. Critical elevation is required.
+          description: The bearer token from the Auth server describing the user. A user does not need to be in an elevated state.
           type: string
           required: true
           format: "/^Bearer .+/"
