@@ -123,8 +123,6 @@ paths:
           description: Book was successfully archived/unarchived
         401:
           description: Not authenticated
-        404:
-          description: Library does not have the specified book
     get:
       parameters:
         - name: Authorization
