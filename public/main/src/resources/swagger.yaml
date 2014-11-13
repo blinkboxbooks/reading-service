@@ -92,7 +92,7 @@ paths:
           type: integer
           format: int32
       summary: User's library
-      description: Returns the user's fully readable books.
+      description: Returns the books that the user owns.
       responses:
         200:
           description: A map of library items
@@ -192,12 +192,12 @@ definitions:
     required:
       - isbn
       - title
+      - author
       - sortableTitle
       - bookType
       - archived
       - readingStatus
       - readingPosition
-      - coverUrl
       - images
       - addedTime
       - version
@@ -209,6 +209,9 @@ definitions:
         type: string
         description: ISBN
       title:
+        type: string
+        description: The full title of the book
+      author:
         type: string
         description: The full title of the book
       sortableTitle:
