@@ -65,6 +65,37 @@ paths:
           description: Bad request for invalid ISBN or no ISBN
         401:
           description: Not authenticated
+  /my/library/full:
+    get:
+      parameters:
+        - name: Authorization
+          in: header
+          description: The bearer token from the Auth server describing the user. Critical elevation is required.
+          type: string
+          required: true
+          format: "/^Bearer .+/"
+          x-elevation: none
+        - name: count
+          in: query
+          description: Maximum number of library items to return. Must be no less than 1 and no more than 50.
+          required: false
+          type: integer
+          format: int32
+        - name: offset
+          in: query
+          description: starting position
+          required: false
+          type: integer
+          format: int32
+      summary: User's library
+      description: Returns the user's fully readable books.
+      responses:
+        200:
+          description: A map of library items
+          schema:
+            $ref: LibraryItems
+        401:
+          description: Not authenticated
   /my/library/archive:
     post:
       parameters:
