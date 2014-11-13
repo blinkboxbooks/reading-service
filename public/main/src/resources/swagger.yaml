@@ -40,7 +40,7 @@ paths:
             $ref: LibraryItems
         401:
           description: Not authenticated
-  /my/library/sample:
+  /my/library/samples:
     post:
       parameters:
         - name: Authorization
@@ -60,11 +60,15 @@ paths:
       description: Add book sample to the library
       responses:
         200:
+          description: Sample book already added to library
+        201:
           description: Sample book added to library
         400:
           description: Bad request for invalid ISBN or no ISBN
         401:
           description: Not authenticated
+        409:
+          description: Full book already in the library.
   /my/library/full:
     get:
       parameters:
