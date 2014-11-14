@@ -23,7 +23,7 @@ class ReadingApi(
   import ReadingApi._
 
   val log = LoggerFactory.getLogger(classOf[ReadingApi])
-  implicit override val jsonFormats = JsonFormats.blinkboxFormat() + ReadingPositionSerializer + MediaTypeSerializer + BookTypeSerializer + BookDetailsSerializer
+  implicit override val jsonFormats = JsonFormats.blinkboxFormat() + ReadingPositionSerializer + MediaTypeSerializer + BookTypeSerializer + ReadingStatusSerializer + BookDetailsSerializer
 
   val getBookDetails = get {
     path("my" / "library" / Isbn) { isbn =>
@@ -76,6 +76,17 @@ object ReadingApi {
     case Full => JString("Full")
     case Sample => JString("Sample")
   }))
+
+  object ReadingStatusSerializer extends CustomSerializer[ReadingStatus](_ => ({
+      case JString("NotStarted") => NotStarted
+      case JString("Reading") => Reading
+      case JString("Finished") => Finished
+    },
+    {
+      case NotStarted => JString("NotStarted")
+      case Reading => JString("Reading")
+      case Finished => JString("Finished")
+    }))
 
   val BookDetailsSerializer = FieldSerializer[BookDetails](
     renameTo("createdAt", "addedDate"),

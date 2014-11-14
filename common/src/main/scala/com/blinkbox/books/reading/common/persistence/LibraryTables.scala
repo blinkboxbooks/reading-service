@@ -37,19 +37,32 @@ trait LibraryTables[Profile <: JdbcProfile] extends TablesContainer[Profile] {
       case "Sample" => Sample
     }
   )
+  implicit lazy val readingStatusColumnType = MappedColumnType.base[ReadingStatus, String](
+    {
+      case NotStarted => "NotStarted"
+      case Reading => "Reading"
+      case Finished => "Finished"
+    },
+    {
+      case "NotStarted" => NotStarted
+      case "Reading" => Reading
+      case "Finished" => Finished
+    }
+  )
 
   class LibraryItems(tag: Tag) extends Table[LibraryItem](tag, "library_items") {
 
     def isbn = column[String]("isbn", DBType("CHAR(13)"))
     def userId = column[Int]("user_id", O.NotNull)
     def `type` = column[BookType]("book_type", O.NotNull)
+    def readingStatus = column[ReadingStatus]("reading_status")
     def progressCfi = column[CFI]("progress_cfi")
     def progressPercentage = column[Int]("progress_percentage")
     def createdAt = column[DateTime]("created_at")
     def updatedAt = column[DateTime]("updated_at")
     def pk = primaryKey("library_items_id", (isbn, userId))
 
-    def * = (isbn, userId, `type`, progressCfi, progressPercentage, createdAt, updatedAt) <> (LibraryItem.tupled, LibraryItem.unapply)
+    def * = (isbn, userId, `type`, readingStatus, progressCfi, progressPercentage, createdAt, updatedAt) <> (LibraryItem.tupled, LibraryItem.unapply)
   }
 
   class LibraryItemMedia(tag: Tag) extends Table[LibraryItemLink](tag, "library_item_links") {

@@ -91,6 +91,7 @@ class LibraryServiceTests extends FlatSpec with MockitoSyrup with ScalaFutures w
 
     val User = 1
     val ISBN = "9780141909837"
+    val ReadingStatus = Reading
     val Progress = ReadingPosition(CFI("someCfi"), 15)
 
     val fullEpubLink = Link(FullEpub, new URI("http://media.blinkboxbooks.com/9780/141/909/837/8c9771c05e504f836e8118804e02f64c.epub"))
@@ -101,8 +102,8 @@ class LibraryServiceTests extends FlatSpec with MockitoSyrup with ScalaFutures w
     val images = List(coverImageLink)
     val links = List(sampleEpubLink, fullEpubLink, epubKeyLink)
 
-    val TestLibraryItem = LibraryItem(ISBN, User, Full, Progress.cfi, Progress.percentage, clock.now(), clock.now())
-    val TestBookDetails = BookDetails(ISBN, clock.now(), Full, Progress, images, links)
+    val TestLibraryItem = LibraryItem(ISBN, User, Full, ReadingStatus, Progress.cfi, Progress.percentage, clock.now(), clock.now())
+    val TestBookDetails = BookDetails(ISBN, clock.now(), Full, ReadingStatus, Progress, images, links)
 
     val catalogueService = mock[CatalogueService]
     val libraryStore = mock[LibraryStore]

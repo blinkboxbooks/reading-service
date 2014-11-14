@@ -13,13 +13,8 @@ case class BookDetails(
   isbn: String,
   addedDate: DateTime,
   bookType: BookType,
+  readingStatus: ReadingStatus,
   readingPosition: ReadingPosition,
   images: List[Image] = List.empty,
   links: List[Link] = List.empty) {
-
-  def readingStatus: ReadingStatus = readingPosition match {
-    case ReadingPosition(_, 0) => NotStarted
-    case ReadingPosition(_, 100) => Finished
-    case _ => Reading
-  }
 }
