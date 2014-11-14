@@ -4,8 +4,11 @@ import java.net.{URL, URI}
 
 import akka.actor.ActorRefFactory
 import com.blinkbox.books.auth.{Elevation, User}
+import com.blinkbox.books.clients.catalogue.CatalogueInfoMissingException
 import com.blinkbox.books.config.ApiConfig
 import com.blinkbox.books.reading.common._
+import com.blinkbox.books.reading.common.persistence.LibraryMediaMissingException
+import com.blinkbox.books.spray.v2.Link
 import com.blinkbox.books.spray.v2.`application/vnd.blinkbox.books.v2+json`
 import com.blinkbox.books.spray.{BearerTokenAuthenticator, v2}
 import com.blinkbox.books.spray.BearerTokenAuthenticator.credentialsInvalidHeaders
@@ -47,6 +50,32 @@ class ReadingApiTests extends FlatSpec with ScalatestRouteTest with MockitoSyrup
       assert(status == Unauthorized &&
         header[`WWW-Authenticate`] == credentialsInvalidHeaders.headOption &&
         mediaType == MediaTypes.`text/plain`)
+    }
+  }
+
+  // will work once https://git.mobcastdev.com/Platform/common-spray/pull/38 is accepted
+  ignore should "return 500 Internal Error when there media links of a book in user's library is missing" in new TestFixture {
+    when(libraryService.getBook(TestBook.isbn,AuthenticatedUser.id))
+      .thenReturn(Future.failed(new LibraryMediaMissingException("test exception")))
+    when(authenticator.apply(any[RequestContext])).thenReturn(Future.successful(Right(AuthenticatedUser)))
+
+    Get(s"/my/library/${TestBook.isbn}") ~> Authorization(OAuth2BearerToken(AccessToken)) ~> routes ~> check {
+      assert(status == InternalServerError)
+      assert(mediaType == `application/vnd.blinkbox.books.v2+json`)
+      assert(body.asString == """{"code":"InternalServerError","developerMessage":"There was an internal server error."}""")
+    }
+  }
+
+  // will work once https://git.mobcastdev.com/Platform/common-spray/pull/38 is accepted
+  ignore should "return 500 Internal Error when there catalogue info of a book in user's library is missing" in new TestFixture {
+    when(libraryService.getBook(TestBook.isbn,AuthenticatedUser.id))
+      .thenReturn(Future.failed(new CatalogueInfoMissingException("test exception")))
+    when(authenticator.apply(any[RequestContext])).thenReturn(Future.successful(Right(AuthenticatedUser)))
+
+    Get(s"/my/library/${TestBook.isbn}") ~> Authorization(OAuth2BearerToken(AccessToken)) ~> routes ~> check {
+      assert(status == InternalServerError)
+      assert(mediaType == `application/vnd.blinkbox.books.v2+json`)
+      assert(body.asString == """{"code":"InternalServerError","developerMessage":"There was an internal server error."}""")
     }
   }
 

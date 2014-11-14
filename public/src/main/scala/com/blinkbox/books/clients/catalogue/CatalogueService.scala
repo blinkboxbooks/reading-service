@@ -7,9 +7,11 @@ import scala.concurrent.Future
 case class CatalogueInfo(coverImageUrl: URI, sampleEpubUrl: URI)
 
 trait CatalogueService {
-  def getInfoFor(isbn: String): Future[Option[CatalogueInfo]]
+  def getInfoFor(isbn: String): Future[CatalogueInfo]
 }
 
 class CatalogueServiceClient extends CatalogueService {
-  override def getInfoFor(isbn: String): Future[Option[CatalogueInfo]] = ???
+  override def getInfoFor(isbn: String): Future[CatalogueInfo] = ???
 }
+
+class CatalogueInfoMissingException(msg: String) extends Exception(msg, null)

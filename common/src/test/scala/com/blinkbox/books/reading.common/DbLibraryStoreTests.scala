@@ -4,6 +4,7 @@ import java.net.URI
 
 import com.blinkbox.books.reading.common.persistence._
 import com.blinkbox.books.slick.{DatabaseComponent, TablesContainer, H2DatabaseSupport}
+import com.blinkbox.books.spray.v2.Link
 import com.blinkbox.books.test.{FailHelper, MockitoSyrup}
 import com.blinkbox.books.time.{StoppedClock, TimeSupport}
 import org.h2.jdbc.JdbcSQLException
@@ -45,16 +46,14 @@ class DbLibraryStoreTests extends FlatSpec with MockitoSyrup with ScalaFutures w
     db.withSession { implicit session =>
       whenReady(libraryStore.getBookMedia(ISBN1)) { media =>
         val expectedLinks = List(Link(libItem1EpubKeyLink.`type`, libItem1EpubKeyLink.uri), Link(libItem1EpubLink.`type`, libItem1EpubLink.uri))
-        assert(media == Some(expectedLinks))
+        assert(media == expectedLinks)
       }
     }
   }
 
-  it should "return None when there are no media links for a book" in new PopulatedDbFixture {
+  it should "throw LibraryMediaMissingException when there are no media links for a book" in new PopulatedDbFixture {
     db.withSession { implicit session =>
-      whenReady(libraryStore.getBookMedia("nonexistent-book")) { media =>
-        assert(media == None)
-      }
+      failingWith[LibraryMediaMissingException](libraryStore.getBookMedia("nonexistent-book"))
     }
   }
 

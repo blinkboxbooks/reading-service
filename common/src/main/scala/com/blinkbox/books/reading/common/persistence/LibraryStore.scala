@@ -1,8 +1,8 @@
 package com.blinkbox.books.reading.common.persistence
 
 import com.blinkbox.books.config.DatabaseConfig
-import com.blinkbox.books.reading.common.Link
 import com.blinkbox.books.slick.{DatabaseComponent, DatabaseSupport, MySQLDatabaseSupport, TablesContainer}
+import com.blinkbox.books.spray.v2.Link
 import com.typesafe.scalalogging.slf4j.StrictLogging
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -11,7 +11,7 @@ import scala.slick.jdbc.JdbcBackend.Database
 
 trait LibraryStore {
   def getBook(userId: Int, isbn: String): Future[Option[LibraryItem]]
-  def getBookMedia(isbn: String): Future[Option[List[Link]]]
+  def getBookMedia(isbn: String): Future[List[Link]]
 }
 
 class DbLibraryStore[DB <: DatabaseSupport](db: DB#Database, tables: LibraryTables[DB#Profile], exceptionFilter: DB#ExceptionFilter)(implicit val ec: ExecutionContext) extends LibraryStore with StrictLogging {
@@ -25,13 +25,16 @@ class DbLibraryStore[DB <: DatabaseSupport](db: DB#Database, tables: LibraryTabl
     }
   }
 
-  override def getBookMedia(isbn: String): Future[Option[List[Link]]] = Future {
+  override def getBookMedia(isbn: String): Future[List[Link]] = Future {
     db.withSession { implicit session =>
       val links = tables.getLibraryItemLinkFor(isbn).list
-      if (links.isEmpty) None else Some(links.map(l => Link(l.`type`, l.uri)))
+      if (links.isEmpty) throw new LibraryMediaMissingException(s"media (full ePub & key URLs) for $isbn does not exist")
+      else links.map(l => Link(l.`type`, l.uri))
     }
   }
 }
+
+class LibraryMediaMissingException(msg: String) extends Exception(msg, null)
 
 class DefaultDatabaseComponent(config: DatabaseConfig) extends DatabaseComponent {
 

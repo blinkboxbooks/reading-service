@@ -23,7 +23,6 @@ class ReadingApi(
   import ReadingApi._
 
   val log = LoggerFactory.getLogger(classOf[ReadingApi])
-
   implicit override val jsonFormats = JsonFormats.blinkboxFormat() + ReadingPositionSerializer + MediaTypeSerializer + BookDetailsSerializer
 
   val getBookDetails = get {

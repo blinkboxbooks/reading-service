@@ -1,6 +1,6 @@
 package com.blinkbox.books.reading.common
 
-import java.net.URI
+import com.blinkbox.books.spray.v2.Relation
 
 sealed trait ReadingStatus
 object NotStarted extends ReadingStatus
@@ -12,10 +12,6 @@ case class ReadingPosition(cfi: CFI, percentage: Int) {
 }
 
 case class CFI(value: String)
-
-trait Relation
-
-case class Link(rel: Relation, url: URI)
 
 sealed trait LinkType extends Relation
 case object CoverImage extends LinkType
