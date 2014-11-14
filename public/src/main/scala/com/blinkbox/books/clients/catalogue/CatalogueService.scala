@@ -4,7 +4,7 @@ import java.net.URI
 
 import scala.concurrent.Future
 
-case class CatalogueInfo(coverImageUrl: URI, sampleEpubUrl: URI)
+case class CatalogueInfo(title: String, sortableTitle: String, author: String, coverImageUrl: URI, sampleEpubUrl: URI)
 
 trait CatalogueService {
   def getInfoFor(isbn: String): Future[CatalogueInfo]

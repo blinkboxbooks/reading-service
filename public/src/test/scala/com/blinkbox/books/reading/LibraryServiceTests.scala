@@ -23,7 +23,7 @@ import scala.concurrent.Future
 class LibraryServiceTests extends FlatSpec with MockitoSyrup with ScalaFutures with FailHelper {
 
   "Library service" should "return book details" in new TestFixture {
-    when(catalogueService.getInfoFor(ISBN)).thenReturn(Future.successful(CatalogueInfo(coverImageLink.url, sampleEpubLink.url)))
+    when(catalogueService.getInfoFor(ISBN)).thenReturn(Future.successful(TestCatalogueInfo))
     when(libraryStore.getBook(any[Int], any[String])).thenReturn(Future.successful(Some(TestLibraryItem)))
     when(libraryStore.getBookMedia(ISBN)).thenReturn(Future.successful(List(fullEpubLink, epubKeyLink)))
 
@@ -40,7 +40,7 @@ class LibraryServiceTests extends FlatSpec with MockitoSyrup with ScalaFutures w
   }
 
   it should "return None if user does not have it in his library" in new TestFixture {
-    when(catalogueService.getInfoFor(ISBN)).thenReturn(Future.successful(CatalogueInfo(coverImageLink.url, sampleEpubLink.url)))
+    when(catalogueService.getInfoFor(ISBN)).thenReturn(Future.successful(TestCatalogueInfo))
     when(libraryStore.getBook(any[Int], any[String])).thenReturn(Future.successful(None))
     when(libraryStore.getBookMedia(ISBN)).thenReturn(Future.successful(List(fullEpubLink, epubKeyLink)))
 
@@ -57,7 +57,7 @@ class LibraryServiceTests extends FlatSpec with MockitoSyrup with ScalaFutures w
   }
 
   it should "return LibraryMediaMissing exception if library does not have media for a book in the library" in new TestFixture {
-    when(catalogueService.getInfoFor(ISBN)).thenReturn(Future.successful(CatalogueInfo(coverImageLink.url, sampleEpubLink.url)))
+    when(catalogueService.getInfoFor(ISBN)).thenReturn(Future.successful(TestCatalogueInfo))
     when(libraryStore.getBook(any[Int], any[String])).thenReturn(Future.successful(Some(TestLibraryItem)))
     when(libraryStore.getBookMedia(ISBN)).thenReturn(Future.failed(new LibraryMediaMissingException("expected exception")))
 
@@ -103,7 +103,8 @@ class LibraryServiceTests extends FlatSpec with MockitoSyrup with ScalaFutures w
     val links = List(sampleEpubLink, fullEpubLink, epubKeyLink)
 
     val TestLibraryItem = LibraryItem(ISBN, User, Full, ReadingStatus, Progress.cfi, Progress.percentage, clock.now(), clock.now())
-    val TestBookDetails = BookDetails(ISBN, clock.now(), Full, ReadingStatus, Progress, images, links)
+    val TestCatalogueInfo = CatalogueInfo("Title", "Sortable Title", "Author", coverImageLink.url, sampleEpubLink.url)
+    val TestBookDetails = BookDetails(ISBN, TestCatalogueInfo.title, TestCatalogueInfo.sortableTitle, TestCatalogueInfo.author, clock.now(), Full, ReadingStatus, Progress, images, links)
 
     val catalogueService = mock[CatalogueService]
     val libraryStore = mock[LibraryStore]
