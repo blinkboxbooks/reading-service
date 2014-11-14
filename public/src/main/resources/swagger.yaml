@@ -1,25 +1,27 @@
-swagger: 2
+swagger: "2.0"
 info:
   title: Reading Service API
-  description: Manages user's library
+  description: A service for managing a user's library
   version: 0.0.1
-host: localhost
+host: api.blinkboxbooks.com
 schemes:
   - https
 produces:
   - application/vnd.blinkbox.books.v2+json
 paths:
-  my/library:
+  /my/library:
     get:
       parameters:
-        - name: compact
-          in: query
-          description: If set, the endpoint returns a minimal representation of user's library.
-          required: false
-          type: boolean
+        - name: Authorization
+          in: header
+          description: The bearer token from the Auth server describing the user. A user does not need to be in an elevated state.
+          type: string
+          required: true
+          format: "/^Bearer .+/"
+          x-elevation: none
         - name: count
           in: query
-          description: size of the page
+          description: Maximum number of library items to return. Must be no less than 1 and no more than 50.
           required: false
           type: integer
           format: int32
@@ -30,20 +32,56 @@ paths:
           type: integer
           format: int32
       summary: User's library
-      description: The library endpoint returns information about user's library. The response includes all user's books and bookmarks that are not archived.
+      description: The library endpoint returns the minimal information of a user's library items needed to display on a mobile device. The response includes all user's unarchived books.
       responses:
         200:
           description: A map of library items
           schema:
-            $ref: Books
-  my/library/archived:
-    get:
-      summary: Archived books in user's library
-      description: Returns all the books in user's library that are archived.
+            $ref: LibraryItems
+        401:
+          description: Not authenticated
+  /my/library/samples:
+    post:
       parameters:
+        - name: Authorization
+          in: header
+          description: The bearer token from the Auth server describing the user. A user does not need to be in an elevated state.
+          type: string
+          required: true
+          format: "/^Bearer .+/"
+          x-elevation: none
+        - name: isbn
+          in: body
+          description: ISBN
+          required: true
+          schema:
+            type: integer
+            description: 13 digit isbn number
+      description: Add book sample to the library
+      responses:
+        200:
+          description: Sample book already added to library
+        201:
+          description: Sample book added to library
+        400:
+          description: Bad request for invalid ISBN or no ISBN
+        401:
+          description: Not authenticated
+        409:
+          description: Full book already in the library.
+  /my/library/full:
+    get:
+      parameters:
+        - name: Authorization
+          in: header
+          description: The bearer token from the Auth server describing the user. A user does not need to be in an elevated state.
+          type: string
+          required: true
+          format: "/^Bearer .+/"
+          x-elevation: none
         - name: count
           in: query
-          description: size of the page
+          description: Maximum number of library items to return. Must be no less than 1 and no more than 50.
           required: false
           type: integer
           format: int32
@@ -53,26 +91,78 @@ paths:
           required: false
           type: integer
           format: int32
+      summary: User's library
+      description: Returns the books that the user owns.
       responses:
         200:
           description: A map of library items
           schema:
-            $ref: Books
-  my/library/owned:
-    get:
-      summary: Books that user owns
-      description: Returns all the books in the library that the user owns. Samples are not included in the response. This endpoint is intended to be used by the website to check whether any of the books it displays is part of the library. TODO - decide if this needs to be paged.
+            $ref: LibraryItems
+        401:
+          description: Not authenticated
+  /my/library/archive:
+    post:
+      parameters:
+        - name: Authorization
+          in: header
+          description: The bearer token from the Auth server describing the user. A user does not need to be in an elevated state.
+          type: string
+          required: true
+          format: "/^Bearer .+/"
+          x-elevation: none
+        - name: isbn
+          in: body
+          description: ISBN
+          required: true
+          schema:
+            type: integer
+            description: 13 digit isbn
+      description: Archive/Unarchive the book
       responses:
         200:
-          description: A map of library items
-          schema:
-            type: array
-            items:
-              type: string
-              description: ISBNs of owned books.
-  my/library/{isbn}:
+          description: Book was successfully archived/unarchived
+        401:
+          description: Not authenticated
     get:
       parameters:
+        - name: Authorization
+          in: header
+          description: The bearer token from the Auth server describing the user. A user does not need to be in an elevated state.
+          type: string
+          required: true
+          format: "/^Bearer .+/"
+          x-elevation: none
+        - name: count
+          in: query
+          description: Maximum number of library items to return. Must be no less than 1 and no more than 50.
+          required: false
+          type: integer
+          format: int32
+        - name: offset
+          in: query
+          description: starting position
+          required: false
+          type: integer
+          format: int32
+      summary: User's library
+      description: Returns the user's archived books.
+      responses:
+        200:
+          description: A map of library items
+          schema:
+            $ref: LibraryItems
+        401:
+          description: Not authenticated
+  /my/library/{isbn}:
+    get:
+      parameters:
+        - name: Authorization
+          in: header
+          description: The bearer token from the Auth server describing the user. A user does not need to be in an elevated state.
+          type: string
+          required: true
+          format: "/^Bearer .+/"
+          x-elevation: none
         - name: isbn
           in: path
           description: ISBN
@@ -83,248 +173,88 @@ paths:
         200:
           description: Book details
           schema:
-            type: object
-            $ref: Book
+            $ref: LibraryItem
+        401:
+          description: Not authenticated
         404:
          description: The book is not in the library
-    post:
-      parameters:
-        - name: isbn
-          in: path
-          description: ISBN
-          required: true
-          type: string
-      description: Add book sample to the library
-      responses:
-        200:
-          description: The book is already in the library
-        201:
-          description: The book was addes to the library
-    patch:
-      parameters:
-        - name: isbn
-          in: path
-          description: ISBN
-          required: true
-          type: string
-        - name: archived
-          in: body
-          required: true
-          schema:
-            type: boolean
-      description: Archive/Unarchive the book
-      responses:
-        200:
-          description: Book was successfully archived/unarchived
-        404:
-          description: Library does not have the specified book
-  my/library/bookmarks/{id}:
-    post:
-      parameters:
-        - name: id
-          in: path
-          description: GUID
-          required: true
-          type: string
-        - name: body
-          in: body
-          schema:
-            $ref: BookmarkRequest
-      responses:
-        200:
-          description: Bookmark successfully added
-    delete:
-      parameters:
-        - name: id
-          in: path
-          description: GUID of a bookmark to be deleted
-          required: true
-          type: string
-      responses:
-        200:
-          description: Bookmark successfully deleted
-  my/library/changes:
-    post:
-      description: Submit local changes to the library
-      parameters:
-        - name: body
-          in: body
-          schema:
-            $ref: SyncRequest
-      responses:
-        200:
-          description: A list of library actions that brings the local library up to date with the remote replica.
-          schema:
-            $ref: SyncResult
 definitions:
-  Books:
+  LibraryItems:
+    type: object
     properties:
       items:
-        type: object
-        additionalProperties:
-          title: Books in the library
-          schema:
-            $ref: Book
-  Book:
-    description: A book
-    oneOf:
-      - type: object
-        description: A minimal representation of a book
-        properties:
-          isbn:
-            type: string
-            description: ISBN
-            required: true
-          sampleOnly:
-            type: string
-            description: indicates whether the library contains only the sample of the book
-            required: true
-      - type: object
-        description: Full representation of a book
-        properties:
-          isbn:
-            type: string
-            description: ISBN
-            required: true
-          sampleOnly:
-            type: string
-            description: indicates whether the library contains only the sample of the book
-            required: true
-          archived:
-            type: boolean
-            description: indicates whether the book is archived
-            required: true
-          mediaOnDevice:
-            type: boolean
-            description: indicates whether the ePub should be on the device
-            required: true
-          readingStatus:
-            enum:
-              - NOTSTARTED
-              - READING
-              - FINISHED
-            required: true
-          readingPosition:
-            type: object
-            $ref: ReadingPosition
-          bookmarks:
-            description: Map[bookmark_type, [Bookmark]]
-            type: object
-            additionalProperties:
-              title: Bookmarks
-              type: array
-              items: Bookmark
-            required: true
-          links:
-            type: object
-            additionalProperties:
-              title: Links to related resources
-              schema:
-                $ref: Link
-            required: true
-  Bookmark:
-    description: Bookmark representation
+        type: array
+        items:
+          $ref: LibraryItem
+  LibraryItem:
+    type: object
+    description: A minimal representation of a book
+    required:
+      - isbn
+      - title
+      - author
+      - sortableTitle
+      - bookType
+      - archived
+      - readingStatus
+      - readingPosition
+      - images
+      - addedTime
+      - version
+    additionalProperties: false
+    subTypes:
+      - ExhaustiveLibraryItem
     properties:
-      guid:
+      isbn:
         type: string
-      cfi:
+        description: ISBN
+      title:
         type: string
-      name:
+        description: The full title of the book
+      author:
         type: string
-        required: false
-      preview:
+        description: The full title of the book
+      sortableTitle:
         type: string
-        required: false
+        description: The non-displayable sortable title of the book used for sorting books only
+      bookType:
+        description: indicates whether the library contains only the sample of the book
+        enum:
+          - Sample
+          - Full
+      archived:
+        type: boolean
+        description: indicates whether the book is archived
+      readingStatus:
+        enum:
+          - NotStarted
+          - Reading
+          - Finished
+      readingPosition:
+        $ref: ReadingPosition
+      images:
+        type: array
+        description: The urls for the image displayed in a user's library
+        items:
+          type: object
+          properties:
+            rel:
+              type: string
+            url:
+              type: string
+      addedTime:
+        type: string
+        format: date-time
+        description: The date and time the book was added to the user's library
+      version:
+        type: string
+        description: The version of the epub
   ReadingPosition:
     description: Current reading postion
+    type: object
     properties:
       cfi:
         type: string
       percentage:
         type: integer
         format: int32
-  Link:
-    description: Resource link
-    properties:
-      url:
-        type: string
-        description: The URL of the resource
-    additionalProperties:
-      title:
-        type: string
-  BookmarkRequest:
-    properties:
-      isbn:
-        type: string
-      bookmark:
-        type:
-          $ref: Bookmark
-  SyncRequest:
-    properties:
-      since:
-        description: The changes happend after this time.
-        type: string
-        format: date-time
-      items:
-        description: A list of library events since the $since date
-        required: true
-        type: array
-        items:
-          $ref: LibraryEvent
-  SyncResult:
-    properties:
-      syncTime:
-        description: Indicates when the synchronisation happened with the remote replica. Clients must use this timestamp as the "since" parameter in the subsequent synchronisation request
-        type: string
-        format: date-time
-      items:
-        description: A list of library actions that the client needs to apply to the local replica to bring it up to date.
-        type: array
-        items:
-          $ref: LibraryEvent
-  LibraryEvent:
-    description: Library action
-    properties:
-      createdAt:
-        description: The time when this action happened
-        type: string
-        format: date-time
-      action:
-        oneOf:
-          - AddBook
-          - RemoveBook
-          - UpdateBook
-          - AddBookmark
-          - RemoveBookmark
-          - TurnPage
-  AddBook:
-    properties:
-      book:
-        type: Book
-  RemoveBook:
-    properties:
-      isbn:
-        type: string
-  UpdateBook:
-    properties:
-      property:
-        enum:
-          - SAMPLE
-          - ON_DEVICE
-          - READING_STATUS
-          - READING_POSITION
-          - LINKS
-      value:
-        type: object
-  AddBookmark:
-    properties:
-      isbn:
-        type: string
-      bookmark:
-        type: Bookmark
-  RemoveBookmark:
-    properties:
-      guid:
-        type: string
-  TurnPage:
-    description: page turn
