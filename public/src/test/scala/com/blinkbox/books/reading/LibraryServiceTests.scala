@@ -101,8 +101,8 @@ class LibraryServiceTests extends FlatSpec with MockitoSyrup with ScalaFutures w
     val images = List(coverImageLink)
     val links = List(sampleEpubLink, fullEpubLink, epubKeyLink)
 
-    val TestLibraryItem = LibraryItem(ISBN, User, sample = false, Progress.cfi, Progress.percentage, clock.now(), clock.now())
-    val TestBookDetails = BookDetails(ISBN, clock.now(), isSample = false, Progress, images, links)
+    val TestLibraryItem = LibraryItem(ISBN, User, Full, Progress.cfi, Progress.percentage, clock.now(), clock.now())
+    val TestBookDetails = BookDetails(ISBN, clock.now(), Full, Progress, images, links)
 
     val catalogueService = mock[CatalogueService]
     val libraryStore = mock[LibraryStore]

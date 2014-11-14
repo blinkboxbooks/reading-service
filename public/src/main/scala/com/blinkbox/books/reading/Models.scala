@@ -12,7 +12,7 @@ case class Image(rel: Relation, url: URI)
 case class BookDetails(
   isbn: String,
   addedDate: DateTime,
-  isSample: Boolean,
+  bookType: BookType,
   readingPosition: ReadingPosition,
   images: List[Image] = List.empty,
   links: List[Link] = List.empty) {

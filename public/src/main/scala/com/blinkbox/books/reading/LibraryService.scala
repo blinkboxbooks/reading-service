@@ -35,6 +35,6 @@ class DefaultLibraryService(
       val images = List(Image(CoverImage, catalogueInfo.coverImageUrl))
       val catalogueLinks = List(Link(SampleEpub, catalogueInfo.sampleEpubUrl))
       val links = catalogueLinks ++ libraryMediaLinks
-      BookDetails(item.isbn, item.createdAt, item.sample, readingPosition, images, links)
+      BookDetails(item.isbn, item.createdAt, item.`type`, readingPosition, images, links)
     }
 }

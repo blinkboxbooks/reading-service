@@ -13,6 +13,10 @@ case class ReadingPosition(cfi: CFI, percentage: Int) {
 
 case class CFI(value: String)
 
+sealed trait BookType
+object Full extends BookType
+object Sample extends BookType
+
 sealed trait LinkType extends Relation
 case object CoverImage extends LinkType
 case object SampleEpub extends LinkType

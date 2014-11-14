@@ -2,7 +2,7 @@ package com.blinkbox.books.reading.common.persistence
 
 import java.net.URI
 
-import com.blinkbox.books.reading.common.{FullEpub, EpubKey, LibraryMediaLinkType, CFI}
+import com.blinkbox.books.reading.common._
 import org.joda.time.DateTime
 
 import scala.slick.ast.ColumnOption.DBType
@@ -27,19 +27,29 @@ trait LibraryTables[Profile <: JdbcProfile] extends TablesContainer[Profile] {
       case "FullEpub" => FullEpub
     }
   )
+  implicit lazy val bookTypeColumnType = MappedColumnType.base[BookType, String](
+    {
+      case Full => "Full"
+      case Sample => "Sample"
+    },
+    {
+      case "Full" => Full
+      case "Sample" => Sample
+    }
+  )
 
   class LibraryItems(tag: Tag) extends Table[LibraryItem](tag, "library_items") {
 
     def isbn = column[String]("isbn", DBType("CHAR(13)"))
     def userId = column[Int]("user_id", O.NotNull)
-    def sample = column[Boolean]("sample", O.NotNull)
+    def `type` = column[BookType]("book_type", O.NotNull)
     def progressCfi = column[CFI]("progress_cfi")
     def progressPercentage = column[Int]("progress_percentage")
     def createdAt = column[DateTime]("created_at")
     def updatedAt = column[DateTime]("updated_at")
     def pk = primaryKey("library_items_id", (isbn, userId))
 
-    def * = (isbn, userId, sample, progressCfi, progressPercentage, createdAt, updatedAt) <> (LibraryItem.tupled, LibraryItem.unapply)
+    def * = (isbn, userId, `type`, progressCfi, progressPercentage, createdAt, updatedAt) <> (LibraryItem.tupled, LibraryItem.unapply)
   }
 
   class LibraryItemMedia(tag: Tag) extends Table[LibraryItemLink](tag, "library_item_links") {

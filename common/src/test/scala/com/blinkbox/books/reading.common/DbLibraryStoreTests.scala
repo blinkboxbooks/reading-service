@@ -80,9 +80,9 @@ class DbLibraryStoreTests extends FlatSpec with MockitoSyrup with ScalaFutures w
     val ISBN1 = "9780141909837"
     val ISBN2 = "9780141909838"
 
-    val libItem1 = LibraryItem(ISBN1, 1, sample = false, cfi, percentage, createdAt, updatedAt)
-    val libItem2 = LibraryItem(ISBN2, 1, sample = false, cfi, percentage, createdAt, updatedAt)
-    val libItem3 = LibraryItem(ISBN1, 2, sample = false, cfi, percentage, createdAt, updatedAt)
+    val libItem1 = LibraryItem(ISBN1, 1, Full, cfi, percentage, createdAt, updatedAt)
+    val libItem2 = LibraryItem(ISBN2, 1, Full, cfi, percentage, createdAt, updatedAt)
+    val libItem3 = LibraryItem(ISBN1, 2, Full, cfi, percentage, createdAt, updatedAt)
 
     val libItem1EpubLink = LibraryItemLink(ISBN1, FullEpub, new URI("http://media.blinkboxbooks.com/9780/141/909/837/8c9771c05e504f836e8118804e02f64c.epub"))
     val libItem2EpubLink = LibraryItemLink(ISBN2, FullEpub, new URI("http://media.blinkboxbooks.com/9780/141/909/838/6e8118804e02f64c8c9771c05e504f83.epub"))
