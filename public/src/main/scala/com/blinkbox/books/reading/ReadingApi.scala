@@ -1,14 +1,13 @@
 package com.blinkbox.books.reading
 
 import akka.actor.ActorRefFactory
-import com.blinkbox.books.auth.User
 import com.blinkbox.books.auth.Elevation.Unelevated
+import com.blinkbox.books.auth.User
 import com.blinkbox.books.config.ApiConfig
 import com.blinkbox.books.reading.common._
 import com.blinkbox.books.spray.Directives.rootPath
 import com.blinkbox.books.spray.MonitoringDirectives.monitor
-import com.blinkbox.books.spray.v2.JsonFormats
-import com.blinkbox.books.spray.{v2, ElevatedContextAuthenticator, url2uri}
+import com.blinkbox.books.spray.{ElevatedContextAuthenticator, JsonFormats, url2uri, v2}
 import org.slf4j.LoggerFactory
 import spray.http.StatusCodes._
 import spray.routing._

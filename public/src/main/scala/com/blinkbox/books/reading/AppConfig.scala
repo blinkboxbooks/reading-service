@@ -1,7 +1,7 @@
 package com.blinkbox.books.reading
 
 import akka.util.Timeout
-import com.blinkbox.books.config.{AuthClientConfig, DatabaseConfig, ApiConfig, RichConfig}
+import com.blinkbox.books.config.{ApiConfig, AuthClientConfig, DatabaseConfig, RichConfig}
 import com.typesafe.config.Config
 
 case class AppConfig(api: ApiConfig, db: DatabaseConfig, auth: AuthClientConfig, startTimeout: Timeout)

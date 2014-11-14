@@ -2,17 +2,16 @@ package com.blinkbox.books.reading
 
 import java.net.URI
 
-import com.blinkbox.books.clients.catalogue.{CatalogueInfoMissingException, CatalogueInfo, CatalogueService}
+import com.blinkbox.books.clients.catalogue.{CatalogueInfo, CatalogueInfoMissingException, CatalogueService}
 import com.blinkbox.books.reading.common._
-import com.blinkbox.books.reading.common.persistence.{LibraryMediaMissingException, LibraryItem, LibraryStore}
+import com.blinkbox.books.reading.common.persistence.{LibraryItem, LibraryMediaMissingException, LibraryStore}
 import com.blinkbox.books.spray.v2.Link
 import com.blinkbox.books.test.{FailHelper, MockitoSyrup}
 import com.blinkbox.books.time.{StoppedClock, TimeSupport}
 import org.junit.runner.RunWith
-import org.scalatest.FlatSpec
-
-import org.mockito.Mockito._
 import org.mockito.Matchers._
+import org.mockito.Mockito._
+import org.scalatest.FlatSpec
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.junit.JUnitRunner
 

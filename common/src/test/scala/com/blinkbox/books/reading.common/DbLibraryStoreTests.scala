@@ -3,7 +3,7 @@ package com.blinkbox.books.reading.common
 import java.net.URI
 
 import com.blinkbox.books.reading.common.persistence._
-import com.blinkbox.books.slick.{DatabaseComponent, TablesContainer, H2DatabaseSupport}
+import com.blinkbox.books.slick.{DatabaseComponent, H2DatabaseSupport, TablesContainer}
 import com.blinkbox.books.spray.v2.Link
 import com.blinkbox.books.test.{FailHelper, MockitoSyrup}
 import com.blinkbox.books.time.{StoppedClock, TimeSupport}
@@ -14,10 +14,9 @@ import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.junit.JUnitRunner
 import org.scalatest.time.{Millis, Span}
 
+import scala.concurrent.ExecutionContext.Implicits.global
 import scala.slick.driver.H2Driver
 import scala.slick.jdbc.JdbcBackend.Database
-
-import scala.concurrent.ExecutionContext.Implicits.global
 
 @RunWith(classOf[JUnitRunner])
 class DbLibraryStoreTests extends FlatSpec with MockitoSyrup with ScalaFutures with FailHelper with TimeSupport {

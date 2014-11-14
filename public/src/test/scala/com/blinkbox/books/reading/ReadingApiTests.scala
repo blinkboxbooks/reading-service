@@ -1,6 +1,6 @@
 package com.blinkbox.books.reading
 
-import java.net.{URL, URI}
+import java.net.{URI, URL}
 
 import akka.actor.ActorRefFactory
 import com.blinkbox.books.auth.{Elevation, User}
@@ -8,10 +8,9 @@ import com.blinkbox.books.clients.catalogue.CatalogueInfoMissingException
 import com.blinkbox.books.config.ApiConfig
 import com.blinkbox.books.reading.common._
 import com.blinkbox.books.reading.common.persistence.LibraryMediaMissingException
-import com.blinkbox.books.spray.v2.Link
-import com.blinkbox.books.spray.v2.`application/vnd.blinkbox.books.v2+json`
-import com.blinkbox.books.spray.{BearerTokenAuthenticator, v2}
 import com.blinkbox.books.spray.BearerTokenAuthenticator.credentialsInvalidHeaders
+import com.blinkbox.books.spray.v2.{Link, `application/vnd.blinkbox.books.v2+json`}
+import com.blinkbox.books.spray.{BearerTokenAuthenticator, v2}
 import com.blinkbox.books.test.MockitoSyrup
 import com.blinkbox.books.time.{StoppedClock, TimeSupport}
 import org.junit.runner.RunWith
@@ -19,9 +18,9 @@ import org.mockito.Matchers.any
 import org.mockito.Mockito._
 import org.scalatest.FlatSpec
 import org.scalatest.junit.JUnitRunner
-import spray.http.HttpHeaders.{`WWW-Authenticate`, Authorization}
-import spray.http.{MediaTypes, GenericHttpCredentials, OAuth2BearerToken}
+import spray.http.HttpHeaders.{Authorization, `WWW-Authenticate`}
 import spray.http.StatusCodes._
+import spray.http.{GenericHttpCredentials, MediaTypes, OAuth2BearerToken}
 import spray.routing.AuthenticationFailedRejection.CredentialsRejected
 import spray.routing.{AuthenticationFailedRejection, HttpService, RequestContext}
 import spray.testkit.ScalatestRouteTest

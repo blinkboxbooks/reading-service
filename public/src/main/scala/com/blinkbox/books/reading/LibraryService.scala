@@ -6,9 +6,8 @@ import com.blinkbox.books.reading.common.persistence.{LibraryItem, LibraryStore}
 import com.blinkbox.books.spray.v2.Link
 import com.typesafe.scalalogging.slf4j.StrictLogging
 
-import scala.concurrent.Future
-
 import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.Future
 
 trait LibraryService {
   def getBook(isbn: String, userId: Int): Future[Option[BookDetails]]

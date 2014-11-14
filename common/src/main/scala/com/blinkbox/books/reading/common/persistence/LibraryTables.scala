@@ -3,12 +3,11 @@ package com.blinkbox.books.reading.common.persistence
 import java.net.URI
 
 import com.blinkbox.books.reading.common._
+import com.blinkbox.books.slick.TablesContainer
 import org.joda.time.DateTime
 
 import scala.slick.ast.ColumnOption.DBType
 import scala.slick.driver.JdbcProfile
-import com.blinkbox.books.slick.TablesContainer
-
 import scala.slick.lifted
 
 trait LibraryTables[Profile <: JdbcProfile] extends TablesContainer[Profile] {
