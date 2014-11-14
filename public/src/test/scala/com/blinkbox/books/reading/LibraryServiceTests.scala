@@ -96,16 +96,13 @@ class LibraryServiceTests extends FlatSpec with MockitoSyrup with ScalaFutures w
     val fullEpubLink = Link(FullEpub, new URI("http://media.blinkboxbooks.com/9780/141/909/837/8c9771c05e504f836e8118804e02f64c.epub"))
     val sampleEpubLink = Link(SampleEpub, new URI("http://media.blinkboxbooks.com/9780/141/909/837/8c9771c05e504f836e8118804e02f64c.sample.epub"))
     val epubKeyLink = Link(EpubKey, new URI("https://keys.mobcastdev.com/9780/141/909/837/e237e27468c6b37a5679fab718a893e6.epub.9780141909837.key"))
-    val coverImageLink = Link(CoverImage, new URI("http://internal-media.mobcastdev.com/9780/141/909/837/1d067c7c7b1ef88ad580e99549e05ceb.png"))
+    val coverImageLink = Image(CoverImage, new URI("http://internal-media.mobcastdev.com/9780/141/909/837/1d067c7c7b1ef88ad580e99549e05ceb.png"))
 
-    val links = List(
-      coverImageLink,
-      sampleEpubLink,
-      fullEpubLink,
-      epubKeyLink
-    )
+    val images = List(coverImageLink)
+    val links = List(sampleEpubLink, fullEpubLink, epubKeyLink)
+
     val TestLibraryItem = LibraryItem(ISBN, User, sample = false, Progress.cfi, Progress.percentage, clock.now(), clock.now())
-    val TestBookDetails = BookDetails(ISBN, clock.now(), isSample = false, Progress, links)
+    val TestBookDetails = BookDetails(ISBN, clock.now(), isSample = false, Progress, images, links)
 
     val catalogueService = mock[CatalogueService]
     val libraryStore = mock[LibraryStore]

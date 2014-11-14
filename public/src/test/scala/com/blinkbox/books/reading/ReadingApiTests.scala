@@ -87,15 +87,16 @@ class ReadingApiTests extends FlatSpec with ScalatestRouteTest with MockitoSyrup
 
     val AuthenticatedUser = User(AccessToken, claims = Map("sub" -> "urn:blinkbox:zuul:user:1", "sso/at" -> "ssoToken"))
 
+    val images = List(Image(CoverImage, new URI("http://media.blinkboxbooks.com/9780/141/909/837/cover.png")))
+
     val links = List(
       Link(FullEpub, new URI("http://media.blinkboxbooks.com/9780/141/909/837/8c9771c05e504f836e8118804e02f64c.epub")),
       Link(SampleEpub, new URI("http://media.blinkboxbooks.com/9780/141/909/837/8c9771c05e504f836e8118804e02f64c.sample.epub")),
       Link(EpubKey, new URI("https://keys.mobcastdev.com/9780/141/909/837/e237e27468c6b37a5679fab718a893e6.epub.9780141909837.key"))
     )
-    val TestBook = BookDetails("9780141909837", clock.now(), isSample = false, ReadingPosition(CFI("someCfi"), 15), links)
+    val TestBook = BookDetails("9780141909837", clock.now(), isSample = false, ReadingPosition(CFI("someCfi"), 15), images, links)
 
-    val TestBookJson = s"""{"isbn":"9780141909837","addedDate":"${clock.now()}","isSample":false,"readingPosition":{"cfi":"someCfi","percentage":15},"links":[{"rel":"EpubFull","url":"http://media.blinkboxbooks.com/9780/141/909/837/8c9771c05e504f836e8118804e02f64c.epub"},{"rel":"EpubSample","url":"http://media.blinkboxbooks.com/9780/141/909/837/8c9771c05e504f836e8118804e02f64c.sample.epub"},{"rel":"EpubKey","url":"https://keys.mobcastdev.com/9780/141/909/837/e237e27468c6b37a5679fab718a893e6.epub.9780141909837.key"}]}"""
-
+    val TestBookJson = s"""{"isbn":"9780141909837","addedDate":"${clock.now()}","isSample":false,"readingPosition":{"cfi":"someCfi","percentage":15},"images":[{"rel":"CoverImage","url":"http://media.blinkboxbooks.com/9780/141/909/837/cover.png"}],"links":[{"rel":"EpubFull","url":"http://media.blinkboxbooks.com/9780/141/909/837/8c9771c05e504f836e8118804e02f64c.epub"},{"rel":"EpubSample","url":"http://media.blinkboxbooks.com/9780/141/909/837/8c9771c05e504f836e8118804e02f64c.sample.epub"},{"rel":"EpubKey","url":"https://keys.mobcastdev.com/9780/141/909/837/e237e27468c6b37a5679fab718a893e6.epub.9780141909837.key"}]}"""
     val apiConfig = mock[ApiConfig]
     when(apiConfig.localUrl).thenReturn(new URL("http://localhost"))
 

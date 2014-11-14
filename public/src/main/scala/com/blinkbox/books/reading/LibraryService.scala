@@ -32,8 +32,9 @@ class DefaultLibraryService(
   def buildBookDetailsOptional(libItem: Option[LibraryItem], libraryMediaLinks: List[Link], catalogueInfo: CatalogueInfo): Option[BookDetails] =
     libItem map { item =>
       val readingPosition = ReadingPosition(item.progressCfi, item.progressPercentage)
-      val catalogueLinks = List(Link(CoverImage, catalogueInfo.coverImageUrl), Link(SampleEpub, catalogueInfo.sampleEpubUrl))
+      val images = List(Image(CoverImage, catalogueInfo.coverImageUrl))
+      val catalogueLinks = List(Link(SampleEpub, catalogueInfo.sampleEpubUrl))
       val links = catalogueLinks ++ libraryMediaLinks
-      BookDetails(item.isbn, item.createdAt, item.sample, readingPosition, links)
+      BookDetails(item.isbn, item.createdAt, item.sample, readingPosition, images, links)
     }
 }
