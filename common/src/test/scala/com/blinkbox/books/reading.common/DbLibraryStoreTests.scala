@@ -2,7 +2,7 @@ package com.blinkbox.books.reading.common
 
 import java.net.URI
 
-import com.blinkbox.books.reading.common.persistence._
+import com.blinkbox.books.reading.persistence._
 import com.blinkbox.books.slick.{DatabaseComponent, H2DatabaseSupport, TablesContainer}
 import com.blinkbox.books.spray.v2.Link
 import com.blinkbox.books.test.{FailHelper, MockitoSyrup}

@@ -1,5 +1,6 @@
 package com.blinkbox.books.reading
 
+import com.blinkbox.books.auth.User
 import com.blinkbox.books.clients.catalogue.{CatalogueInfo, CatalogueService}
 import com.blinkbox.books.reading._
 import com.blinkbox.books.reading.persistence.{LibraryItem, LibraryStore}
@@ -11,11 +12,16 @@ import scala.concurrent.Future
 
 trait LibraryService {
   def getBook(isbn: String, userId: Int): Future[Option[BookDetails]]
+  def getLibrary(count: Int, offset: Int)(implicit user: User): Future[List[LibraryItem]]
 }
 
 class DefaultLibraryService(
   libraryStore: LibraryStore,
   catalogueService: CatalogueService) extends LibraryService with StrictLogging {
+
+  override def getLibrary(count: Int, offset: Int)(implicit user: User): Future[List[Option[BookDetails]]] = {
+    libraryStore.getLibrary(count, offset, user.id).map(list => list.map( isbn => getBook(isbn, user.id)))
+  }
 
   override def getBook(isbn: String, userId: Int): Future[Option[BookDetails]] = {
     val libItemFuture = libraryStore.getBook(userId, isbn)
