@@ -1,0 +1,2 @@
+name := "reading-service-public"
+
