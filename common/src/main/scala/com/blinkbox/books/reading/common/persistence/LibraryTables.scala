@@ -52,8 +52,8 @@ trait LibraryTables[Profile <: JdbcProfile] extends TablesContainer[Profile] {
   class LibraryItems(tag: Tag) extends Table[LibraryItem](tag, "library_items") {
 
     def isbn = column[String]("isbn", DBType("CHAR(13)"))
-    def userId = column[Int]("user_id", O.NotNull)
-    def `type` = column[BookType]("book_type", O.NotNull)
+    def userId = column[Int]("user_id")
+    def `type` = column[BookType]("book_type")
     def readingStatus = column[ReadingStatus]("reading_status")
     def progressCfi = column[CFI]("progress_cfi")
     def progressPercentage = column[Int]("progress_percentage")
