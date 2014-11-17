@@ -71,7 +71,6 @@ trait SprayClient extends Client {
 */
 class DefaultClient(val config: ClientConfig)(implicit val ec: ExecutionContext, val system: ActorSystem) extends SprayClient
 
-
 // Exceptions raised by client API.
 class BadRequestException(val error: String, cause: Throwable = null) extends RuntimeException(error, cause)
 class NotFoundException(val error: String, cause: Throwable = null) extends RuntimeException(error, cause)

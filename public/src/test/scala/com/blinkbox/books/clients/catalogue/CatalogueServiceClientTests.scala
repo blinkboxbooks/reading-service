@@ -22,7 +22,6 @@ import scala.concurrent.duration._
 import scala.concurrent.{ExecutionContext, Future}
 import scala.concurrent.ExecutionContext.Implicits.global
 
-
 @RunWith(classOf[JUnitRunner])
 class CatalogueServiceClientTests extends FlatSpec with ScalaFutures with FailHelper with MockitoSyrup {
 
