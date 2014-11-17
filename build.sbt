@@ -4,12 +4,6 @@ name := "reading-service"
 
 scalaVersion  := "2.11.4"
 
-// This is needed due to a bug in the scala reflection that makes tests intermittently fail.
-// See: https://issues.scala-lang.org/browse/SI-6240
-lazy val testSettings = Seq(
-  parallelExecution in Test := false
-)
-
 lazy val buildSettings = Seq(
   organization := "com.blinkbox.books.agora",
   scalaVersion  := "2.11.4",
