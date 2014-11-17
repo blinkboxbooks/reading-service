@@ -1,8 +1,8 @@
 package com.blinkbox.books.reading
 
-import akka.actor.{Props, ActorSystem}
+import akka.actor.{ActorSystem, Props}
 import com.blinkbox.books.auth.{ZuulElevationChecker, ZuulTokenDecoder, ZuulTokenDeserializer}
-import com.blinkbox.books.clients.catalogue.CatalogueServiceClient
+import com.blinkbox.books.clients.catalogue.{DefaultClient, DefaultCatalogueV1Service}
 import com.blinkbox.books.config.{ApiConfig, Configuration}
 import com.blinkbox.books.logging.Loggers
 import com.blinkbox.books.reading.common.persistence.{DbLibraryStore, DefaultDatabaseComponent}
@@ -41,7 +41,8 @@ object Main extends App with Configuration with Loggers with StrictLogging {
     val libraryStore = new DbLibraryStore[MySQLDatabaseSupport](dbComponent.db, dbComponent.tables, dbComponent.exceptionFilter)
 
     // Catalogue service client setup
-    val catalogueService = new CatalogueServiceClient
+    val client = new DefaultClient(appConfig.catalogue) // TODO: configure separate execution context
+    val catalogueService = new DefaultCatalogueV1Service(client)
 
     // Library service setup
     val libraryService = new DefaultLibraryService(libraryStore, catalogueService)
