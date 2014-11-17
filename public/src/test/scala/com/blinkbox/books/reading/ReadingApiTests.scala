@@ -52,6 +52,18 @@ class ReadingApiTests extends FlatSpec with ScalatestRouteTest with MockitoSyrup
     }
   }
 
+  it should "return 404 NotFound when user does not have the requested book in the library" in new TestFixture {
+    when(libraryService.getBook(TestBook.isbn, AuthenticatedUser.id)).thenReturn(Future.successful(None))
+    when(authenticator.apply(any[RequestContext])).thenReturn(Future.successful(Right(AuthenticatedUser)))
+
+    Get(s"/my/library/${TestBook.isbn}") ~> Authorization(OAuth2BearerToken(AccessToken)) ~> routes ~> check {
+      assert(status == NotFound)
+      // TODO: check that the body contains correct instance of Error object once the RejectionHandler in common-spray supports it
+      //assert(mediaType == `application/vnd.blinkbox.books.v2+json`)
+
+    }
+  }
+
   // will work once https://git.mobcastdev.com/Platform/common-spray/pull/38 is accepted
   ignore should "return 500 Internal Error when there media links of a book in user's library is missing" in new TestFixture {
     when(libraryService.getBook(TestBook.isbn,AuthenticatedUser.id))

@@ -28,7 +28,7 @@ class ReadingApi(
     path("my" / "library" / Isbn) { isbn =>
       authenticate(authenticator.withElevation(Unelevated)) { user =>
         onSuccess(libraryService.getBook(isbn, user.id)) { res =>
-          complete(OK, res)
+          complete(res)
         }
       }
     }
