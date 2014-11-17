@@ -1,0 +1,260 @@
+swagger: "2.0"
+info:
+  title: Reading Service API
+  description: A service for managing a user's library
+  version: 0.0.1
+host: api.blinkboxbooks.com
+schemes:
+  - https
+produces:
+  - application/vnd.blinkbox.books.v2+json
+paths:
+  /my/library:
+    get:
+      parameters:
+        - name: Authorization
+          in: header
+          description: The bearer token from the Auth server describing the user. A user does not need to be in an elevated state.
+          type: string
+          required: true
+          format: "/^Bearer .+/"
+          x-elevation: none
+        - name: count
+          in: query
+          description: Maximum number of library items to return. Must be no less than 1 and no more than 50.
+          required: false
+          type: integer
+          format: int32
+        - name: offset
+          in: query
+          description: starting position
+          required: false
+          type: integer
+          format: int32
+      summary: User's library
+      description: The library endpoint returns the minimal information of a user's library items needed to display on a mobile device. The response includes all user's unarchived books.
+      responses:
+        200:
+          description: A map of library items
+          schema:
+            $ref: LibraryItems
+        401:
+          description: Not authenticated
+  /my/library/samples:
+    post:
+      parameters:
+        - name: Authorization
+          in: header
+          description: The bearer token from the Auth server describing the user. A user does not need to be in an elevated state.
+          type: string
+          required: true
+          format: "/^Bearer .+/"
+          x-elevation: none
+        - name: isbn
+          in: body
+          description: ISBN
+          required: true
+          schema:
+            type: integer
+            description: 13 digit isbn number
+      description: Add book sample to the library
+      responses:
+        200:
+          description: Sample book already added to library
+        201:
+          description: Sample book added to library
+        400:
+          description: Bad request for invalid ISBN or no ISBN
+        401:
+          description: Not authenticated
+        409:
+          description: Full book already in the library.
+  /my/library/full:
+    get:
+      parameters:
+        - name: Authorization
+          in: header
+          description: The bearer token from the Auth server describing the user. A user does not need to be in an elevated state.
+          type: string
+          required: true
+          format: "/^Bearer .+/"
+          x-elevation: none
+        - name: count
+          in: query
+          description: Maximum number of library items to return. Must be no less than 1 and no more than 50.
+          required: false
+          type: integer
+          format: int32
+        - name: offset
+          in: query
+          description: starting position
+          required: false
+          type: integer
+          format: int32
+      summary: User's library
+      description: Returns the books that the user owns.
+      responses:
+        200:
+          description: A map of library items
+          schema:
+            $ref: LibraryItems
+        401:
+          description: Not authenticated
+  /my/library/archive:
+    post:
+      parameters:
+        - name: Authorization
+          in: header
+          description: The bearer token from the Auth server describing the user. A user does not need to be in an elevated state.
+          type: string
+          required: true
+          format: "/^Bearer .+/"
+          x-elevation: none
+        - name: isbn
+          in: body
+          description: ISBN
+          required: true
+          schema:
+            type: integer
+            description: 13 digit isbn
+      description: Archive/Unarchive the book
+      responses:
+        200:
+          description: Book was successfully archived/unarchived
+        401:
+          description: Not authenticated
+    get:
+      parameters:
+        - name: Authorization
+          in: header
+          description: The bearer token from the Auth server describing the user. A user does not need to be in an elevated state.
+          type: string
+          required: true
+          format: "/^Bearer .+/"
+          x-elevation: none
+        - name: count
+          in: query
+          description: Maximum number of library items to return. Must be no less than 1 and no more than 50.
+          required: false
+          type: integer
+          format: int32
+        - name: offset
+          in: query
+          description: starting position
+          required: false
+          type: integer
+          format: int32
+      summary: User's library
+      description: Returns the user's archived books.
+      responses:
+        200:
+          description: A map of library items
+          schema:
+            $ref: LibraryItems
+        401:
+          description: Not authenticated
+  /my/library/{isbn}:
+    get:
+      parameters:
+        - name: Authorization
+          in: header
+          description: The bearer token from the Auth server describing the user. A user does not need to be in an elevated state.
+          type: string
+          required: true
+          format: "/^Bearer .+/"
+          x-elevation: none
+        - name: isbn
+          in: path
+          description: ISBN
+          required: true
+          type: string
+      description: Returns book details
+      responses:
+        200:
+          description: Book details
+          schema:
+            $ref: LibraryItem
+        401:
+          description: Not authenticated
+        404:
+         description: The book is not in the library
+definitions:
+  LibraryItems:
+    type: object
+    properties:
+      items:
+        type: array
+        items:
+          $ref: LibraryItem
+  LibraryItem:
+    type: object
+    description: A minimal representation of a book
+    required:
+      - isbn
+      - title
+      - author
+      - sortableTitle
+      - bookType
+      - archived
+      - readingStatus
+      - readingPosition
+      - images
+      - addedTime
+      - version
+    additionalProperties: false
+    subTypes:
+      - ExhaustiveLibraryItem
+    properties:
+      isbn:
+        type: string
+        description: ISBN
+      title:
+        type: string
+        description: The full title of the book
+      author:
+        type: string
+        description: The full title of the book
+      sortableTitle:
+        type: string
+        description: The non-displayable sortable title of the book used for sorting books only
+      bookType:
+        description: indicates whether the library contains only the sample of the book
+        enum:
+          - Sample
+          - Full
+      archived:
+        type: boolean
+        description: indicates whether the book is archived
+      readingStatus:
+        enum:
+          - NotStarted
+          - Reading
+          - Finished
+      readingPosition:
+        $ref: ReadingPosition
+      images:
+        type: array
+        description: The urls for the image displayed in a user's library
+        items:
+          type: object
+          properties:
+            rel:
+              type: string
+            url:
+              type: string
+      addedTime:
+        type: string
+        format: date-time
+        description: The date and time the book was added to the user's library
+      version:
+        type: string
+        description: The version of the epub
+  ReadingPosition:
+    description: Current reading postion
+    type: object
+    properties:
+      cfi:
+        type: string
+      percentage:
+        type: integer
+        format: int32
