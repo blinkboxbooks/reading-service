@@ -38,7 +38,7 @@ class DefaultLibraryService(
       BookDetails(
         item.isbn,
         catalogueInfo.title,
-        catalogueInfo.sortableTitle,
+        catalogueInfo.sortTitle,
         catalogueInfo.author,
         item.createdAt,
         item.`type`,
