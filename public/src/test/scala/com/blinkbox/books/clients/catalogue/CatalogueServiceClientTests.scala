@@ -90,14 +90,13 @@ class CatalogueServiceClientTests extends FlatSpec with ScalaFutures with FailHe
 }
 
 class TestFixture extends MockitoSyrup with CatalogueV1Responses {
-  implicit val system = ActorSystem("test-system")
 
   val clientConfig = ClientConfig(new URL("https://myfavoritewebsite.com"), 1.second)
   val mockSendReceive = mock[SendReceive]
 
   lazy val client = new SprayClient {
     override val config: ClientConfig = clientConfig
-    override val system: ActorSystem = system
+    override val system: ActorSystem = ActorSystem("test-system")
     override val ec: ExecutionContext = global
 
     override def doSendReceive(implicit refFactory: ActorRefFactory, ec: ExecutionContext): SendReceive = mockSendReceive
