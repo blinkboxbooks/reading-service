@@ -4,7 +4,7 @@ import akka.actor.ActorRefFactory
 import com.blinkbox.books.auth.Elevation.Unelevated
 import com.blinkbox.books.auth.User
 import com.blinkbox.books.config.ApiConfig
-import com.blinkbox.books.reading.common._
+import com.blinkbox.books.reading._
 import com.blinkbox.books.spray.Directives.rootPath
 import com.blinkbox.books.spray.MonitoringDirectives.monitor
 import com.blinkbox.books.spray.{ElevatedContextAuthenticator, JsonFormats, url2uri, v2}

@@ -1,4 +1,4 @@
-package com.blinkbox.books.reading.common
+package com.blinkbox.books.reading
 
 import com.blinkbox.books.spray.v2.Relation
 

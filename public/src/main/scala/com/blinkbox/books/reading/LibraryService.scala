@@ -1,8 +1,8 @@
 package com.blinkbox.books.reading
 
 import com.blinkbox.books.clients.catalogue.{CatalogueInfo, CatalogueService}
-import com.blinkbox.books.reading.common._
-import com.blinkbox.books.reading.common.persistence.{LibraryItem, LibraryStore}
+import com.blinkbox.books.reading._
+import com.blinkbox.books.reading.persistence.{LibraryItem, LibraryStore}
 import com.blinkbox.books.spray.v2.Link
 import com.typesafe.scalalogging.slf4j.StrictLogging
 

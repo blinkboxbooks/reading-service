@@ -1,4 +1,4 @@
-package com.blinkbox.books.reading.common.persistence
+package com.blinkbox.books.reading.persistence
 
 import com.blinkbox.books.config.DatabaseConfig
 import com.blinkbox.books.slick.{DatabaseComponent, DatabaseSupport, MySQLDatabaseSupport, TablesContainer}
@@ -12,6 +12,7 @@ import scala.slick.jdbc.JdbcBackend.Database
 trait LibraryStore {
   def getBook(userId: Int, isbn: String): Future[Option[LibraryItem]]
   def getBookMedia(isbn: String): Future[List[Link]]
+  def getLibrary(count: Int, offset: Int, userId: Int): Future[List[LibraryItem]]
 }
 
 class DbLibraryStore[DB <: DatabaseSupport](db: DB#Database, tables: LibraryTables[DB#Profile], exceptionFilter: DB#ExceptionFilter)(implicit val ec: ExecutionContext) extends LibraryStore with StrictLogging {
@@ -29,7 +30,13 @@ class DbLibraryStore[DB <: DatabaseSupport](db: DB#Database, tables: LibraryTabl
     db.withSession { implicit session =>
       val links = tables.getLibraryItemLinkFor(isbn).list
       if (links.isEmpty) throw new LibraryMediaMissingException(s"media (full ePub & key URLs) for $isbn does not exist")
-      else links.map(l => Link(l.`type`, l.uri))
+      else links.map(l => Link(l.bookType, l.uri))
+    }
+  }
+
+  override def getLibrary(count: Int, offset: Int, userId: Int): Future[List[LibraryItem]] = Future {
+    db.withSession { implicit session =>
+      tables.getUserLibraryById(count, offset, userId).list
     }
   }
 }

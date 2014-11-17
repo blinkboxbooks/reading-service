@@ -1,8 +1,8 @@
-package com.blinkbox.books.reading.common.persistence
+package com.blinkbox.books.reading.persistence
 
 import java.net.URI
 
-import com.blinkbox.books.reading.common._
+import com.blinkbox.books.reading._
 import com.blinkbox.books.slick.TablesContainer
 import org.joda.time.DateTime
 
@@ -82,8 +82,12 @@ trait LibraryTables[Profile <: JdbcProfile] extends TablesContainer[Profile] {
   private def getLibraryItemMedia(isbn: Column[String]): lifted.Query[LibraryItemMedia, LibraryItemLink, Seq] =
     libraryItemMedia.filter(_.isbn === isbn)
 
+  private def getUserLibrary(count: ConstColumn[Long], offset: ConstColumn[Long], userId: Column[Int]): lifted.Query[LibraryItems, LibraryItem, Seq] =
+    libraryItems.withFilter(b => b.userId === userId).drop(offset).take(count)
+
   lazy val getLibraryItemBy = Compiled(getLibraryItem _)
   lazy val getLibraryItemLinkFor = Compiled(getLibraryItemMedia _)
+  lazy val getUserLibraryById = Compiled(getUserLibrary _)
 }
 
 object LibraryTables {

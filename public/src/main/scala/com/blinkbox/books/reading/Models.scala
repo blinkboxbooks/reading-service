@@ -2,7 +2,7 @@ package com.blinkbox.books.reading
 
 import java.net.URI
 
-import com.blinkbox.books.reading.common._
+import com.blinkbox.books.reading._
 import com.blinkbox.books.spray.v2.{Link, Relation}
 import org.joda.time.DateTime
 
