@@ -53,10 +53,10 @@ class DefaultCatalogueV1Service(client: Client)(implicit ec: ExecutionContext) e
   }
 
   // ToDo
-  def getBulkBookInfo(isbns: List[String]): Future[List[BookInfo]] = {
-    val isbnQueryString = isbns.foldRight("+")
+  def getBulkBookInfo(isbns: List[String]): Future[BulkBookInfo] = {
+    val isbnQueryString = isbns.map(isbn => s"id=${isbn}").fold("&")
     val req = Get(s"${client.config.url}/catalogue/books/$isbnQueryString")
-    client.dataRequest[List[BookInfo]](req, credentials = None).transform(identity, {
+    client.dataRequest[BulkBookInfo](req, credentials = None).transform(identity, {
       case e: NotFoundException =>
         new CatalogueInfoMissingException(s"Catalogue does not have a book with the following isbns: $isbns", e)
     })
@@ -69,6 +69,8 @@ class DefaultCatalogueV1Service(client: Client)(implicit ec: ExecutionContext) e
         new CatalogueInfoMissingException(s"Catalogue does not have a contributor with id: $contributorId", e)
     })
   }
+
+  private case class BulkBookInfo(`type`: String, numberOfResults: Int, offset: Int, count: Int, items: List[BookInfo])
 }
 
 class CatalogueInfoMissingException(msg: String, cause: Throwable = null) extends Exception(msg, cause)
