@@ -47,7 +47,7 @@ object ReadingApi {
   import org.json4s.FieldSerializer._
 
   /** Matcher for ISBN. */
-  val Isbn = """^(\d{13})$""".r
+  val Isbn = """^([0-9]{13})$""".r
 
   object ReadingPositionSerializer extends CustomSerializer[ReadingPosition](format =>
     (PartialFunction.empty, {
