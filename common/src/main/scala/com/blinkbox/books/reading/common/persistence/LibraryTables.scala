@@ -16,36 +16,36 @@ trait LibraryTables[Profile <: JdbcProfile] extends TablesContainer[Profile] {
 
   implicit lazy val cfiColumnType = MappedColumnType.base[Cfi, String](_.value, Cfi)
   implicit lazy val urlColumnType = MappedColumnType.base[URI, String](_.toString, new URI(_))
-  implicit lazy val LibraryMediaTypeColumnType = MappedColumnType.base[LibraryMediaLinkType, String](
+  implicit lazy val LibraryMediaTypeColumnType = MappedColumnType.base[LibraryMediaLinkType, Int](
     {
-      case EpubKey => "EpubKey"
-      case FullEpub => "FullEpub"
+      case EpubKey => 1
+      case FullEpub => 2
     },
     {
-      case "EpubKey" => EpubKey
-      case "FullEpub" => FullEpub
+      case 1 => EpubKey
+      case 2 => FullEpub
     }
   )
-  implicit lazy val bookTypeColumnType = MappedColumnType.base[BookType, String](
+  implicit lazy val bookTypeColumnType = MappedColumnType.base[BookType, Int](
     {
-      case Full => "Full"
-      case Sample => "Sample"
+      case Full => 1
+      case Sample => 2
     },
     {
-      case "Full" => Full
-      case "Sample" => Sample
+      case 1 => Full
+      case 2 => Sample
     }
   )
-  implicit lazy val readingStatusColumnType = MappedColumnType.base[ReadingStatus, String](
+  implicit lazy val readingStatusColumnType = MappedColumnType.base[ReadingStatus, Int](
     {
-      case NotStarted => "NotStarted"
-      case Reading => "Reading"
-      case Finished => "Finished"
+      case NotStarted => 1
+      case Reading => 2
+      case Finished => 3
     },
     {
-      case "NotStarted" => NotStarted
-      case "Reading" => Reading
-      case "Finished" => Finished
+      case 1 => NotStarted
+      case 2 => Reading
+      case 3 => Finished
     }
   )
 
@@ -64,7 +64,7 @@ trait LibraryTables[Profile <: JdbcProfile] extends TablesContainer[Profile] {
     def * = (isbn, userId, bookType, readingStatus, progressCfi, progressPercentage, createdAt, updatedAt) <> (LibraryItem.tupled, LibraryItem.unapply)
   }
 
-  class LibraryItemMedia(tag: Tag) extends Table[LibraryItemLink](tag, "library_item_links") {
+  class LibraryItemMedia(tag: Tag) extends Table[LibraryItemLink](tag, "library_media") {
     def isbn = column[String]("isbn", DBType("CHAR(13)"))
     def linkType = column[LibraryMediaLinkType]("media_type")
     def uri = column[URI]("uri")
