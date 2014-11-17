@@ -14,7 +14,7 @@ trait LibraryTables[Profile <: JdbcProfile] extends TablesContainer[Profile] {
 
   import driver.simple._
 
-  implicit lazy val cfiColumnType = MappedColumnType.base[CFI, String](_.value, CFI)
+  implicit lazy val cfiColumnType = MappedColumnType.base[Cfi, String](_.value, Cfi)
   implicit lazy val urlColumnType = MappedColumnType.base[URI, String](_.toString, new URI(_))
   implicit lazy val LibraryMediaTypeColumnType = MappedColumnType.base[LibraryMediaLinkType, String](
     {
@@ -53,15 +53,15 @@ trait LibraryTables[Profile <: JdbcProfile] extends TablesContainer[Profile] {
 
     def isbn = column[String]("isbn", DBType("CHAR(13)"))
     def userId = column[Int]("user_id")
-    def `type` = column[BookType]("book_type")
+    def bookType = column[BookType]("book_type")
     def readingStatus = column[ReadingStatus]("reading_status")
-    def progressCfi = column[CFI]("progress_cfi")
+    def progressCfi = column[Cfi]("progress_cfi")
     def progressPercentage = column[Int]("progress_percentage")
     def createdAt = column[DateTime]("created_at")
     def updatedAt = column[DateTime]("updated_at")
     def pk = primaryKey("library_items_id", (isbn, userId))
 
-    def * = (isbn, userId, `type`, readingStatus, progressCfi, progressPercentage, createdAt, updatedAt) <> (LibraryItem.tupled, LibraryItem.unapply)
+    def * = (isbn, userId, bookType, readingStatus, progressCfi, progressPercentage, createdAt, updatedAt) <> (LibraryItem.tupled, LibraryItem.unapply)
   }
 
   class LibraryItemMedia(tag: Tag) extends Table[LibraryItemLink](tag, "library_item_links") {

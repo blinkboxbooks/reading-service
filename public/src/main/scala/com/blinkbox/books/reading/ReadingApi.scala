@@ -51,7 +51,7 @@ object ReadingApi {
 
   object ReadingPositionSerializer extends CustomSerializer[ReadingPosition](format =>
     (PartialFunction.empty, {
-      case ReadingPosition(CFI(cfi), position) => ("cfi" -> cfi) ~ ("percentage" -> position)
+      case ReadingPosition(Cfi(cfi), position) => ("cfi" -> cfi) ~ ("percentage" -> position)
     })
   )
 

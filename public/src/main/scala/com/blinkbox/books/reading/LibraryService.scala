@@ -41,7 +41,7 @@ class DefaultLibraryService(
         catalogueInfo.sortTitle,
         catalogueInfo.author,
         item.createdAt,
-        item.`type`,
+        item.bookType,
         item.readingStatus,
         readingPosition,
         images,

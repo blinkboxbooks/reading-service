@@ -7,11 +7,11 @@ object NotStarted extends ReadingStatus
 object Reading extends ReadingStatus
 object Finished extends ReadingStatus
 
-case class ReadingPosition(cfi: CFI, percentage: Int) {
+case class ReadingPosition(cfi: Cfi, percentage: Int) {
   require(percentage >= 0 && percentage <= 100)
 }
 
-case class CFI(value: String)
+case class Cfi(value: String)
 
 sealed trait BookType
 object Full extends BookType

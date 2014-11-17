@@ -73,7 +73,7 @@ class DbLibraryStoreTests extends FlatSpec with MockitoSyrup with ScalaFutures w
 
     val createdAt = clock.now()
     val updatedAt = clock.now()
-    val cfi = CFI("some cfi")
+    val cfi = Cfi("some cfi")
     val percentage = 0
 
     val ISBN1 = "9780141909837"
