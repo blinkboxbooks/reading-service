@@ -49,7 +49,7 @@ trait LibraryTables[Profile <: JdbcProfile] extends TablesContainer[Profile] {
     }
   )
 
-  class LibraryItems(tag: Tag) extends Table[LibraryItem](tag, "library_items") {
+  class LibraryItems(tag: Tag) extends Table[LibraryItem](tag, "library_item") {
 
     def isbn = column[String]("isbn", DBType("CHAR(13)"))
     def userId = column[Int]("user_id")
@@ -59,28 +59,30 @@ trait LibraryTables[Profile <: JdbcProfile] extends TablesContainer[Profile] {
     def progressPercentage = column[Int]("progress_percentage")
     def createdAt = column[DateTime]("created_at")
     def updatedAt = column[DateTime]("updated_at")
-    def pk = primaryKey("library_items_id", (isbn, userId))
+    def pk = primaryKey("pk_library_item", (isbn, userId))
 
     def * = (isbn, userId, bookType, readingStatus, progressCfi, progressPercentage, createdAt, updatedAt) <> (LibraryItem.tupled, LibraryItem.unapply)
   }
 
-  class LibraryItemMedia(tag: Tag) extends Table[LibraryItemLink](tag, "library_media") {
+  class LibraryMedia(tag: Tag) extends Table[LibraryItemLink](tag, "library_media") {
     def isbn = column[String]("isbn", DBType("CHAR(13)"))
     def linkType = column[LibraryMediaLinkType]("media_type")
     def uri = column[URI]("uri")
-    def pk = primaryKey("library_item_links_isbn", (isbn, linkType))
+    def createdAt = column[DateTime]("created_at")
+    def updatedAt = column[DateTime]("updated_at")
+    def pk = primaryKey("pk_library_media", (isbn, linkType))
 
-    def * = (isbn, linkType, uri) <> (LibraryItemLink.tupled, LibraryItemLink.unapply)
+    def * = (isbn, linkType, uri, createdAt, updatedAt) <> (LibraryItemLink.tupled, LibraryItemLink.unapply)
   }
 
   lazy val libraryItems = TableQuery[LibraryItems]
-  lazy val libraryItemMedia = TableQuery[LibraryItemMedia]
+  lazy val libraryMedia = TableQuery[LibraryMedia]
 
   private def getLibraryItem(userId: Column[Int], isbn: Column[String]): lifted.Query[LibraryItems, LibraryItem, Seq] =
     libraryItems.filter(b => b.isbn === isbn && b.userId === userId)
 
-  private def getLibraryItemMedia(isbn: Column[String]): lifted.Query[LibraryItemMedia, LibraryItemLink, Seq] =
-    libraryItemMedia.filter(_.isbn === isbn)
+  private def getLibraryItemMedia(isbn: Column[String]): lifted.Query[LibraryMedia, LibraryItemLink, Seq] =
+    libraryMedia.filter(_.isbn === isbn)
 
   lazy val getLibraryItemBy = Compiled(getLibraryItem _)
   lazy val getLibraryItemLinkFor = Compiled(getLibraryItemMedia _)
