@@ -69,7 +69,7 @@ class DbLibraryStoreTests extends FlatSpec with MockitoSyrup with ScalaFutures w
     import tables.driver.simple._
 
     db.withSession { implicit session =>
-      val ddl = tables.libraryItems.ddl ++ tables.libraryMedia.ddl
+      val ddl = tables.libraryItems.ddl ++ tables.libraryMedia.ddl ++ tables.bookTypes.ddl ++ tables.mediaTypes.ddl ++ tables.readingStatuses.ddl
       try { ddl.drop } catch { case _: JdbcSQLException => /* Do nothing */ }
       ddl.create
     }
@@ -100,6 +100,9 @@ class DbLibraryStoreTests extends FlatSpec with MockitoSyrup with ScalaFutures w
     val libItem2EpubKeyLink = LibraryItemLink(ISBN2, EpubKey, new URI("https://keys.mobcastdev.com/9780/141/909/838/5679fab718a893e6e237e27468c6b37a.epub.9780141909838.key"), DateTime.now, DateTime.now)
 
     db.withSession { implicit session =>
+      tables.bookTypes ++= List((Full, "Full"), (Sample, "Sample"))
+      tables.mediaTypes ++= List((EpubKey, "EpubKey"), (FullEpub, "FullEpub"))
+      tables.readingStatuses ++= List((NotStarted, "NotStarted"), (Reading, "Reading"), (Finished, "Finished"))
       tables.libraryItems ++= List(libItem1, libItem2, libItem3, libItem4)
       tables.libraryMedia ++= List(libItem1EpubLink, libItem1EpubKeyLink, libItem2EpubLink, libItem2EpubKeyLink)
     }

@@ -18,38 +18,60 @@ trait LibraryTables[Profile <: JdbcProfile] extends TablesContainer[Profile] {
   implicit lazy val urlColumnType = MappedColumnType.base[URI, String](_.toString, new URI(_))
   implicit lazy val LibraryMediaTypeColumnType = MappedColumnType.base[LibraryMediaLinkType, Int](
     {
-      case EpubKey => 1
-      case FullEpub => 2
+      case EpubKey => 0
+      case FullEpub => 1
     },
     {
-      case 1 => EpubKey
-      case 2 => FullEpub
+      case 0 => EpubKey
+      case 1 => FullEpub
     }
   )
   implicit lazy val bookTypeColumnType = MappedColumnType.base[BookType, Int](
     {
-      case Full => 1
-      case Sample => 2
+      case Full => 0
+      case Sample => 1
     },
     {
-      case 1 => Full
-      case 2 => Sample
+      case 0 => Full
+      case 1 => Sample
     }
   )
   implicit lazy val readingStatusColumnType = MappedColumnType.base[ReadingStatus, Int](
     {
-      case NotStarted => 1
-      case Reading => 2
-      case Finished => 3
+      case NotStarted => 0
+      case Reading => 1
+      case Finished => 2
     },
     {
-      case 1 => NotStarted
-      case 2 => Reading
-      case 3 => Finished
+      case 0 => NotStarted
+      case 1 => Reading
+      case 2 => Finished
     }
   )
 
-  class LibraryItems(tag: Tag) extends Table[LibraryItem](tag, "library_item") {
+  // Reference tables
+  class BookTypes(tag: Tag) extends Table[(BookType, String)](tag, "book_types") {
+    def id = column[BookType]("id")
+    def bookType = column[String]("type")
+
+    override def * = (id, bookType)
+  }
+
+  class ReadingStatuses(tag: Tag) extends Table[(ReadingStatus, String)](tag, "reading_statuses") {
+    def id = column[ReadingStatus]("id")
+    def status = column[String]("status")
+
+    override def * = (id, status)
+  }
+
+  class MediaTypes(tag: Tag) extends Table[(LibraryMediaLinkType, String)](tag, "media_types") {
+    def id = column[LibraryMediaLinkType]("id")
+    def mediaType = column[String]("type")
+
+    override def * = (id, mediaType)
+  }
+
+  class LibraryItems(tag: Tag) extends Table[LibraryItem](tag, "library_items") {
 
     def isbn = column[String]("isbn", DBType("CHAR(13)"))
     def userId = column[Int]("user_id")
@@ -59,7 +81,10 @@ trait LibraryTables[Profile <: JdbcProfile] extends TablesContainer[Profile] {
     def progressPercentage = column[Int]("progress_percentage")
     def createdAt = column[DateTime]("created_at")
     def updatedAt = column[DateTime]("updated_at")
-    def pk = primaryKey("pk_library_item", (isbn, userId))
+
+    def pk = primaryKey("pk_library_items", (isbn, userId))
+    def fk1 = foreignKey("fk_library_items_book_types", bookType, bookTypes)(_.id)
+    def fk2 = foreignKey("fk_library_items_reading_statuses", readingStatus, readingStatuses)(_.id)
 
     def * = (isbn, userId, bookType, readingStatus, progressCfi, progressPercentage, createdAt, updatedAt) <> (LibraryItem.tupled, LibraryItem.unapply)
   }
@@ -70,11 +95,16 @@ trait LibraryTables[Profile <: JdbcProfile] extends TablesContainer[Profile] {
     def uri = column[URI]("uri")
     def createdAt = column[DateTime]("created_at")
     def updatedAt = column[DateTime]("updated_at")
+
     def pk = primaryKey("pk_library_media", (isbn, linkType))
+    def fk = foreignKey("fk_library_media_media_types", linkType, mediaTypes)(_.id)
 
     def * = (isbn, linkType, uri, createdAt, updatedAt) <> (LibraryItemLink.tupled, LibraryItemLink.unapply)
   }
 
+  lazy val bookTypes = TableQuery[BookTypes]
+  lazy val mediaTypes = TableQuery[MediaTypes]
+  lazy val readingStatuses = TableQuery[ReadingStatuses]
   lazy val libraryItems = TableQuery[LibraryItems]
   lazy val libraryMedia = TableQuery[LibraryMedia]
 
