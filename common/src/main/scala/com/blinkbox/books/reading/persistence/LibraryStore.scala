@@ -12,6 +12,7 @@ import scala.slick.jdbc.JdbcBackend.Database
 trait LibraryStore {
   def getBook(userId: Int, isbn: String): Future[Option[LibraryItem]]
   def getBookMedia(isbn: String): Future[List[Link]]
+  def getBooksMedia(isbns: List[String]): Future[List[Link]]
   def getLibrary(count: Int, offset: Int, userId: Int): Future[List[LibraryItem]]
 }
 
@@ -30,6 +31,14 @@ class DbLibraryStore[DB <: DatabaseSupport](db: DB#Database, tables: LibraryTabl
     db.withSession { implicit session =>
       val links = tables.getLibraryItemLinkFor(isbn).list
       if (links.isEmpty) throw new LibraryMediaMissingException(s"media (full ePub & key URLs) for $isbn does not exist")
+      else links.map(l => Link(l.bookType, l.uri))
+    }
+  }
+
+  override def getBooksMedia(isbns: List[String]): Future[List[Link]] = Future {
+    db.withSession { implicit session =>
+      val links = tables.getBulkLibraryItemMedia(isbns).list
+      if (links.isEmpty) throw new LibraryMediaMissingException(s"media (full ePub & key URLs) for $isbns does not exist")
       else links.map(l => Link(l.bookType, l.uri))
     }
   }

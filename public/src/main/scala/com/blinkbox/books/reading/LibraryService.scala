@@ -1,7 +1,7 @@
 package com.blinkbox.books.reading
 
 import com.blinkbox.books.auth.User
-import com.blinkbox.books.clients.catalogue.{CatalogueInfo, CatalogueService}
+import com.blinkbox.books.clients.catalogue.{BulkBookInfo, CatalogueInfo, CatalogueService}
 import com.blinkbox.books.reading._
 import com.blinkbox.books.reading.persistence.{LibraryItem, LibraryStore}
 import com.blinkbox.books.spray.v2.Link
@@ -12,16 +12,20 @@ import scala.concurrent.Future
 
 trait LibraryService {
   def getBook(isbn: String, userId: Int): Future[Option[BookDetails]]
-  def getLibrary(count: Int, offset: Int)(implicit user: User): Future[List[LibraryItem]]
+  def getLibrary(count: Int, offset: Int)(implicit user: User): Future[List[BookDetails]]
 }
 
 class DefaultLibraryService(
   libraryStore: LibraryStore,
   catalogueService: CatalogueService) extends LibraryService with StrictLogging {
 
-  override def getLibrary(count: Int, offset: Int)(implicit user: User): Future[List[Option[BookDetails]]] = {
-    libraryStore.getLibrary(count, offset, user.id).map(list => list.map( isbn => getBook(isbn, user.id)))
-  }
+  override def getLibrary(count: Int, offset: Int)(implicit user: User): Future[List[BookDetails]] = for {
+    library <- libraryStore.getLibrary(count, offset, user.id)
+    isbns = library.map(_.isbn)
+    itemMedialinks <- libraryStore.getBooksMedia(isbns)
+    catalogueInfo <- catalogueService.getBulkInfoFor(isbns)
+    list = library.map { b => buildBookDetails(b, itemMedialinks, catalogueInfo.filter(c => c.isbn == b.isbn).head) }
+  } yield list
 
   override def getBook(isbn: String, userId: Int): Future[Option[BookDetails]] = {
     val libItemFuture = libraryStore.getBook(userId, isbn)
@@ -32,6 +36,25 @@ class DefaultLibraryService(
       itemMediaLinks <- itemMediaLinksFuture
       catalogueInfo <- catalogueInfoFuture
     } yield buildBookDetailsOptional(libItem, itemMediaLinks, catalogueInfo)
+  }
+
+  def buildBookDetails(libItem: LibraryItem, libraryMediaLinks: List[Link], catalogueInfo: CatalogueInfo): BookDetails = {
+    val readingPosition = ReadingPosition(libItem.progressCfi, libItem.progressPercentage)
+    val images = List(Image(CoverImage, catalogueInfo.coverImageUrl))
+    val catalogueLinks = List(Link(SampleEpub, catalogueInfo.sampleEpubUrl))
+    val links = catalogueLinks ++ libraryMediaLinks
+
+    BookDetails(
+      libItem.isbn,
+      catalogueInfo.title,
+      catalogueInfo.sortTitle,
+      catalogueInfo.author,
+      libItem.createdAt,
+      libItem.bookType,
+      libItem.readingStatus,
+      readingPosition,
+      images,
+      links)
   }
 
   def buildBookDetailsOptional(libItem: Option[LibraryItem], libraryMediaLinks: List[Link], catalogueInfo: CatalogueInfo): Option[BookDetails] =

@@ -85,6 +85,9 @@ trait LibraryTables[Profile <: JdbcProfile] extends TablesContainer[Profile] {
   private def getUserLibrary(count: ConstColumn[Long], offset: ConstColumn[Long], userId: Column[Int]):  lifted.Query[LibraryItems, LibraryItem, Seq] =
     libraryItems.withFilter(b => b.userId === userId).drop(offset).take(count)
 
+  def getBulkLibraryItemMedia(isbns: List[String]): lifted.Query[LibraryItemMedia, LibraryItemLink, Seq] =
+    libraryItemMedia.filter(_.isbn inSet isbns)
+
   lazy val getLibraryItemBy = Compiled(getLibraryItem _)
   lazy val getLibraryItemLinkFor = Compiled(getLibraryItemMedia _)
   lazy val getUserLibraryById = Compiled(getUserLibrary _)

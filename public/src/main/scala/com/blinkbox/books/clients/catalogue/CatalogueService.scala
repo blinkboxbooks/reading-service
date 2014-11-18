@@ -8,12 +8,16 @@ import spray.httpx.RequestBuilding.Get
 
 import scala.concurrent.{ExecutionContext, Future}
 
-case class CatalogueInfo(title: String, sortTitle: String, author: String, coverImageUrl: URI, sampleEpubUrl: URI)
-case class ContributorInfo(displayName: String, sortName: String)
-case class BookInfo(title: String, images: List[v1.Image], links: List[v1.Link])
+case class CatalogueInfo(isbn: String, title: String, sortTitle: String, author: String, coverImageUrl: URI, sampleEpubUrl: URI)
+case class ContributorInfo(id: String, displayName: String, sortName: String)
+case class BookInfo(id: String, title: String, images: List[v1.Image], links: List[v1.Link])
+case class BulkCatalogueInfo(`type`: String, numberOfResults: Int, offset: Int, count: Int, items: List[BookInfo])
+case class BulkContributorInfo(`type`: String, numberOfResults: Int, offset: Int, count: Int, items: List[ContributorInfo])
+case class BulkBookInfo(`type`: String, numberOfResults: Int, offset: Int, count: Int, items: List[BookInfo])
 
 trait CatalogueService {
   def getInfoFor(isbn: String): Future[CatalogueInfo]
+  def getBulkInfoFor(isbns: List[String]): Future[List[CatalogueInfo]]
 }
 
 trait CatalogueV1Service {
@@ -29,7 +33,9 @@ class DefaultCatalogueV1Service(client: Client)(implicit ec: ExecutionContext) e
     coverImageUrl = extractCoverImageUrl(bookInfo.images) getOrElse { throw new CatalogueInfoMissingException(s"Cover image missing for $isbn") }
     sampleEpubUrl = extractSampleEpubUrl(bookInfo.links) getOrElse { throw new CatalogueInfoMissingException(s"Sample ePub missing for $isbn") }
     contributorInfo <- getContributorInfo(contributorId)
-  } yield CatalogueInfo(bookInfo.title, bookInfo.title, contributorInfo.displayName, coverImageUrl, sampleEpubUrl)
+  } yield CatalogueInfo(bookInfo.id, bookInfo.title, bookInfo.title, contributorInfo.displayName, coverImageUrl, sampleEpubUrl)
+
+  override def getBulkInfoFor(isbns: List[String]): Future[List[CatalogueInfo]] = getBulkBookInfoFor(isbns).flatMap(buildBulkCatalogueInfo(_))
 
   private def extractContributorId(links: List[v1.Link]): Option[String] =
     links.find(_.rel == "urn:blinkboxbooks:schema:contributor") flatMap { l =>
@@ -53,8 +59,8 @@ class DefaultCatalogueV1Service(client: Client)(implicit ec: ExecutionContext) e
   }
 
   // ToDo
-  def getBulkBookInfo(isbns: List[String]): Future[BulkBookInfo] = {
-    val isbnQueryString = isbns.map(isbn => s"id=${isbn}").fold("&")
+  def getBulkBookInfoFor(isbns: List[String]): Future[BulkBookInfo] = {
+    val isbnQueryString = isbns.map(isbn => s"id=${isbn}").foldRight("")((a,b) => s"${a}&${b}")
     val req = Get(s"${client.config.url}/catalogue/books/$isbnQueryString")
     client.dataRequest[BulkBookInfo](req, credentials = None).transform(identity, {
       case e: NotFoundException =>
@@ -70,7 +76,26 @@ class DefaultCatalogueV1Service(client: Client)(implicit ec: ExecutionContext) e
     })
   }
 
-  private case class BulkBookInfo(`type`: String, numberOfResults: Int, offset: Int, count: Int, items: List[BookInfo])
+  def getBulkContributorInfo(contributorIds: List[String]): Future[BulkContributorInfo] = {
+    val queryString = contributorIds.map(id => s"id=${id}").foldRight("")((a,b) => s"${a}&${b}")
+    val req = Get(s"${client.config.url}/catalogue/contributors/$queryString")
+    client.dataRequest[BulkContributorInfo](req, credentials = None).transform(identity, {
+      case e: NotFoundException =>
+        new CatalogueInfoMissingException(s"Catalogue does not have a contributor with id: $contributorIds", e)
+    })
+  }
+
+  def buildBulkCatalogueInfo(bulkBookInfo: BulkBookInfo): Future[List[CatalogueInfo]] = {
+    val extractContId: (BookInfo) => String = b => extractContributorId(b.links) getOrElse { throw new CatalogueInfoMissingException(s"Contributor missing for ${b.id}") }
+    val extractCoverImgUrl: (BookInfo) => URI = b => extractCoverImageUrl(b.images) getOrElse { throw new CatalogueInfoMissingException(s"Cover image missing for $b.id") }
+    val extractSampleUrl: (BookInfo) => URI = b => extractSampleEpubUrl(b.links) getOrElse { throw new CatalogueInfoMissingException(s"Sample ePub missing for ${b.id}") }
+    val extractContributorDisplayName: (BookInfo, List[ContributorInfo]) => String = (b, c) => c.find(c => c.id == extractContId(b)).get.displayName
+    val contributorIds = bulkBookInfo.items.map(extractContId)
+    for {
+      contributorIds <- getBulkContributorInfo(contributorIds)
+      list = bulkBookInfo.items.map(b => CatalogueInfo(b.id, b.title, b.title, extractContributorDisplayName(b, contributorIds.items), extractCoverImgUrl(b), extractSampleUrl(b)))
+    } yield list
+  }
 }
 
 class CatalogueInfoMissingException(msg: String, cause: Throwable = null) extends Exception(msg, cause)
