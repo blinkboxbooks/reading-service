@@ -75,9 +75,9 @@ trait LibraryTables[Profile <: JdbcProfile] extends TablesContainer[Profile] {
 
     def isbn = column[String]("isbn", DBType("CHAR(13)"))
     def userId = column[Int]("user_id")
-    def bookType = column[BookType]("book_type")
-    def readingStatus = column[ReadingStatus]("reading_status")
-    def progressCfi = column[Cfi]("progress_cfi")
+    def bookType = column[BookType]("book_type_id")
+    def readingStatus = column[ReadingStatus]("reading_status_id")
+    def progressCfi = column[Cfi]("progress_cfi", DBType("VARCHAR(255)"))
     def progressPercentage = column[Int]("progress_percentage")
     def createdAt = column[DateTime]("created_at")
     def updatedAt = column[DateTime]("updated_at")
@@ -91,7 +91,7 @@ trait LibraryTables[Profile <: JdbcProfile] extends TablesContainer[Profile] {
 
   class LibraryMedia(tag: Tag) extends Table[LibraryItemLink](tag, "library_media") {
     def isbn = column[String]("isbn", DBType("CHAR(13)"))
-    def linkType = column[LibraryMediaLinkType]("media_type")
+    def linkType = column[LibraryMediaLinkType]("media_type_id")
     def uri = column[URI]("uri")
     def createdAt = column[DateTime]("created_at")
     def updatedAt = column[DateTime]("updated_at")
