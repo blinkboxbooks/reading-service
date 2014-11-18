@@ -6,12 +6,11 @@ CREATE TABLE `library_items` (
   `progress_cfi` VARCHAR(255) NOT NULL,
   `progress_percentage` TINYINT NOT NULL,
   `created_at` DATETIME NOT NULL,
-  `updated_at` DATETIME NOT NULL
+  `updated_at` DATETIME NOT NULL,
+  PRIMARY KEY (`isbn`,`user_id`),
+  FOREIGN KEY `fk_library_items_book_types` (`book_type_id`) references `book_types`(`id`),
+  FOREIGN KEY `fk_library_items_reading_statuses` (`reading_status_id`) references `reading_statuses`(`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
-ALTER TABLE `library_items` ADD CONSTRAINT `pk_library_items` PRIMARY KEY (`isbn`,`user_id`);
-ALTER TABLE `library_items` ADD CONSTRAINT `fk_library_items_book_types` FOREIGN KEY (`book_type_id`) references `book_types`(`id`) ON UPDATE NO ACTION ON DELETE NO ACTION;
-ALTER TABLE `library_items` ADD CONSTRAINT `fk_library_items_reading_statuses` FOREIGN KEY (`reading_status_id`) references `reading_statuses`(`id`) ON UPDATE NO ACTION ON DELETE NO ACTION;
 
 INSERT INTO db_version (db_version_id, file_name, jira_issue)
 VALUES (4, '004-create-library-items-table.sql', 'RS-5');
