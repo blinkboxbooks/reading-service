@@ -1,4 +1,4 @@
-package com.blinkbox.books.reading.common
+package com.blinkbox.books.reading
 
 import java.net.URI
 

@@ -6,8 +6,8 @@ import akka.actor.ActorRefFactory
 import com.blinkbox.books.auth.{Elevation, User}
 import com.blinkbox.books.clients.catalogue.CatalogueInfoMissingException
 import com.blinkbox.books.config.ApiConfig
-import com.blinkbox.books.reading.common._
-import com.blinkbox.books.reading.common.persistence.LibraryMediaMissingException
+import com.blinkbox.books.reading._
+import com.blinkbox.books.reading.persistence.LibraryMediaMissingException
 import com.blinkbox.books.spray.BearerTokenAuthenticator.credentialsInvalidHeaders
 import com.blinkbox.books.spray.v2.{Link, `application/vnd.blinkbox.books.v2+json`}
 import com.blinkbox.books.spray.{BearerTokenAuthenticator, v2}

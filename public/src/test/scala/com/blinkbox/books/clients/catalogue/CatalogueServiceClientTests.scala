@@ -62,7 +62,7 @@ class CatalogueServiceClientTests extends FlatSpec with ScalaFutures with FailHe
     provideJsonResponses(List(firstResponse, secondResponse))
 
     whenReady(service.getInfoFor(TestBookIsbn)) { res =>
-      assert(res == CatalogueInfo(TestBookInfo.title, TestBookInfo.title, TestContributorInfo.displayName, new URI(TestBookCoverImage.src), new URI(TestBookInfo.links.filter(_.rel.endsWith("samplemedia")).head.href)))
+      assert(res == CatalogueInfo(TestBookIsbn, TestBookInfo.title, TestBookInfo.title, TestContributorInfo.displayName, new URI(TestBookCoverImage.src), new URI(TestBookInfo.links.filter(_.rel.endsWith("samplemedia")).head.href)))
     }
   }
 
@@ -112,10 +112,10 @@ class TestFixture extends MockitoSyrup with CatalogueV1Responses {
     v1.Link("urn:blinkboxbooks:schema:bookpricelist", "/service/catalogue/prices?book=9780007197545", Some("Price"), None),
     v1.Link("urn:blinkboxbooks:schema:samplemedia", "http://internal-media.mobcastdev.com/9780/007/197/545/71d24849440f5ee414fd5e7f2dad2cbb.sample.epub", Some("Sample"), None)
   )
-  val TestBookInfo = BookInfo("With My Body", List(TestBookCoverImage), TestBookLinks)
+  val TestBookInfo = BookInfo(TestBookIsbn ,"With My Body", List(TestBookCoverImage), TestBookLinks)
 
   val TestContributorId = "4809fa392bf32dcc92206f5cf30882611e05d97b"
-  val TestContributorInfo = ContributorInfo("Nikki Gemmell", "Gemmell, Nikki")
+  val TestContributorInfo = ContributorInfo(TestContributorId, "Nikki Gemmell", "Gemmell, Nikki")
 
   def provideJsonResponse(statusCode: StatusCode, content: String): Unit = {
     val resp = HttpResponse(statusCode, HttpEntity(`application/vnd.blinkboxbooks.data.v1+json`, content))

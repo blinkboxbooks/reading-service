@@ -27,7 +27,7 @@ class ReadingApi(
 
   val getBulkBooksDetails = get {
     path("my" / "library") {
-      authenticate(authenticator.withElevation(Unelevated)) { user =>
+      authenticate(authenticator.withElevation(Unelevated)) { implicit user =>
         paged(defaultPageSize) { page =>
           onSuccess(libraryService.getLibrary(page.count, page.offset)) { res =>
             val items = Map("items" -> res)

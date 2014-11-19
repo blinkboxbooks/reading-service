@@ -31,7 +31,7 @@ class DbLibraryStore[DB <: DatabaseSupport](db: DB#Database, tables: LibraryTabl
     db.withSession { implicit session =>
       val links = tables.getLibraryItemLinkFor(isbn).list
       if (links.isEmpty) throw new LibraryMediaMissingException(s"media (full ePub & key URLs) for $isbn does not exist")
-      else links.map(l => Link(l.bookType, l.uri))
+      else links.map(l => Link(l.`type`, l.uri))
     }
   }
 
@@ -39,7 +39,7 @@ class DbLibraryStore[DB <: DatabaseSupport](db: DB#Database, tables: LibraryTabl
     db.withSession { implicit session =>
       val links = tables.getBulkLibraryItemMedia(isbns).list
       if (links.isEmpty) throw new LibraryMediaMissingException(s"media (full ePub & key URLs) for $isbns does not exist")
-      else links.map(l => Link(l.bookType, l.uri))
+      else links.map(l => Link(l.`type`, l.uri))
     }
   }
 
