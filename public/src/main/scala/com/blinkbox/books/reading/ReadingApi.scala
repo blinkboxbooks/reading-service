@@ -5,7 +5,7 @@ import com.blinkbox.books.auth.Elevation.Unelevated
 import com.blinkbox.books.auth.User
 import com.blinkbox.books.config.ApiConfig
 import com.blinkbox.books.reading._
-import com.blinkbox.books.spray.Directives.rootPath
+import com.blinkbox.books.spray.Directives.{paged, rootPath}
 import com.blinkbox.books.spray.MonitoringDirectives.monitor
 import com.blinkbox.books.spray.{ElevatedContextAuthenticator, JsonFormats, url2uri, v2}
 import org.slf4j.LoggerFactory
@@ -22,7 +22,21 @@ class ReadingApi(
   import ReadingApi._
 
   val log = LoggerFactory.getLogger(classOf[ReadingApi])
+  val defaultPageSize = 25
   implicit override val jsonFormats = JsonFormats.blinkboxFormat() + ReadingPositionSerializer + MediaTypeSerializer + BookTypeSerializer + ReadingStatusSerializer + BookDetailsSerializer
+
+  val getBulkBooksDetails = get {
+    path("my" / "library") {
+      authenticate(authenticator.withElevation(Unelevated)) { user =>
+        paged(defaultPageSize) { page =>
+          onSuccess(libraryService.getLibrary(page.count, page.offset)) { res =>
+            val items = Map("items" -> res)
+            complete(OK, items)
+          }
+        }
+      }
+    }
+  }
 
   val getBookDetails = get {
     path("my" / "library" / Isbn) { isbn =>

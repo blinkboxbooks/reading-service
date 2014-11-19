@@ -22,7 +22,9 @@ trait CatalogueService {
 
 trait CatalogueV1Service {
   def getBookInfo(isbn: String): Future[BookInfo]
+  def getBulkBookInfoFor(isbns: List[String]): Future[BulkBookInfo]
   def getContributorInfo(contributorId: String): Future[ContributorInfo]
+  def getBulkContributorInfo(contributorIds: List[String]): Future[BulkContributorInfo]
 }
 
 class DefaultCatalogueV1Service(client: Client)(implicit ec: ExecutionContext) extends CatalogueService with CatalogueV1Service with Version1JsonSupport {
@@ -76,7 +78,7 @@ class DefaultCatalogueV1Service(client: Client)(implicit ec: ExecutionContext) e
     })
   }
 
-  def getBulkContributorInfo(contributorIds: List[String]): Future[BulkContributorInfo] = {
+  override def getBulkContributorInfo(contributorIds: List[String]): Future[BulkContributorInfo] = {
     val queryString = contributorIds.map(id => s"id=${id}").foldRight("")((a,b) => s"${a}&${b}")
     val req = Get(s"${client.config.url}/catalogue/contributors/$queryString")
     client.dataRequest[BulkContributorInfo](req, credentials = None).transform(identity, {
