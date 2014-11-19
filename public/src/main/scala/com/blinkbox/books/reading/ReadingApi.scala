@@ -7,9 +7,9 @@ import com.blinkbox.books.config.ApiConfig
 import com.blinkbox.books.reading._
 import com.blinkbox.books.spray.Directives.{paged, rootPath}
 import com.blinkbox.books.spray.MonitoringDirectives.monitor
+import com.blinkbox.books.spray.v2.Implicits.throwableMarshaller
 import com.blinkbox.books.spray.{ElevatedContextAuthenticator, JsonFormats, url2uri, v2}
 import org.slf4j.LoggerFactory
-import spray.http.StatusCodes._
 import spray.routing._
 
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -48,7 +48,7 @@ class ReadingApi(
     }
   }
 
-  val routes = monitor(log) {
+  val routes = monitor(log, throwableMarshaller) {
     rootPath(apiConfig.localUrl.path) {
       getBookDetails
     }
@@ -56,9 +56,9 @@ class ReadingApi(
 }
 
 object ReadingApi {
-  import org.json4s._
-  import org.json4s.JsonDSL._
   import org.json4s.FieldSerializer._
+  import org.json4s.JsonDSL._
+  import org.json4s._
 
   /** Matcher for ISBN. */
   val Isbn = """^([0-9]{13})$""".r
