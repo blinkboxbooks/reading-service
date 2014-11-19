@@ -10,6 +10,7 @@ import com.blinkbox.books.spray.MonitoringDirectives.monitor
 import com.blinkbox.books.spray.v2.Implicits.throwableMarshaller
 import com.blinkbox.books.spray.{ElevatedContextAuthenticator, JsonFormats, url2uri, v2}
 import org.slf4j.LoggerFactory
+import spray.http.StatusCodes._
 import spray.routing._
 
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -50,7 +51,7 @@ class ReadingApi(
 
   val routes = monitor(log, throwableMarshaller) {
     rootPath(apiConfig.localUrl.path) {
-      getBookDetails
+      getBookDetails ~ getBulkBooksDetails
     }
   }
 }

@@ -41,6 +41,28 @@ class ReadingApiTests extends FlatSpec with ScalatestRouteTest with MockitoSyrup
     }
   }
 
+  it should "return entire user's library for a valid request" in new TestFixture {
+    implicit val user = AuthenticatedUser
+    when(libraryService.getLibrary(25, 0)).thenReturn(Future.successful(List(TestBook, TestBook2)))
+    when(authenticator.apply(any[RequestContext])).thenReturn(Future.successful(Right(AuthenticatedUser)))
+    Get("/my/library") ~> Authorization(OAuth2BearerToken(AccessToken)) ~> routes ~> check {
+      assert(status == OK)
+      assert(mediaType == `application/vnd.blinkbox.books.v2+json`)
+      assert(body.asString == LibraryJson)
+    }
+  }
+
+  it should "return an empty library for a valid request of a user who does not have a library yet" in new TestFixture {
+    implicit val user = AuthenticatedUser
+    when(libraryService.getLibrary(25, 0)).thenReturn(Future.successful(List.empty))
+    when(authenticator.apply(any[RequestContext])).thenReturn(Future.successful(Right(AuthenticatedUser)))
+    Get("/my/library") ~> Authorization(OAuth2BearerToken(AccessToken)) ~> routes ~> check {
+      assert(status == OK)
+      assert(mediaType == `application/vnd.blinkbox.books.v2+json`)
+      assert(body.asString == """{"items":[]}""")
+    }
+  }
+
   it should "return 401 Unauthorized when user request has invalid access token" in new TestFixture {
     when(authenticator.apply(any[RequestContext]))
       .thenReturn(Future.successful(Left(AuthenticationFailedRejection(CredentialsRejected, credentialsInvalidHeaders))))
@@ -104,8 +126,12 @@ class ReadingApiTests extends FlatSpec with ScalatestRouteTest with MockitoSyrup
       Link(EpubKey, new URI("https://keys.mobcastdev.com/9780/141/909/837/e237e27468c6b37a5679fab718a893e6.epub.9780141909837.key"))
     )
     val TestBook = BookDetails("9780141909837", "Title", "Sortable Title", "Author", clock.now(), Full, Reading, ReadingPosition(Cfi("someCfi"), 15), images, links)
+    // For brevity, I'm using the same sets of images and links
+    val TestBook2 = BookDetails("9780234123501", "Other Title", "Other Sortable Title", "Author", clock.now(), Full, Reading, ReadingPosition(Cfi("someCfi"), 30), images, links)
 
     val TestBookJson = s"""{"isbn":"9780141909837","title":"Title","sortableTitle":"Sortable Title","author":"Author","addedDate":"${clock.now()}","bookType":"Full","readingStatus":"Reading","readingPosition":{"cfi":"someCfi","percentage":15},"images":[{"rel":"CoverImage","url":"http://media.blinkboxbooks.com/9780/141/909/837/cover.png"}],"links":[{"rel":"EpubFull","url":"http://media.blinkboxbooks.com/9780/141/909/837/8c9771c05e504f836e8118804e02f64c.epub"},{"rel":"EpubSample","url":"http://media.blinkboxbooks.com/9780/141/909/837/8c9771c05e504f836e8118804e02f64c.sample.epub"},{"rel":"EpubKey","url":"https://keys.mobcastdev.com/9780/141/909/837/e237e27468c6b37a5679fab718a893e6.epub.9780141909837.key"}]}"""
+    val TestBook2Json = s"""{"isbn":"9780234123501","title":"Other Title","sortableTitle":"Other Sortable Title","author":"Author","addedDate":"${clock.now()}","bookType":"Full","readingStatus":"Reading","readingPosition":{"cfi":"someCfi","percentage":30},"images":[{"rel":"CoverImage","url":"http://media.blinkboxbooks.com/9780/141/909/837/cover.png"}],"links":[{"rel":"EpubFull","url":"http://media.blinkboxbooks.com/9780/141/909/837/8c9771c05e504f836e8118804e02f64c.epub"},{"rel":"EpubSample","url":"http://media.blinkboxbooks.com/9780/141/909/837/8c9771c05e504f836e8118804e02f64c.sample.epub"},{"rel":"EpubKey","url":"https://keys.mobcastdev.com/9780/141/909/837/e237e27468c6b37a5679fab718a893e6.epub.9780141909837.key"}]}"""
+    val LibraryJson = s"""{"items":[${TestBookJson},${TestBook2Json}]}"""
     val apiConfig = mock[ApiConfig]
     when(apiConfig.localUrl).thenReturn(new URL("http://localhost"))
 
