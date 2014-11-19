@@ -18,7 +18,7 @@ case class LibraryItem(
 
 case class LibraryItemLink(
   isbn: String, mediaType: LibraryMediaLinkType,
-  uri: URI, 
-  createdAt: DateTime, 
+  uri: URI,
+  createdAt: DateTime,
   updatedAt: DateTime
 )
