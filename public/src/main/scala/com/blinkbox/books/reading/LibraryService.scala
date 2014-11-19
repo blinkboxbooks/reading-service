@@ -28,7 +28,7 @@ class DefaultLibraryService(
   } yield list
 
   override def getBook(isbn: String, userId: Int): Future[Option[BookDetails]] = {
-    val libItemFuture = libraryStore.getBook(userId, isbn)
+    val libItemFuture = libraryStore.getBook(isbn, userId)
     val itemMediaLinksFuture = libraryStore.getBookMedia(isbn)
     val catalogueInfoFuture = catalogueService.getInfoFor(isbn)
     for {

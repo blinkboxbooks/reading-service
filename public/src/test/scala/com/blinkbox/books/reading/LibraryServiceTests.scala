@@ -23,7 +23,7 @@ class LibraryServiceTests extends FlatSpec with MockitoSyrup with ScalaFutures w
 
   "Library service" should "return book details" in new TestFixture {
     when(catalogueService.getInfoFor(ISBN)).thenReturn(Future.successful(TestCatalogueInfo))
-    when(libraryStore.getBook(any[Int], any[String])).thenReturn(Future.successful(Some(TestLibraryItem)))
+    when(libraryStore.getBook(any[String], any[Int])).thenReturn(Future.successful(Some(TestLibraryItem)))
     when(libraryStore.getBookMedia(ISBN)).thenReturn(Future.successful(List(fullEpubLink, epubKeyLink)))
 
     whenReady(service.getBook(ISBN, User)) { res =>
@@ -31,7 +31,7 @@ class LibraryServiceTests extends FlatSpec with MockitoSyrup with ScalaFutures w
     }
 
     verify(catalogueService).getInfoFor(ISBN)
-    verify(libraryStore).getBook(User, ISBN)
+    verify(libraryStore).getBook(ISBN, User)
     verify(libraryStore).getBookMedia(ISBN)
 
     verifyNoMoreInteractions(catalogueService)
@@ -40,7 +40,7 @@ class LibraryServiceTests extends FlatSpec with MockitoSyrup with ScalaFutures w
 
   it should "return None if user does not have it in his library" in new TestFixture {
     when(catalogueService.getInfoFor(ISBN)).thenReturn(Future.successful(TestCatalogueInfo))
-    when(libraryStore.getBook(any[Int], any[String])).thenReturn(Future.successful(None))
+    when(libraryStore.getBook(any[String], any[Int])).thenReturn(Future.successful(None))
     when(libraryStore.getBookMedia(ISBN)).thenReturn(Future.successful(List(fullEpubLink, epubKeyLink)))
 
     whenReady(service.getBook(ISBN, User)) { res =>
@@ -48,7 +48,7 @@ class LibraryServiceTests extends FlatSpec with MockitoSyrup with ScalaFutures w
     }
 
     verify(catalogueService).getInfoFor(ISBN)
-    verify(libraryStore).getBook(User, ISBN)
+    verify(libraryStore).getBook(ISBN, User)
     verify(libraryStore).getBookMedia(ISBN)
 
     verifyNoMoreInteractions(catalogueService)
@@ -57,13 +57,13 @@ class LibraryServiceTests extends FlatSpec with MockitoSyrup with ScalaFutures w
 
   it should "return LibraryMediaMissing exception if library does not have media for a book in the library" in new TestFixture {
     when(catalogueService.getInfoFor(ISBN)).thenReturn(Future.successful(TestCatalogueInfo))
-    when(libraryStore.getBook(any[Int], any[String])).thenReturn(Future.successful(Some(TestLibraryItem)))
+    when(libraryStore.getBook(any[String], any[Int])).thenReturn(Future.successful(Some(TestLibraryItem)))
     when(libraryStore.getBookMedia(ISBN)).thenReturn(Future.failed(new LibraryMediaMissingException("expected exception")))
 
     failingWith[LibraryMediaMissingException](service.getBook(ISBN, User))
 
     verify(catalogueService).getInfoFor(ISBN)
-    verify(libraryStore).getBook(User, ISBN)
+    verify(libraryStore).getBook(ISBN, User)
     verify(libraryStore).getBookMedia(ISBN)
 
     verifyNoMoreInteractions(catalogueService)
@@ -72,13 +72,13 @@ class LibraryServiceTests extends FlatSpec with MockitoSyrup with ScalaFutures w
 
   it should "return CatalogueInfoMissing exception if catalogue does not have book info for a book in the library" in new TestFixture {
     when(catalogueService.getInfoFor(ISBN)).thenReturn(Future.failed(new CatalogueInfoMissingException("expected exception")))
-    when(libraryStore.getBook(any[Int], any[String])).thenReturn(Future.successful(Some(TestLibraryItem)))
+    when(libraryStore.getBook(any[String], any[Int])).thenReturn(Future.successful(Some(TestLibraryItem)))
     when(libraryStore.getBookMedia(ISBN)).thenReturn(Future.successful(List(fullEpubLink, epubKeyLink)))
 
     failingWith[CatalogueInfoMissingException](service.getBook(ISBN, User))
 
     verify(catalogueService).getInfoFor(ISBN)
-    verify(libraryStore).getBook(User, ISBN)
+    verify(libraryStore).getBook(ISBN, User)
     verify(libraryStore).getBookMedia(ISBN)
 
     verifyNoMoreInteractions(catalogueService)

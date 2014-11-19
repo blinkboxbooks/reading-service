@@ -10,7 +10,7 @@ import scala.slick.driver.MySQLDriver
 import scala.slick.jdbc.JdbcBackend.Database
 
 trait LibraryStore {
-  def getBook(userId: Int, isbn: String): Future[Option[LibraryItem]]
+  def getBook(isbn: String, userId: Int): Future[Option[LibraryItem]]
   def getBookMedia(isbn: String): Future[List[Link]]
   def getBooksMedia(isbns: List[String]): Future[List[Link]]
   def getLibrary(count: Int, offset: Int, userId: Int): Future[List[LibraryItem]]
@@ -21,7 +21,7 @@ class DbLibraryStore[DB <: DatabaseSupport](db: DB#Database, tables: LibraryTabl
   import tables._
   import driver.simple._
 
-  override def getBook(userId: Int, isbn: String): Future[Option[LibraryItem]] = Future {
+  override def getBook(isbn: String, userId: Int): Future[Option[LibraryItem]] = Future {
     db.withSession { implicit session =>
       tables.getLibraryItemBy(userId, isbn).firstOption
     }
