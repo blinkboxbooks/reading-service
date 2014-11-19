@@ -8,6 +8,7 @@ import com.blinkbox.books.spray.v2.Link
 import com.blinkbox.books.test.{FailHelper, MockitoSyrup}
 import com.blinkbox.books.time.{StoppedClock, TimeSupport}
 import org.h2.jdbc.JdbcSQLException
+import org.joda.time.DateTime
 import org.junit.runner.RunWith
 import org.scalatest.FlatSpec
 import org.scalatest.concurrent.ScalaFutures
@@ -44,7 +45,7 @@ class DbLibraryStoreTests extends FlatSpec with MockitoSyrup with ScalaFutures w
   it should "retrieve book media links for a valid isbn" in new PopulatedDbFixture {
     db.withSession { implicit session =>
       whenReady(libraryStore.getBookMedia(ISBN1)) { media =>
-        val expectedLinks = List(Link(libItem1EpubKeyLink.`type`, libItem1EpubKeyLink.uri), Link(libItem1EpubLink.`type`, libItem1EpubLink.uri))
+        val expectedLinks = List(Link(libItem1EpubKeyLink.mediaType, libItem1EpubKeyLink.uri), Link(libItem1EpubLink.mediaType, libItem1EpubLink.uri))
         assert(media == expectedLinks)
       }
     }
@@ -56,11 +57,19 @@ class DbLibraryStoreTests extends FlatSpec with MockitoSyrup with ScalaFutures w
     }
   }
 
+  it should "map BookType and ReadingStatus to and from integers" in new PopulatedDbFixture {
+    import tables.driver.simple._
+
+    db.withSession { implicit session =>
+      assert(tables.libraryItems.list == List(libItem1, libItem2, libItem3, libItem4))
+    }
+  }
+
   class EmptyDbFixture extends TestDbComponent {
     import tables.driver.simple._
 
     db.withSession { implicit session =>
-      val ddl = tables.libraryItems.ddl ++ tables.libraryItemMedia.ddl
+      val ddl = tables.libraryItems.ddl ++ tables.libraryMedia.ddl ++ tables.bookTypes.ddl ++ tables.mediaTypes.ddl ++ tables.readingStatuses.ddl
       try { ddl.drop } catch { case _: JdbcSQLException => /* Do nothing */ }
       ddl.create
     }
@@ -82,16 +91,20 @@ class DbLibraryStoreTests extends FlatSpec with MockitoSyrup with ScalaFutures w
     val libItem1 = LibraryItem(ISBN1, 1, Full, NotStarted, cfi, percentage, createdAt, updatedAt)
     val libItem2 = LibraryItem(ISBN2, 1, Full, Reading, cfi, percentage, createdAt, updatedAt)
     val libItem3 = LibraryItem(ISBN1, 2, Full, Finished, cfi, percentage, createdAt, updatedAt)
+    val libItem4 = LibraryItem(ISBN2, 2, Sample, Reading, cfi, percentage, createdAt, updatedAt)
 
-    val libItem1EpubLink = LibraryItemLink(ISBN1, FullEpub, new URI("http://media.blinkboxbooks.com/9780/141/909/837/8c9771c05e504f836e8118804e02f64c.epub"))
-    val libItem2EpubLink = LibraryItemLink(ISBN2, FullEpub, new URI("http://media.blinkboxbooks.com/9780/141/909/838/6e8118804e02f64c8c9771c05e504f83.epub"))
+    val libItem1EpubLink = LibraryItemLink(ISBN1, FullEpub, new URI("http://media.blinkboxbooks.com/9780/141/909/837/8c9771c05e504f836e8118804e02f64c.epub"), DateTime.now, DateTime.now)
+    val libItem2EpubLink = LibraryItemLink(ISBN2, FullEpub, new URI("http://media.blinkboxbooks.com/9780/141/909/838/6e8118804e02f64c8c9771c05e504f83.epub"), DateTime.now, DateTime.now)
 
-    val libItem1EpubKeyLink = LibraryItemLink(ISBN1, EpubKey, new URI("https://keys.mobcastdev.com/9780/141/909/837/e237e27468c6b37a5679fab718a893e6.epub.9780141909837.key"))
-    val libItem2EpubKeyLink = LibraryItemLink(ISBN2, EpubKey, new URI("https://keys.mobcastdev.com/9780/141/909/838/5679fab718a893e6e237e27468c6b37a.epub.9780141909838.key"))
+    val libItem1EpubKeyLink = LibraryItemLink(ISBN1, EpubKey, new URI("https://keys.mobcastdev.com/9780/141/909/837/e237e27468c6b37a5679fab718a893e6.epub.9780141909837.key"), DateTime.now, DateTime.now)
+    val libItem2EpubKeyLink = LibraryItemLink(ISBN2, EpubKey, new URI("https://keys.mobcastdev.com/9780/141/909/838/5679fab718a893e6e237e27468c6b37a.epub.9780141909838.key"), DateTime.now, DateTime.now)
 
     db.withSession { implicit session =>
-      tables.libraryItems ++= List(libItem1, libItem2, libItem3)
-      tables.libraryItemMedia ++= List(libItem1EpubLink, libItem1EpubKeyLink, libItem2EpubLink, libItem2EpubKeyLink)
+      tables.bookTypes ++= List((Full, "Full"), (Sample, "Sample"))
+      tables.mediaTypes ++= List((EpubKey, "EpubKey"), (FullEpub, "FullEpub"))
+      tables.readingStatuses ++= List((NotStarted, "NotStarted"), (Reading, "Reading"), (Finished, "Finished"))
+      tables.libraryItems ++= List(libItem1, libItem2, libItem3, libItem4)
+      tables.libraryMedia ++= List(libItem1EpubLink, libItem1EpubKeyLink, libItem2EpubLink, libItem2EpubKeyLink)
     }
   }
 
