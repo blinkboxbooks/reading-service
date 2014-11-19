@@ -64,7 +64,7 @@ class ReadingApiTests extends FlatSpec with ScalatestRouteTest with MockitoSyrup
     }
   }
 
-  it should "return 500 Internal Error when there media links of a book in user's library is missing" in new TestFixture {
+  it should "return 500 Internal Error when media links of a book in user's library are missing" in new TestFixture {
     when(libraryService.getBook(TestBook.isbn, AuthenticatedUser.id))
       .thenReturn(Future.failed(new LibraryMediaMissingException("test exception")))
     when(authenticator.apply(any[RequestContext])).thenReturn(Future.successful(Right(AuthenticatedUser)))
@@ -76,7 +76,7 @@ class ReadingApiTests extends FlatSpec with ScalatestRouteTest with MockitoSyrup
     }
   }
 
-  it should "return 500 Internal Error when there catalogue info of a book in user's library is missing" in new TestFixture {
+  it should "return 500 Internal Error when catalogue info of a book in user's library is missing" in new TestFixture {
     when(libraryService.getBook(TestBook.isbn, AuthenticatedUser.id))
       .thenReturn(Future.failed(new CatalogueInfoMissingException("test exception")))
     when(authenticator.apply(any[RequestContext])).thenReturn(Future.successful(Right(AuthenticatedUser)))
