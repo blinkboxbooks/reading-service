@@ -115,7 +115,7 @@ class TestFixture extends MockitoSyrup with CatalogueV1Responses {
   val TestBookInfo = BookInfo(TestBookIsbn ,"With My Body", List(TestBookCoverImage), TestBookLinks)
 
   val TestContributorId = "4809fa392bf32dcc92206f5cf30882611e05d97b"
-  val TestContributorInfo = ContributorInfo(TestContributorId, "Nikki Gemmell", "Gemmell, Nikki")
+  val TestContributorInfo = ContributorInfo(TestContributorId"Nikki Gemmell", "Gemmell, Nikki")
 
   def provideJsonResponse(statusCode: StatusCode, content: String): Unit = {
     val resp = HttpResponse(statusCode, HttpEntity(`application/vnd.blinkboxbooks.data.v1+json`, content))

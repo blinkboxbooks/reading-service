@@ -36,7 +36,15 @@ class DbLibraryStoreTests extends FlatSpec with MockitoSyrup with ScalaFutures w
   it should "retrieve all books in a user's library" in new PopulatedDbFixture {
     db.withSession { implicit session =>
       whenReady(libraryStore.getLibrary(10, 0, 1)) { items =>
-        assert(items.nonEmpty)
+        assert(items == List(libItem1, libItem2))
+      }
+    }
+  }
+
+  it should "return an empty list for a user's library if he has no items" in new PopulatedDbFixture {
+    db.withSession { implicit session =>
+      whenReady(libraryStore.getLibrary(10, 0, 9001)) { items =>
+        assert(items.isEmpty)
       }
     }
   }
