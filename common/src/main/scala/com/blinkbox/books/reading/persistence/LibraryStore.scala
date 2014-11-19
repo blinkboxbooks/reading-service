@@ -31,7 +31,7 @@ class DbLibraryStore[DB <: DatabaseSupport](db: DB#Database, tables: LibraryTabl
     db.withSession { implicit session =>
       val links = tables.getLibraryItemLinkFor(isbn).list
       if (links.isEmpty) throw new LibraryMediaMissingException(s"media (full ePub & key URLs) for $isbn does not exist")
-      else links.map(l => Link(l.`type`, l.uri))
+      else links.map(l => Link(l.mediaType, l.uri))
     }
   }
 
