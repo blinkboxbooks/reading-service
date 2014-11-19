@@ -1,5 +1,13 @@
 # Change log
 
+## 0.1.3 ([#14](https://git.mobcastdev.com/Agora/reading-service/pull/14) 2014-11-19 14:46:34)
+
+500 responses are now JSON
+
+### Improvement
+
+- `500 Internal Error` responses now return `Error` as JSON.
+
 ## 0.1.2 ([#13](https://git.mobcastdev.com/Agora/reading-service/pull/13) 2014-11-17 17:23:40)
 
 DB schemas
