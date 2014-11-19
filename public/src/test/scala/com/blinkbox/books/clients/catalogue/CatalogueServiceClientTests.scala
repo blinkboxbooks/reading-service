@@ -7,6 +7,7 @@ import com.blinkbox.books.reading.ClientConfig
 import com.blinkbox.books.spray.v1
 import com.blinkbox.books.spray.v1.`application/vnd.blinkboxbooks.data.v1+json`
 import com.blinkbox.books.test.{FailHelper, MockitoSyrup}
+import org.json4s.JsonAST.JValue
 import org.junit.runner.RunWith
 import org.mockito.Matchers._
 import org.mockito.Mockito._
@@ -33,6 +34,10 @@ class CatalogueServiceClientTests extends FlatSpec with ScalaFutures with FailHe
     whenReady(service.getBookInfo(TestBookIsbn)) { res =>
       assert(res == TestBookInfo)
     }
+  }
+
+  it should "return book info for multiple valid ISBNs" in new TestFixture {
+
   }
 
   it should "throw NotFoundException if the book is not in the catalogue" in new TestFixture {
@@ -138,9 +143,8 @@ trait CatalogueV1Responses {
   import org.json4s.JsonDSL._
   import org.json4s.jackson.JsonMethods._
 
-  def bookResponse(isbn: String, title: String, images: List[v1.Image], links: List[v1.Link]): String = {
-    val json =
-      ("type" -> "urn:blinkboxbooks:schema:book") ~
+  def bookResponseJson(isbn: String, title: String, images: List[v1.Image], links: List[v1.Link]) = {
+    ("type" -> "urn:blinkboxbooks:schema:book") ~
       ("guid" -> s"urn:blinkboxbooks:id:book:$isbn") ~
       ("id" -> isbn) ~
       ("title" -> title) ~
@@ -149,34 +153,46 @@ trait CatalogueV1Responses {
       ("images" ->
         images.map { img =>
           ("rel" -> img.rel) ~
-          ("src" -> img.src)
+            ("src" -> img.src)
         }) ~
       ("links" ->
         links.map { l =>
           ("rel" -> l.rel) ~
-          ("href" -> l.href) ~
-          ("title" -> l.title) ~
-          ("targetGuid" -> l.targetGuid)
+            ("href" -> l.href) ~
+            ("title" -> l.title) ~
+            ("targetGuid" -> l.targetGuid)
         })
+  }
 
-    compact(render(json))
+  def bookResponse(isbn: String, title: String, images: List[v1.Image], links: List[v1.Link]): String =
+    compact(render(bookResponseJson(isbn, title, images, links)))
+
+  def contributorResponseJson(id: String, displayName: String, sortName: String): JValue = {
+    ("type" -> "urn:blinkboxbooks:schema:contributor") ~
+      ("guid" -> s"urn:blinkboxbooks:id:contributor:$id") ~
+      ("id" -> id) ~
+      ("displayName" -> displayName) ~
+      ("sortName" -> sortName) ~
+      ("bookCount" -> 1) ~
+      ("biography" -> null) ~
+      ("links" -> List(
+        ("rel" -> "urn:blinkboxbooks:schema:books") ~
+          ("href" -> s"/service/catalogue/books?contributor=$id") ~
+          ("title" -> "Books for contributor")
+        )
+      )
   }
 
   def contributorResponse(id: String, displayName: String, sortName: String): String = {
-    val json =
-      ("type" -> "urn:blinkboxbooks:schema:contributor") ~
-        ("guid" -> s"urn:blinkboxbooks:id:contributor:$id") ~
-        ("id" -> id) ~
-        ("displayName" -> displayName) ~
-        ("sortName" -> sortName) ~
-        ("bookCount" -> 1) ~
-        ("biography" -> null) ~
-        ("links" -> List(
-            ("rel" -> "urn:blinkboxbooks:schema:books") ~
-            ("href" -> s"/service/catalogue/books?contributor=$id") ~
-            ("title" -> "Books for contributor")
-          )
-        )
+    compact(render(contributorResponseJson(id, displayName, sortName)))
+  }
+
+  def bulkResponse(bookResponses: List[JValue]): String = {
+    val json = ("type" -> "urn:blinkboxbooks:schema:list") ~
+      ("numberOfResults" -> bookResponses.size) ~
+      ("offset" -> "0") ~
+      ("count" -> bookResponses.size) ~
+      ("items" -> bookResponses)
 
     compact(render(json))
   }
