@@ -1,0 +1,18 @@
+# This file details the various servers in each environment which tests for this service require.
+dev_int:
+  servers:
+    admin_api: https://api.dev.bbbtest2.com/service/
+    consumer_api: https://api.dev.bbbtest2.com/service/
+    auth:  https://auth.dev.bbbtest2.com
+
+qa:
+  servers:
+    admin_api: 
+    consumer_api: 
+    auth:
+
+local:
+  servers:
+    admin_api: http://localhost:7539/service/
+    consumer_api: http://localhost:7538/service/
+    auth: http://172.17.190.190:9393/

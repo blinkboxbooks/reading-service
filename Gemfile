@@ -1,0 +1,16 @@
+source "http://artifactory.blinkbox.local/artifactory/api/gems/bbb-gems/"
+source "http://artifactory.blinkbox.local/artifactory/api/gems/rubygems/"
+
+group :test do
+  gem "activesupport"
+  gem "rake"
+  gem "cucumber"
+  gem "rspec"
+  gem "sinatra"
+
+  gem "blinkbox-user"
+  gem "cucumber-blinkbox"
+  gem "cucumber-helpers"
+  gem "cucumber-rest"
+  gem "httpclient"
+end
