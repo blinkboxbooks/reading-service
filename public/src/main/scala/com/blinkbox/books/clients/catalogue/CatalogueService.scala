@@ -8,7 +8,7 @@ import spray.httpx.RequestBuilding.Get
 
 import scala.concurrent.{ExecutionContext, Future}
 
-case class CatalogueInfo(isbn: String, title: String, sortTitle: String, author: String, coverImageUrl: URI, sampleEpubUrl: URI)
+case class CatalogueInfo(id: String, title: String, author: String, sortableAuthor: String, coverImageUrl: URI, sampleEpubUrl: URI)
 case class ContributorInfo(id: String, displayName: String, sortName: String)
 case class BookInfo(id: String, title: String, images: List[v1.Image], links: List[v1.Link])
 case class BulkCatalogueInfo(`type`: String, numberOfResults: Int, offset: Int, count: Int, items: List[BookInfo])
@@ -35,7 +35,7 @@ class DefaultCatalogueV1Service(client: Client)(implicit ec: ExecutionContext) e
     coverImageUrl = extractCoverImageUrl(bookInfo.images) getOrElse { throw new CatalogueInfoMissingException(s"Cover image missing for $isbn") }
     sampleEpubUrl = extractSampleEpubUrl(bookInfo.links) getOrElse { throw new CatalogueInfoMissingException(s"Sample ePub missing for $isbn") }
     contributorInfo <- getContributorInfo(contributorId)
-  } yield CatalogueInfo(bookInfo.id, bookInfo.title, bookInfo.title, contributorInfo.displayName, coverImageUrl, sampleEpubUrl)
+  } yield CatalogueInfo(isbn, bookInfo.title, contributorInfo.displayName, contributorInfo.sortName, coverImageUrl, sampleEpubUrl)
 
   override def getBulkInfoFor(isbns: List[String]): Future[List[CatalogueInfo]] = getBulkBookInfoFor(isbns).flatMap(buildBulkCatalogueInfo(_))
 
@@ -60,7 +60,6 @@ class DefaultCatalogueV1Service(client: Client)(implicit ec: ExecutionContext) e
     })
   }
 
-  // ToDo
   def getBulkBookInfoFor(isbns: List[String]): Future[BulkBookInfo] = {
     val isbnQueryString = isbns.map(isbn => s"id=${isbn}").foldRight("")((a,b) => s"${a}&${b}")
     val req = Get(s"${client.config.url}/catalogue/books/$isbnQueryString")
@@ -87,7 +86,7 @@ class DefaultCatalogueV1Service(client: Client)(implicit ec: ExecutionContext) e
     })
   }
 
-  def buildBulkCatalogueInfo(bulkBookInfo: BulkBookInfo): Future[List[CatalogueInfo]] = {
+  private def buildBulkCatalogueInfo(bulkBookInfo: BulkBookInfo): Future[List[CatalogueInfo]] = {
     val extractContId: (BookInfo) => String = b => extractContributorId(b.links) getOrElse { throw new CatalogueInfoMissingException(s"Contributor missing for ${b.id}") }
     val extractCoverImgUrl: (BookInfo) => URI = b => extractCoverImageUrl(b.images) getOrElse { throw new CatalogueInfoMissingException(s"Cover image missing for $b.id") }
     val extractSampleUrl: (BookInfo) => URI = b => extractSampleEpubUrl(b.links) getOrElse { throw new CatalogueInfoMissingException(s"Sample ePub missing for ${b.id}") }

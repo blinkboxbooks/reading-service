@@ -12,8 +12,8 @@ case class Image(rel: Relation, url: URI)
 case class BookDetails(
   isbn: String,
   title: String,
-  sortableTitle: String,
   author: String,
+  sortableAuthor: String,
   addedDate: DateTime,
   bookType: BookType,
   readingStatus: ReadingStatus,

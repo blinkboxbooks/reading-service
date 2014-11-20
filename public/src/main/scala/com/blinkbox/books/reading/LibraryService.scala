@@ -24,7 +24,7 @@ class DefaultLibraryService(
     isbns = library.map(_.isbn)
     itemMedialinks <- libraryStore.getBooksMedia(isbns)
     catalogueInfo <- catalogueService.getBulkInfoFor(isbns)
-    list = library.map { b => buildBookDetails(b, itemMedialinks, catalogueInfo.filter(c => c.isbn == b.isbn).head) }
+    list = library.map { b => buildBookDetails(b, itemMedialinks, catalogueInfo.filter(c => c.id == b.isbn).head) }
   } yield list
 
   override def getBook(isbn: String, userId: Int): Future[Option[BookDetails]] = {
@@ -47,8 +47,8 @@ class DefaultLibraryService(
     BookDetails(
       libItem.isbn,
       catalogueInfo.title,
-      catalogueInfo.sortTitle,
       catalogueInfo.author,
+      catalogueInfo.sortableAuthor,
       libItem.createdAt,
       libItem.bookType,
       libItem.readingStatus,
@@ -67,8 +67,8 @@ class DefaultLibraryService(
       BookDetails(
         item.isbn,
         catalogueInfo.title,
-        catalogueInfo.sortTitle,
         catalogueInfo.author,
+        catalogueInfo.sortableAuthor,
         item.createdAt,
         item.bookType,
         item.readingStatus,

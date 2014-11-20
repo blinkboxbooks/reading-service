@@ -193,7 +193,7 @@ definitions:
       - isbn
       - title
       - author
-      - sortableTitle
+      - sortableAuthor
       - bookType
       - archived
       - readingStatus
@@ -213,10 +213,10 @@ definitions:
         description: The full title of the book
       author:
         type: string
-        description: The full title of the book
-      sortableTitle:
+        description: The author of the book
+      sortableAuthor:
         type: string
-        description: The non-displayable sortable title of the book used for sorting books only
+        description: The non-displayable author name used for sorting books by author name
       bookType:
         description: indicates whether the library contains only the sample of the book
         enum:
