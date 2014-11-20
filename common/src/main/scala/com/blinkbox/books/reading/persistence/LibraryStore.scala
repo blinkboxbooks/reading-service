@@ -27,7 +27,6 @@ class DbLibraryStore[DB <: DatabaseSupport](db: DB#Database, tables: LibraryTabl
     }
   }
 
-
   override def getBookMedia(isbn: String): Future[List[Link]] = Future {
     db.withSession { implicit session =>
       val links = tables.getLibraryItemLinkFor(isbn).list
