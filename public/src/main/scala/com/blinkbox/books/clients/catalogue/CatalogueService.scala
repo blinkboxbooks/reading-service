@@ -79,7 +79,7 @@ class DefaultCatalogueV1Service(client: Client)(implicit ec: ExecutionContext) e
 
   override def getBulkContributorInfo(contributorIds: List[String]): Future[BulkContributorInfo] = {
     val queryString = contributorIds.map(id => s"id=${id}").foldRight("")((a,b) => s"${a}&${b}")
-    val req = Get(s"${client.config.url}/catalogue/contributors/$queryString")
+    val req = Get(s"${client.config.url}/catalogue/contributors?$queryString")
     client.dataRequest[BulkContributorInfo](req, credentials = None).transform(identity, {
       case e: NotFoundException =>
         new CatalogueInfoMissingException(s"Catalogue does not have a contributor with id: $contributorIds", e)
