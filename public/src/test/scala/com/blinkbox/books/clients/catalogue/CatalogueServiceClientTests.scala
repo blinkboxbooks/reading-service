@@ -30,14 +30,10 @@ class CatalogueServiceClientTests extends FlatSpec with ScalaFutures with FailHe
   implicit val defaultPatience = PatienceConfig(timeout = scaled(Span(5, Seconds)), interval = scaled(Span(5, Millis)))
 
   "Catalogue service client" should "return book info for a valid ISBN" in new TestFixture {
-    provideJsonResponse(OK, bookResponse(TestBookIsbn, TestBookInfo.title, TestBookInfo.images, TestBookInfo.links))
+    provideJsonResponse(OK, bookResponse(TestBookInfo.id, TestBookInfo.title, TestBookInfo.images, TestBookInfo.links))
     whenReady(service.getBookInfo(TestBookIsbn)) { res =>
       assert(res == TestBookInfo)
     }
-  }
-
-  it should "return book info for multiple valid ISBNs" in new TestFixture {
-
   }
 
   it should "throw NotFoundException if the book is not in the catalogue" in new TestFixture {
@@ -68,6 +64,26 @@ class CatalogueServiceClientTests extends FlatSpec with ScalaFutures with FailHe
 
     whenReady(service.getInfoFor(TestBookIsbn)) { res =>
       assert(res == CatalogueInfo(TestBookIsbn, TestBookInfo.title, TestContributorInfo.displayName,  TestContributorInfo.sortName, new URI(TestBookCoverImage.src), new URI(TestBookInfo.links.filter(_.rel.endsWith("samplemedia")).head.href)))
+    }
+  }
+
+  it should "return book info for multiple valid ISBNs" in new TestFixture {
+    val book1response = bookResponseJson(TestBookIsbn, TestBookInfo.title, TestBookInfo.images, TestBookInfo.links)
+    val book2response = bookResponseJson(SecondBookTestInfo.id, SecondBookTestInfo.title, SecondBookTestInfo.images, SecondBookTestInfo.links)
+    provideJsonResponse(OK, bulkResponse(List(book1response, book2response)))
+
+    whenReady(service.getBulkBookInfoFor(List(TestBookIsbn, SecondTestBookIsbn))) { res =>
+      assert(res == BulkBookInfo(2, List(TestBookInfo, SecondBookTestInfo)))
+    }
+  }
+
+  it should "return catalogue info for multiple valid contributor IDs" in new TestFixture {
+    val contributor1response = contributorResponseJson(TestContributorId, TestContributorInfo.displayName, TestContributorInfo.sortName)
+    val contributor2response = contributorResponseJson(TestContributor2Id, TestContributor2Info.displayName, TestContributor2Info.sortName)
+    provideJsonResponse(OK, bulkResponse(List(contributor1response, contributor2response)))
+
+    whenReady(service.getBulkContributorInfo(List(TestContributorId, TestContributor2Id))) { res =>
+      assert(res == BulkContributorInfo(2, List(TestContributorInfo, TestContributor2Info)))
     }
   }
 
@@ -109,6 +125,7 @@ class TestFixture extends MockitoSyrup with CatalogueV1Responses {
   val service = new DefaultCatalogueV1Service(client)
 
   val TestBookIsbn = "9780007197545"
+  val SecondTestBookIsbn = "9780107195745"
   val TestBookCoverImage = v1.Image("urn:blinkboxbooks:image:cover", "http://media.blinkboxbooks.com/9780/007/197/545/cover.png")
   val TestBookLinks = List(
     v1.Link("urn:blinkboxbooks:schema:contributor", "/service/catalogue/contributors/4809fa392bf32dcc92206f5cf30882611e05d97b", Some("Nikki Gemmell"), Some("urn:blinkboxbooks:id:contributor:4809fa392bf32dcc92206f5cf30882611e05d97b")),
@@ -118,9 +135,12 @@ class TestFixture extends MockitoSyrup with CatalogueV1Responses {
     v1.Link("urn:blinkboxbooks:schema:samplemedia", "http://internal-media.mobcastdev.com/9780/007/197/545/71d24849440f5ee414fd5e7f2dad2cbb.sample.epub", Some("Sample"), None)
   )
   val TestBookInfo = BookInfo(TestBookIsbn, "With My Body", List(TestBookCoverImage), TestBookLinks)
+  val SecondBookTestInfo = BookInfo(SecondTestBookIsbn, "Moby Dick", List(TestBookCoverImage), TestBookLinks)
 
   val TestContributorId = "4809fa392bf32dcc92206f5cf30882611e05d97b"
+  val TestContributor2Id = "8409fa392bf32dcc92206f5cf30882611e05db79"
   val TestContributorInfo = ContributorInfo(TestContributorId, "Nikki Gemmell", "Gemmell, Nikki")
+  val TestContributor2Info = ContributorInfo(TestContributor2Id, "Author Name", "Name, Author")
 
   def provideJsonResponse(statusCode: StatusCode, content: String): Unit = {
     val resp = HttpResponse(statusCode, HttpEntity(`application/vnd.blinkboxbooks.data.v1+json`, content))

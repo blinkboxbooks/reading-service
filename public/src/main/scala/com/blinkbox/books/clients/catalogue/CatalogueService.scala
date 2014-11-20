@@ -12,8 +12,8 @@ case class CatalogueInfo(id: String, title: String, author: String, sortableAuth
 case class ContributorInfo(id: String, displayName: String, sortName: String)
 case class BookInfo(id: String, title: String, images: List[v1.Image], links: List[v1.Link])
 case class BulkCatalogueInfo(`type`: String, numberOfResults: Int, offset: Int, count: Int, items: List[BookInfo])
-case class BulkContributorInfo(`type`: String, numberOfResults: Int, offset: Int, count: Int, items: List[ContributorInfo])
-case class BulkBookInfo(`type`: String, numberOfResults: Int, offset: Int, count: Int, items: List[BookInfo])
+case class BulkContributorInfo(numberOfResults: Int, items: List[ContributorInfo])
+case class BulkBookInfo(numberOfResults: Int, items: List[BookInfo])
 
 trait CatalogueService {
   def getInfoFor(isbn: String): Future[CatalogueInfo]
@@ -62,7 +62,7 @@ class DefaultCatalogueV1Service(client: Client)(implicit ec: ExecutionContext) e
 
   def getBulkBookInfoFor(isbns: List[String]): Future[BulkBookInfo] = {
     val isbnQueryString = isbns.map(isbn => s"id=${isbn}").foldRight("")((a,b) => s"${a}&${b}")
-    val req = Get(s"${client.config.url}/catalogue/books/$isbnQueryString")
+    val req = Get(s"${client.config.url}/catalogue/books?$isbnQueryString")
     client.dataRequest[BulkBookInfo](req, credentials = None).transform(identity, {
       case e: NotFoundException =>
         new CatalogueInfoMissingException(s"Catalogue does not have a book with the following isbns: $isbns", e)
