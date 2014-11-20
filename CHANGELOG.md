@@ -1,5 +1,14 @@
 # Change log
 
+## 0.1.4 ([#15](https://git.mobcastdev.com/Agora/reading-service/pull/15) 2014-11-19 17:59:41)
+
+Spec update
+
+### Bugfix
+
+- Removed sortable title
+- Added sortable author
+
 ## 0.1.3 ([#14](https://git.mobcastdev.com/Agora/reading-service/pull/14) 2014-11-19 14:46:34)
 
 500 responses are now JSON
