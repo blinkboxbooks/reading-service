@@ -8,7 +8,7 @@ import spray.httpx.RequestBuilding.Get
 
 import scala.concurrent.{ExecutionContext, Future}
 
-case class CatalogueInfo(title: String, sortTitle: String, author: String, coverImageUrl: URI, sampleEpubUrl: URI)
+case class CatalogueInfo(title: String, author: String, sortableAuthor: String, coverImageUrl: URI, sampleEpubUrl: URI)
 case class ContributorInfo(displayName: String, sortName: String)
 case class BookInfo(title: String, images: List[v1.Image], links: List[v1.Link])
 
@@ -29,7 +29,7 @@ class DefaultCatalogueV1Service(client: Client)(implicit ec: ExecutionContext) e
     coverImageUrl = extractCoverImageUrl(bookInfo.images) getOrElse { throw new CatalogueInfoMissingException(s"Cover image missing for $isbn") }
     sampleEpubUrl = extractSampleEpubUrl(bookInfo.links) getOrElse { throw new CatalogueInfoMissingException(s"Sample ePub missing for $isbn") }
     contributorInfo <- getContributorInfo(contributorId)
-  } yield CatalogueInfo(bookInfo.title, bookInfo.title, contributorInfo.displayName, coverImageUrl, sampleEpubUrl)
+  } yield CatalogueInfo(bookInfo.title, contributorInfo.displayName, contributorInfo.sortName, coverImageUrl, sampleEpubUrl)
 
   private def extractContributorId(links: List[v1.Link]): Option[String] =
     links.find(_.rel == "urn:blinkboxbooks:schema:contributor") flatMap { l =>

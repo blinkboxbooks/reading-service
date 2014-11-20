@@ -64,7 +64,7 @@ class ReadingApiTests extends FlatSpec with ScalatestRouteTest with MockitoSyrup
     }
   }
 
-  it should "return 500 Internal Error when there media links of a book in user's library is missing" in new TestFixture {
+  it should "return 500 Internal Error when media links of a book in user's library are missing" in new TestFixture {
     when(libraryService.getBook(TestBook.isbn, AuthenticatedUser.id))
       .thenReturn(Future.failed(new LibraryMediaMissingException("test exception")))
     when(authenticator.apply(any[RequestContext])).thenReturn(Future.successful(Right(AuthenticatedUser)))
@@ -76,7 +76,7 @@ class ReadingApiTests extends FlatSpec with ScalatestRouteTest with MockitoSyrup
     }
   }
 
-  it should "return 500 Internal Error when there catalogue info of a book in user's library is missing" in new TestFixture {
+  it should "return 500 Internal Error when catalogue info of a book in user's library is missing" in new TestFixture {
     when(libraryService.getBook(TestBook.isbn, AuthenticatedUser.id))
       .thenReturn(Future.failed(new CatalogueInfoMissingException("test exception")))
     when(authenticator.apply(any[RequestContext])).thenReturn(Future.successful(Right(AuthenticatedUser)))
@@ -103,9 +103,9 @@ class ReadingApiTests extends FlatSpec with ScalatestRouteTest with MockitoSyrup
       Link(SampleEpub, new URI("http://media.blinkboxbooks.com/9780/141/909/837/8c9771c05e504f836e8118804e02f64c.sample.epub")),
       Link(EpubKey, new URI("https://keys.mobcastdev.com/9780/141/909/837/e237e27468c6b37a5679fab718a893e6.epub.9780141909837.key"))
     )
-    val TestBook = BookDetails("9780141909837", "Title", "Sortable Title", "Author", clock.now(), Full, Reading, ReadingPosition(Cfi("someCfi"), 15), images, links)
+    val TestBook = BookDetails("9780141909837", "Title", "Author", "Sortable Author", clock.now(), Full, Reading, ReadingPosition(Cfi("someCfi"), 15), images, links)
 
-    val TestBookJson = s"""{"isbn":"9780141909837","title":"Title","sortableTitle":"Sortable Title","author":"Author","addedDate":"${clock.now()}","bookType":"Full","readingStatus":"Reading","readingPosition":{"cfi":"someCfi","percentage":15},"images":[{"rel":"CoverImage","url":"http://media.blinkboxbooks.com/9780/141/909/837/cover.png"}],"links":[{"rel":"EpubFull","url":"http://media.blinkboxbooks.com/9780/141/909/837/8c9771c05e504f836e8118804e02f64c.epub"},{"rel":"EpubSample","url":"http://media.blinkboxbooks.com/9780/141/909/837/8c9771c05e504f836e8118804e02f64c.sample.epub"},{"rel":"EpubKey","url":"https://keys.mobcastdev.com/9780/141/909/837/e237e27468c6b37a5679fab718a893e6.epub.9780141909837.key"}]}"""
+    val TestBookJson = s"""{"isbn":"9780141909837","title":"Title","author":"Author","sortableAuthor":"Sortable Author","addedDate":"${clock.now()}","bookType":"Full","readingStatus":"Reading","readingPosition":{"cfi":"someCfi","percentage":15},"images":[{"rel":"CoverImage","url":"http://media.blinkboxbooks.com/9780/141/909/837/cover.png"}],"links":[{"rel":"EpubFull","url":"http://media.blinkboxbooks.com/9780/141/909/837/8c9771c05e504f836e8118804e02f64c.epub"},{"rel":"EpubSample","url":"http://media.blinkboxbooks.com/9780/141/909/837/8c9771c05e504f836e8118804e02f64c.sample.epub"},{"rel":"EpubKey","url":"https://keys.mobcastdev.com/9780/141/909/837/e237e27468c6b37a5679fab718a893e6.epub.9780141909837.key"}]}"""
     val apiConfig = mock[ApiConfig]
     when(apiConfig.localUrl).thenReturn(new URL("http://localhost"))
 

@@ -62,7 +62,7 @@ class CatalogueServiceClientTests extends FlatSpec with ScalaFutures with FailHe
     provideJsonResponses(List(firstResponse, secondResponse))
 
     whenReady(service.getInfoFor(TestBookIsbn)) { res =>
-      assert(res == CatalogueInfo(TestBookInfo.title, TestBookInfo.title, TestContributorInfo.displayName, new URI(TestBookCoverImage.src), new URI(TestBookInfo.links.filter(_.rel.endsWith("samplemedia")).head.href)))
+      assert(res == CatalogueInfo(TestBookInfo.title, TestContributorInfo.displayName,  TestContributorInfo.sortName, new URI(TestBookCoverImage.src), new URI(TestBookInfo.links.filter(_.rel.endsWith("samplemedia")).head.href)))
     }
   }
 
