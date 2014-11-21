@@ -41,8 +41,8 @@ class ReadingApi(
 
   val getBookDetails = get {
     path("my" / "library" / Isbn) { isbn =>
-      authenticate(authenticator.withElevation(Unelevated)) { user =>
-        onSuccess(libraryService.getBook(isbn, user.id)) { res =>
+      authenticate(authenticator.withElevation(Unelevated)) { implicit user =>
+        onSuccess(libraryService.getBook(isbn)) { res =>
           complete(res)
         }
       }

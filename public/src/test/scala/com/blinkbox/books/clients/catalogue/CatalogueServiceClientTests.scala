@@ -72,7 +72,7 @@ class CatalogueServiceClientTests extends FlatSpec with ScalaFutures with FailHe
     val book2response = bookResponseJson(SecondBookTestInfo.id, SecondBookTestInfo.title, SecondBookTestInfo.images, SecondBookTestInfo.links)
     provideJsonResponse(OK, bulkResponse(List(book1response, book2response)))
 
-    whenReady(service.getBulkBookInfoFor(List(TestBookIsbn, SecondTestBookIsbn))) { res =>
+    whenReady(service.getBulkBookInfo(List(TestBookIsbn, SecondTestBookIsbn))) { res =>
       assert(res == BulkBookInfo(2, List(TestBookInfo, SecondBookTestInfo)))
     }
   }
