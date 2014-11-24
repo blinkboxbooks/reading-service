@@ -58,7 +58,7 @@ class CatalogueServiceClientTests extends FlatSpec with ScalaFutures with FailHe
   }
 
   "Catalogue service" should "return book and contributor info for a valid ISBN" in new TestFixture {
-    val firstResponse = (OK, bookResponse(TestBookIsbn, TestBookInfo.title, TestBookInfo.images, TestBookInfo.links))
+    val firstResponse = (OK, bookResponse(TestBookInfo.id, TestBookInfo.title, TestBookInfo.images, TestBookInfo.links))
     val secondResponse = (OK, contributorResponse(TestContributorId, TestContributorInfo.displayName, TestContributorInfo.sortName))
     provideJsonResponses(List(firstResponse, secondResponse))
 
@@ -68,7 +68,7 @@ class CatalogueServiceClientTests extends FlatSpec with ScalaFutures with FailHe
   }
 
   it should "return book info for multiple valid ISBNs" in new TestFixture {
-    val book1response = bookResponseJson(TestBookIsbn, TestBookInfo.title, TestBookInfo.images, TestBookInfo.links)
+    val book1response = bookResponseJson(TestBookInfo.id, TestBookInfo.title, TestBookInfo.images, TestBookInfo.links)
     val book2response = bookResponseJson(SecondBookTestInfo.id, SecondBookTestInfo.title, SecondBookTestInfo.images, SecondBookTestInfo.links)
     provideJsonResponse(OK, bulkResponse(List(book1response, book2response)))
 
@@ -78,8 +78,8 @@ class CatalogueServiceClientTests extends FlatSpec with ScalaFutures with FailHe
   }
 
   it should "return catalogue info for multiple valid contributor IDs" in new TestFixture {
-    val contributor1response = contributorResponseJson(TestContributorId, TestContributorInfo.displayName, TestContributorInfo.sortName)
-    val contributor2response = contributorResponseJson(TestContributor2Id, TestContributor2Info.displayName, TestContributor2Info.sortName)
+    val contributor1response = contributorResponseJson(TestContributorInfo.id, TestContributorInfo.displayName, TestContributorInfo.sortName)
+    val contributor2response = contributorResponseJson(TestContributor2Info.id, TestContributor2Info.displayName, TestContributor2Info.sortName)
     provideJsonResponse(OK, bulkResponse(List(contributor1response, contributor2response)))
 
     whenReady(service.getBulkContributorInfo(List(TestContributorId, TestContributor2Id))) { res =>
@@ -88,21 +88,21 @@ class CatalogueServiceClientTests extends FlatSpec with ScalaFutures with FailHe
   }
 
   it should "throw CatalogueInfoMissingException if the response does not have contributor link" in new TestFixture {
-    provideJsonResponse(OK, bookResponse(TestBookIsbn, TestBookInfo.title, TestBookInfo.images, TestBookInfo.links.filterNot(_.rel.endsWith("contributor"))))
+    provideJsonResponse(OK, bookResponse(TestBookInfo.id, TestBookInfo.title, TestBookInfo.images, TestBookInfo.links.filterNot(_.rel.endsWith("contributor"))))
 
     val ex = failingWith[CatalogueInfoMissingException](service.getInfoFor(TestBookIsbn))
     assert(ex.getMessage == s"Contributor missing for $TestBookIsbn")
   }
 
   it should "throw CatalogueInfoMissingException if the response does not have a cover image link" in new TestFixture {
-    provideJsonResponse(OK, bookResponse(TestBookIsbn, TestBookInfo.title, List.empty[v1.Image], TestBookInfo.links))
+    provideJsonResponse(OK, bookResponse(TestBookInfo.id, TestBookInfo.title, List.empty[v1.Image], TestBookInfo.links))
 
     val ex = failingWith[CatalogueInfoMissingException](service.getInfoFor(TestBookIsbn))
     assert(ex.getMessage == s"Cover image missing for $TestBookIsbn")
   }
 
   it should "throw CatalogueInfoMissingException if the response does not have sample ePub link" in new TestFixture {
-    provideJsonResponse(OK, bookResponse(TestBookIsbn, TestBookInfo.title, TestBookInfo.images, TestBookInfo.links.filterNot(_.rel.endsWith("samplemedia"))))
+    provideJsonResponse(OK, bookResponse(TestBookInfo.id, TestBookInfo.title, TestBookInfo.images, TestBookInfo.links.filterNot(_.rel.endsWith("samplemedia"))))
 
     val ex = failingWith[CatalogueInfoMissingException](service.getInfoFor(TestBookIsbn))
     assert(ex.getMessage == s"Sample ePub missing for $TestBookIsbn")
