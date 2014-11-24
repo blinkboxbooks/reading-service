@@ -22,7 +22,7 @@ trait CatalogueService {
 
 trait CatalogueV1Service {
   def getBookInfo(isbn: String): Future[BookInfo]
-  def getBulkBookInfoFor(isbns: List[String]): Future[BulkBookInfo]
+  def getBulkBookInfo(isbns: List[String]): Future[BulkBookInfo]
   def getContributorInfo(contributorId: String): Future[ContributorInfo]
   def getBulkContributorInfo(contributorIds: List[String]): Future[BulkContributorInfo]
 }
@@ -37,7 +37,7 @@ class DefaultCatalogueV1Service(client: Client)(implicit ec: ExecutionContext) e
     contributorInfo <- getContributorInfo(contributorId)
   } yield CatalogueInfo(isbn, bookInfo.title, contributorInfo.displayName, contributorInfo.sortName, coverImageUrl, sampleEpubUrl)
 
-  override def getBulkInfoFor(isbns: List[String]): Future[List[CatalogueInfo]] = getBulkBookInfoFor(isbns).flatMap(buildBulkCatalogueInfo(_))
+  override def getBulkInfoFor(isbns: List[String]): Future[List[CatalogueInfo]] = getBulkBookInfo(isbns).flatMap(buildBulkCatalogueInfo(_))
 
   private def extractContributorId(links: List[v1.Link]): Option[String] =
     links.find(_.rel == "urn:blinkboxbooks:schema:contributor") flatMap { l =>
@@ -60,8 +60,8 @@ class DefaultCatalogueV1Service(client: Client)(implicit ec: ExecutionContext) e
     })
   }
 
-  def getBulkBookInfoFor(isbns: List[String]): Future[BulkBookInfo] = {
-    val isbnQueryString = isbns.map(isbn => s"id=${isbn}").foldRight("")((a,b) => s"${a}&${b}")
+  def getBulkBookInfo(isbns: List[String]): Future[BulkBookInfo] = {
+    val isbnQueryString = isbns.mkString(start = "id=", sep = "&id=", end = "")
     val req = Get(s"${client.config.url}/catalogue/books?$isbnQueryString")
     client.dataRequest[BulkBookInfo](req, credentials = None).transform(identity, {
       case e: NotFoundException =>

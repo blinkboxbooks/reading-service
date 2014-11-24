@@ -2,6 +2,7 @@ package com.blinkbox.books.reading
 
 import java.net.URI
 
+import com.blinkbox.books.auth.User
 import com.blinkbox.books.clients.catalogue.{CatalogueInfo, CatalogueInfoMissingException, CatalogueService}
 import com.blinkbox.books.reading._
 import com.blinkbox.books.reading.persistence.{LibraryItem, LibraryMediaMissingException, LibraryStore}
@@ -26,12 +27,12 @@ class LibraryServiceTests extends FlatSpec with MockitoSyrup with ScalaFutures w
     when(libraryStore.getBook(any[String], any[Int])).thenReturn(Future.successful(Some(TestLibraryItem)))
     when(libraryStore.getBookMedia(ISBN)).thenReturn(Future.successful(List(fullEpubLink, epubKeyLink)))
 
-    whenReady(service.getBook(ISBN, User)) { res =>
+    whenReady(service.getBook(ISBN)) { res =>
       assert(res == Some(TestBookDetails))
     }
 
     verify(catalogueService).getInfoFor(ISBN)
-    verify(libraryStore).getBook(ISBN, User)
+    verify(libraryStore).getBook(ISBN, UserId)
     verify(libraryStore).getBookMedia(ISBN)
 
     verifyNoMoreInteractions(catalogueService)
@@ -43,12 +44,12 @@ class LibraryServiceTests extends FlatSpec with MockitoSyrup with ScalaFutures w
     when(libraryStore.getBook(any[String], any[Int])).thenReturn(Future.successful(None))
     when(libraryStore.getBookMedia(ISBN)).thenReturn(Future.successful(List(fullEpubLink, epubKeyLink)))
 
-    whenReady(service.getBook(ISBN, User)) { res =>
+    whenReady(service.getBook(ISBN)) { res =>
       assert(res == None)
     }
 
     verify(catalogueService).getInfoFor(ISBN)
-    verify(libraryStore).getBook(ISBN, User)
+    verify(libraryStore).getBook(ISBN, UserId)
     verify(libraryStore).getBookMedia(ISBN)
 
     verifyNoMoreInteractions(catalogueService)
@@ -60,10 +61,10 @@ class LibraryServiceTests extends FlatSpec with MockitoSyrup with ScalaFutures w
     when(libraryStore.getBook(any[String], any[Int])).thenReturn(Future.successful(Some(TestLibraryItem)))
     when(libraryStore.getBookMedia(ISBN)).thenReturn(Future.failed(new LibraryMediaMissingException("expected exception")))
 
-    failingWith[LibraryMediaMissingException](service.getBook(ISBN, User))
+    failingWith[LibraryMediaMissingException](service.getBook(ISBN))
 
     verify(catalogueService).getInfoFor(ISBN)
-    verify(libraryStore).getBook(ISBN, User)
+    verify(libraryStore).getBook(ISBN, UserId)
     verify(libraryStore).getBookMedia(ISBN)
 
     verifyNoMoreInteractions(catalogueService)
@@ -75,10 +76,10 @@ class LibraryServiceTests extends FlatSpec with MockitoSyrup with ScalaFutures w
     when(libraryStore.getBook(any[String], any[Int])).thenReturn(Future.successful(Some(TestLibraryItem)))
     when(libraryStore.getBookMedia(ISBN)).thenReturn(Future.successful(List(fullEpubLink, epubKeyLink)))
 
-    failingWith[CatalogueInfoMissingException](service.getBook(ISBN, User))
+    failingWith[CatalogueInfoMissingException](service.getBook(ISBN))
 
     verify(catalogueService).getInfoFor(ISBN)
-    verify(libraryStore).getBook(ISBN, User)
+    verify(libraryStore).getBook(ISBN, UserId)
     verify(libraryStore).getBookMedia(ISBN)
 
     verifyNoMoreInteractions(catalogueService)
@@ -88,7 +89,8 @@ class LibraryServiceTests extends FlatSpec with MockitoSyrup with ScalaFutures w
   class TestFixture extends TimeSupport {
     val clock = StoppedClock()
 
-    val User = 1
+    val UserId = 1
+    implicit val user =  User("", Map("sub" -> s"urn:blinkbox:zuul:user:$UserId", "sso/at" -> "ssoToken"))
     val ISBN = "9780141909837"
     val ReadingStatus = Reading
     val Progress = ReadingPosition(Cfi("someCfi"), 15)
@@ -101,8 +103,8 @@ class LibraryServiceTests extends FlatSpec with MockitoSyrup with ScalaFutures w
     val images = List(coverImageLink)
     val links = List(sampleEpubLink, fullEpubLink, epubKeyLink)
 
-    val TestLibraryItem = LibraryItem(ISBN, User, Full, ReadingStatus, Progress.cfi, Progress.percentage, clock.now(), clock.now())
-    val TestCatalogueInfo = CatalogueInfo(ISBN, "Title", "Name Surname", "Surname, Author", coverImageLink.url, sampleEpubLink.url)
+    val TestLibraryItem = LibraryItem(ISBN, UserId, Full, ReadingStatus, Progress.cfi, Progress.percentage, clock.now(), clock.now())
+    val TestCatalogueInfo = CatalogueInfo(ISBN, "Title", "Name Surname", "Surname, Name", coverImageLink.url, sampleEpubLink.url)
     val TestBookDetails = BookDetails(ISBN, TestCatalogueInfo.title, TestCatalogueInfo.author, TestCatalogueInfo.sortableAuthor, clock.now(), Full, ReadingStatus, Progress, images, links)
 
     val catalogueService = mock[CatalogueService]

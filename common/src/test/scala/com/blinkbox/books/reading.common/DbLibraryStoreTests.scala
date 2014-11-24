@@ -36,7 +36,7 @@ class DbLibraryStoreTests extends FlatSpec with MockitoSyrup with ScalaFutures w
 
   it should "retrieve all books in a user's library" in new PopulatedDbFixture {
     db.withSession { implicit session =>
-      whenReady(libraryStore.getLibrary(10, 0, 1)) { items =>
+      whenReady(libraryStore.getLibrary(count, offset, 1)) { items =>
         assert(items == List(libItem1, libItem2))
       }
     }
@@ -44,7 +44,7 @@ class DbLibraryStoreTests extends FlatSpec with MockitoSyrup with ScalaFutures w
 
   it should "return an empty list for a user's library if he has no items" in new PopulatedDbFixture {
     db.withSession { implicit session =>
-      whenReady(libraryStore.getLibrary(10, 0, 9001)) { items =>
+      whenReady(libraryStore.getLibrary(count, offset, 9001)) { items =>
         assert(items.isEmpty)
       }
     }
@@ -127,6 +127,9 @@ class DbLibraryStoreTests extends FlatSpec with MockitoSyrup with ScalaFutures w
   trait TestDbComponent extends DatabaseComponent {
     override val DB = new H2DatabaseSupport
     override type Tables = TablesContainer[DB.Profile]
+
+    val count = 10
+    val offset = 0
 
     override def db = {
       val threadId = Thread.currentThread.getId
