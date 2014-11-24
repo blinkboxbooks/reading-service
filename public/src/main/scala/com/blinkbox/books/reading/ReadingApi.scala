@@ -26,7 +26,7 @@ class ReadingApi(
   val defaultPageSize = 25
   implicit override val jsonFormats = JsonFormats.blinkboxFormat() + ReadingPositionSerializer + MediaTypeSerializer + BookTypeSerializer + ReadingStatusSerializer + BookDetailsSerializer
 
-  val getBulkBooksDetails = get {
+  val getLibrary = get {
     path("my" / "library") {
       authenticate(authenticator.withElevation(Unelevated)) { implicit user =>
         paged(defaultPageSize) { page =>
@@ -41,8 +41,8 @@ class ReadingApi(
 
   val getBookDetails = get {
     path("my" / "library" / Isbn) { isbn =>
-      authenticate(authenticator.withElevation(Unelevated)) { user =>
-        onSuccess(libraryService.getBook(isbn, user.id)) { res =>
+      authenticate(authenticator.withElevation(Unelevated)) { implicit user =>
+        onSuccess(libraryService.getBook(isbn)) { res =>
           complete(res)
         }
       }
@@ -51,7 +51,7 @@ class ReadingApi(
 
   val routes = monitor(log, throwableMarshaller) {
     rootPath(apiConfig.localUrl.path) {
-      getBookDetails ~ getBulkBooksDetails
+      getBookDetails ~ getLibrary
     }
   }
 }

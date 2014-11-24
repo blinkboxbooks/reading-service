@@ -11,7 +11,7 @@ import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
 trait LibraryService {
-  def getBook(isbn: String, userId: Int): Future[Option[BookDetails]]
+  def getBook(isbn: String)(implicit user: User): Future[Option[BookDetails]]
   def getLibrary(count: Int, offset: Int)(implicit user: User): Future[List[BookDetails]]
 }
 
@@ -27,8 +27,8 @@ class DefaultLibraryService(
     list = library.map { b => buildBookDetails(b, itemMedialinks, catalogueInfo.filter(c => c.id == b.isbn).head) }
   } yield list
 
-  override def getBook(isbn: String, userId: Int): Future[Option[BookDetails]] = {
-    val libItemFuture = libraryStore.getBook(isbn, userId)
+  override def getBook(isbn: String)(implicit user: User): Future[Option[BookDetails]] = {
+    val libItemFuture = libraryStore.getBook(isbn, user.id)
     val itemMediaLinksFuture = libraryStore.getBookMedia(isbn)
     val catalogueInfoFuture = catalogueService.getInfoFor(isbn)
     for {
@@ -58,22 +58,5 @@ class DefaultLibraryService(
   }
 
   def buildBookDetailsOptional(libItem: Option[LibraryItem], libraryMediaLinks: List[Link], catalogueInfo: CatalogueInfo): Option[BookDetails] =
-    libItem map { item =>
-      val readingPosition = ReadingPosition(item.progressCfi, item.progressPercentage)
-      val images = List(Image(CoverImage, catalogueInfo.coverImageUrl))
-      val catalogueLinks = List(Link(SampleEpub, catalogueInfo.sampleEpubUrl))
-      val links = catalogueLinks ++ libraryMediaLinks
-
-      BookDetails(
-        item.isbn,
-        catalogueInfo.title,
-        catalogueInfo.author,
-        catalogueInfo.sortableAuthor,
-        item.createdAt,
-        item.bookType,
-        item.readingStatus,
-        readingPosition,
-        images,
-        links)
-    }
+    libItem.map(item => buildBookDetails(item, libraryMediaLinks, catalogueInfo))
 }

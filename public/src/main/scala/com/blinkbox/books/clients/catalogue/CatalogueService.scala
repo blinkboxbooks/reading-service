@@ -94,7 +94,7 @@ class DefaultCatalogueV1Service(client: Client)(implicit ec: ExecutionContext) e
     val contributorIds = bulkBookInfo.items.map(extractContId)
     for {
       contributorIds <- getBulkContributorInfo(contributorIds)
-      list = bulkBookInfo.items.map(b => CatalogueInfo(b.id, b.title, b.title, extractContributorDisplayName(b, contributorIds.items), extractCoverImgUrl(b), extractSampleUrl(b)))
+      list = bulkBookInfo.items.map(b => CatalogueInfo(b.id, b.title, extractContributorDisplayName(b, contributorIds.items), extractContributorDisplayName(b, contributorIds.items), extractCoverImgUrl(b), extractSampleUrl(b)))
     } yield list
   }
 }
