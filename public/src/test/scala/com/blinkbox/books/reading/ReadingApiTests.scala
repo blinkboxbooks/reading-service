@@ -31,7 +31,7 @@ import scala.concurrent.Future
 class ReadingApiTests extends FlatSpec with ScalatestRouteTest with MockitoSyrup with v2.JsonSupport {
 
   "Book details endpoint" should "return book details for a valid request" in new TestFixture {
-    when(libraryService.getBook(TestBook.isbn, AuthenticatedUser.id)).thenReturn(Future.successful(Some(TestBook)))
+    when(libraryService.getBook(TestBook.isbn)(AuthenticatedUser)).thenReturn(Future.successful(Some(TestBook)))
     when(authenticator.apply(any[RequestContext])).thenReturn(Future.successful(Right(AuthenticatedUser)))
 
     Get(s"/my/library/${TestBook.isbn}") ~> Authorization(OAuth2BearerToken(AccessToken)) ~> routes ~> check {
@@ -75,7 +75,7 @@ class ReadingApiTests extends FlatSpec with ScalatestRouteTest with MockitoSyrup
   }
 
   it should "return 404 NotFound when user does not have the requested book in the library" in new TestFixture {
-    when(libraryService.getBook(TestBook.isbn, AuthenticatedUser.id)).thenReturn(Future.successful(None))
+    when(libraryService.getBook(TestBook.isbn)(AuthenticatedUser)).thenReturn(Future.successful(None))
     when(authenticator.apply(any[RequestContext])).thenReturn(Future.successful(Right(AuthenticatedUser)))
 
     Get(s"/my/library/${TestBook.isbn}") ~> Authorization(OAuth2BearerToken(AccessToken)) ~> routes ~> check {
@@ -87,7 +87,7 @@ class ReadingApiTests extends FlatSpec with ScalatestRouteTest with MockitoSyrup
   }
 
   it should "return 500 Internal Error when media links of a book in user's library are missing" in new TestFixture {
-    when(libraryService.getBook(TestBook.isbn, AuthenticatedUser.id))
+    when(libraryService.getBook(TestBook.isbn)(AuthenticatedUser))
       .thenReturn(Future.failed(new LibraryMediaMissingException("test exception")))
     when(authenticator.apply(any[RequestContext])).thenReturn(Future.successful(Right(AuthenticatedUser)))
 
@@ -99,8 +99,7 @@ class ReadingApiTests extends FlatSpec with ScalatestRouteTest with MockitoSyrup
   }
 
   it should "return 500 Internal Error when catalogue info of a book in user's library is missing" in new TestFixture {
-    when(libraryService.getBook(TestBook.isbn, AuthenticatedUser.id))
-      .thenReturn(Future.failed(new CatalogueInfoMissingException("test exception")))
+    when(libraryService.getBook(TestBook.isbn)(AuthenticatedUser)).thenReturn(Future.failed(new CatalogueInfoMissingException("test exception")))
     when(authenticator.apply(any[RequestContext])).thenReturn(Future.successful(Right(AuthenticatedUser)))
 
     Get(s"/my/library/${TestBook.isbn}") ~> Authorization(OAuth2BearerToken(AccessToken)) ~> routes ~> check {
