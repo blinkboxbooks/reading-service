@@ -112,7 +112,7 @@ trait LibraryTables[Profile <: JdbcProfile] extends TablesContainer[Profile] {
     libraryItems.filter(b => b.isbn === isbn && b.userId === userId)
 
   private def getUserLibrary(count: ConstColumn[Long], offset: ConstColumn[Long], userId: Column[Int]):  lifted.Query[LibraryItems, LibraryItem, Seq] =
-    libraryItems.withFilter(b => b.userId === userId).drop(offset).take(count)
+    libraryItems.filter(b => b.userId === userId).drop(offset).take(count)
 
   private def getLibraryItemMedia(isbn: Column[String]): lifted.Query[LibraryMedia, LibraryItemLink, Seq] =
     libraryMedia.filter(_.isbn === isbn)
