@@ -41,7 +41,7 @@ class ReadingApiTests extends FlatSpec with ScalatestRouteTest with MockitoSyrup
   }
 
   it should "return entire user's library for a valid request" in new TestFixture {
-    when(libraryService.getLibrary(25, 0)).thenReturn(Future.successful(List(testBook, testBook2)))
+    when(libraryService.getLibrary(25, 0)(authenticatedUser)).thenReturn(Future.successful(List(testBook, testBook2)))
     when(authenticator.apply(any[RequestContext])).thenReturn(Future.successful(Right(authenticatedUser)))
     Get("/my/library") ~> Authorization(OAuth2BearerToken(accessToken)) ~> routes ~> check {
       assert(status == OK)
@@ -51,7 +51,7 @@ class ReadingApiTests extends FlatSpec with ScalatestRouteTest with MockitoSyrup
   }
 
   it should "return an empty library for a valid request of a user who does not have a library yet" in new TestFixture {
-    when(libraryService.getLibrary(25, 0)).thenReturn(Future.successful(List.empty))
+    when(libraryService.getLibrary(25, 0)(authenticatedUser)).thenReturn(Future.successful(List.empty))
     when(authenticator.apply(any[RequestContext])).thenReturn(Future.successful(Right(authenticatedUser)))
     Get("/my/library") ~> Authorization(OAuth2BearerToken(accessToken)) ~> routes ~> check {
       assert(status == OK)

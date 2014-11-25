@@ -111,7 +111,7 @@ class LibraryServiceTests extends FlatSpec with MockitoSyrup with ScalaFutures w
   it should "return successfully when a user has no items in his library" in new TestFixture {
     when(libraryStore.getLibrary(count, offset, UserId)).thenReturn(Future.successful(List.empty[LibraryItem]))
     when(catalogueService.getBulkInfoFor(List.empty[String])).thenReturn(Future.successful(List.empty[CatalogueInfo]))
-    when(libraryStore.getBooksMedia(List.empty[String])).thenReturn(Future.successful(Map.empty()))
+    when(libraryStore.getBooksMedia(List.empty[String])).thenReturn(Future.successful(Map.empty[String, List[Link]])) // compiler needs type hint here
 
     whenReady(service.getLibrary(count, offset)) { res =>
       assert(res == List.empty[BookDetails])
