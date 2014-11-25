@@ -8,6 +8,7 @@ import com.blinkbox.books.spray.Directives.{paged, rootPath}
 import com.blinkbox.books.spray.MonitoringDirectives.monitor
 import com.blinkbox.books.spray.v2.Implicits.throwableMarshaller
 import com.blinkbox.books.spray.{ElevatedContextAuthenticator, JsonFormats, url2uri, v2}
+import com.typesafe.scalalogging.slf4j.StrictLogging
 import org.slf4j.LoggerFactory
 import spray.http.StatusCodes._
 import spray.routing._
@@ -17,7 +18,7 @@ import scala.concurrent.ExecutionContext.Implicits.global
 class ReadingApi(
   apiConfig: ApiConfig,
   authenticator: ElevatedContextAuthenticator[User],
-  libraryService: LibraryService)(implicit val actorRefFactory: ActorRefFactory) extends HttpService with v2.JsonSupport {
+  libraryService: LibraryService)(implicit val actorRefFactory: ActorRefFactory) extends HttpService with v2.JsonSupport with StrictLogging {
 
   import ReadingApi._
 

@@ -41,7 +41,6 @@ class ReadingApiTests extends FlatSpec with ScalatestRouteTest with MockitoSyrup
   }
 
   it should "return entire user's library for a valid request" in new TestFixture {
-    implicit val user = authenticatedUser
     when(libraryService.getLibrary(25, 0)).thenReturn(Future.successful(List(testBook, testBook2)))
     when(authenticator.apply(any[RequestContext])).thenReturn(Future.successful(Right(authenticatedUser)))
     Get("/my/library") ~> Authorization(OAuth2BearerToken(accessToken)) ~> routes ~> check {
@@ -52,7 +51,6 @@ class ReadingApiTests extends FlatSpec with ScalatestRouteTest with MockitoSyrup
   }
 
   it should "return an empty library for a valid request of a user who does not have a library yet" in new TestFixture {
-    implicit val user = authenticatedUser
     when(libraryService.getLibrary(25, 0)).thenReturn(Future.successful(List.empty))
     when(authenticator.apply(any[RequestContext])).thenReturn(Future.successful(Right(authenticatedUser)))
     Get("/my/library") ~> Authorization(OAuth2BearerToken(accessToken)) ~> routes ~> check {
@@ -67,7 +65,6 @@ class ReadingApiTests extends FlatSpec with ScalatestRouteTest with MockitoSyrup
   // we get the wrong number of media links or book information, the system simply does not return the library with
   // incomplete data
   it should "return a 500 if the Catalogue Service does not contain all the books info" in new StoreFixture {
-    implicit val user = authenticatedUser
     val isbn1 = "9870123456789"
     val isbn2 = "9879876543210"
     val libItem1 = LibraryItem(isbn1, authenticatedUser.id, Full, Finished, Cfi("/6/4"), 100, clock.now(), clock.now)
@@ -182,7 +179,7 @@ class ReadingApiTests extends FlatSpec with ScalatestRouteTest with MockitoSyrup
 
     // Authenticator mock
     val accessToken = "accessToken"
-    val authenticatedUser = User(accessToken, claims = Map("sub" -> "urn:blinkbox:zuul:user:1", "sso/at" -> "ssoToken"))
+    implicit val authenticatedUser = User(accessToken, claims = Map("sub" -> "urn:blinkbox:zuul:user:1", "sso/at" -> "ssoToken"))
     val authenticator = mock[BearerTokenAuthenticator]
     when(authenticator.withElevation(Elevation.Unelevated)).thenReturn(authenticator)
 

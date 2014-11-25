@@ -4,6 +4,7 @@ import java.net.URI
 
 import com.blinkbox.books.spray.v1
 import com.blinkbox.books.spray.v1.Version1JsonSupport
+import spray.http.Uri
 import spray.httpx.RequestBuilding.Get
 
 import scala.concurrent.{ExecutionContext, Future}

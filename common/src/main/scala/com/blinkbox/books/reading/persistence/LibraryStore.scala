@@ -36,7 +36,7 @@ class DbLibraryStore[DB <: DatabaseSupport](db: DB#Database, tables: LibraryTabl
   }
 
   override def getBooksMedia(isbns: List[String]): Future[Map[String, List[Link]]] = Future {
-    if (isbns.isEmpty) { Map.empty() }
+    if (isbns.isEmpty) { Map.empty }
     else db.withSession { implicit session =>
       val links = tables.getBulkLibraryItemMedia(isbns).list
       if (links.isEmpty) throw new LibraryMediaMissingException(s"media (full ePub & key URLs) for $isbns does not exist")
