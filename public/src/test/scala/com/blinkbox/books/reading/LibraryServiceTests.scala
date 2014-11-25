@@ -123,7 +123,7 @@ class LibraryServiceTests extends FlatSpec with MockitoSyrup with ScalaFutures w
     val offset = 0
     when(libraryStore.getLibrary(count, offset, UserId)).thenReturn(Future.successful(List.empty[LibraryItem]))
     when(catalogueService.getBulkInfoFor(List.empty[String])).thenReturn(Future.successful(List.empty[CatalogueInfo]))
-    when(libraryStore.getBooksMedia(List.empty[String])).thenReturn(Future.successful(Map.empty[String, List[Link]]))
+    when(libraryStore.getBooksMedia(List.empty[String])).thenReturn(Future.successful(Map.empty()))
 
     whenReady(service.getLibrary(count, offset)) { res =>
       assert(res == List.empty[BookDetails])
