@@ -86,6 +86,92 @@ class LibraryServiceTests extends FlatSpec with MockitoSyrup with ScalaFutures w
     verifyNoMoreInteractions(libraryStore)
   }
 
+  it should "return the entire library of a user" in new TestFixture {
+    val userId = 1
+    val isbn1 = "9870123456789"
+    val isbn2 = "9879876543210"
+    val libItem1 = LibraryItem(isbn1, userId, Full, Finished, Cfi("/6/4"), 100, clock.now(), clock.now)
+    val libItem2 = LibraryItem(isbn2, userId, Full, Reading, Cfi("/6/4"), 50, clock.now(), clock.now)
+    val catalogueInfo1 = CatalogueInfo(isbn1, "Book Name", "Author Name", "Name, Author", new URI("http://cover/location"), new URI("http://sample/location"))
+    val catalogueInfo2 = CatalogueInfo(isbn2, "Book Other", "Author Other", "Other, Author", new URI("http://cover/location2"), new URI("http://sample/location2"))
+
+    // The links have two sample items as one comes from the libraryStore and the other comes from the Catalogue service.
+    // Doing that so that I don't have to mess with ordering of lists
+    val expectedBookDetail1 =
+      BookDetails(isbn1, catalogueInfo1.title, catalogueInfo1.author, catalogueInfo1.sortableAuthor, clock.now(), libItem1.bookType, libItem1.readingStatus, ReadingPosition(libItem1.progressCfi, libItem1.progressPercentage), List(Image(CoverImage, catalogueInfo1.coverImageUrl)), List(Link(SampleEpub, catalogueInfo1.sampleEpubUrl), Link(SampleEpub, catalogueInfo1.sampleEpubUrl)))
+    val expectedBookDetail2 =
+      BookDetails(isbn2, catalogueInfo2.title, catalogueInfo2.author, catalogueInfo2.sortableAuthor, clock.now(), libItem2.bookType, libItem2.readingStatus, ReadingPosition(libItem2.progressCfi, libItem2.progressPercentage), List(Image(CoverImage, catalogueInfo2.coverImageUrl)), List(Link(SampleEpub, catalogueInfo2.sampleEpubUrl), Link(SampleEpub, catalogueInfo2.sampleEpubUrl)))
+    val count = 25
+    val offset = 0
+    when(libraryStore.getLibrary(count, offset, userId)).thenReturn(Future.successful(List(libItem1, libItem2)))
+    when(libraryStore.getBooksMedia(List(isbn1, isbn2))).
+      thenReturn(Future.successful(Map(
+      (isbn1 -> List(Link(SampleEpub, catalogueInfo1.sampleEpubUrl))),
+      (isbn2 -> List(Link(SampleEpub, catalogueInfo2.sampleEpubUrl)))
+    )))
+    when(catalogueService.getBulkInfoFor(List(isbn1, isbn2))).thenReturn(Future.successful(List(catalogueInfo1, catalogueInfo2)))
+
+    whenReady(service.getLibrary(count, offset)) { res =>
+      assert(res.size == 2)
+      assert(res.contains(expectedBookDetail1))
+      assert(res.contains(expectedBookDetail2))
+    }
+  }
+
+  it should "return successfully when a user has no items in his library" in new TestFixture {
+    val count = 25
+    val offset = 0
+    when(libraryStore.getLibrary(count, offset, UserId)).thenReturn(Future.successful(List.empty[LibraryItem]))
+    when(catalogueService.getBulkInfoFor(List.empty[String])).thenReturn(Future.successful(List.empty[CatalogueInfo]))
+    when(libraryStore.getBooksMedia(List.empty[String])).thenReturn(Future.successful(Map.empty[String, List[Link]]))
+
+    whenReady(service.getLibrary(count, offset)) { res =>
+      assert(res == List.empty[BookDetails])
+    }
+  }
+
+  it should "return a LibraryMediaMissingException in a bulk request for library medias if there are missing media for a book" in new TestFixture {
+    val userId = 1
+    val isbn1 = "9870123456789"
+    val isbn2 = "9879876543210"
+    val libItem1 = LibraryItem(isbn1, userId, Full, Finished, Cfi("/6/4"), 100, clock.now(), clock.now)
+    val libItem2 = LibraryItem(isbn2, userId, Full, Reading, Cfi("/6/4"), 50, clock.now(), clock.now)
+    val catalogueInfo1 = CatalogueInfo(isbn1, "Book Name", "Author Name", "Name, Author", new URI("http://cover/location"), new URI("http://sample/location"))
+    val catalogueInfo2 = CatalogueInfo(isbn2, "Book Other", "Author Other", "Other, Author", new URI("http://cover/location2"), new URI("http://sample/location2"))
+
+    val count = 25
+    val offset = 0
+    when(libraryStore.getLibrary(count, offset, userId)).thenReturn(Future.successful(List(libItem1, libItem2)))
+    when(libraryStore.getBooksMedia(List(isbn1, isbn2))).
+      thenReturn(Future.successful(Map(
+      (isbn1 -> List(Link(SampleEpub, catalogueInfo1.sampleEpubUrl)))
+    )))
+    when(catalogueService.getBulkInfoFor(List(isbn1, isbn2))).thenReturn(Future.successful(List(catalogueInfo1, catalogueInfo2)))
+
+    failingWith[LibraryMediaMissingException](service.getLibrary(count, offset))
+  }
+
+  it should "return a CatalogueInfoMissingException in a bulk request for book infos if there is missing information for a book" in new TestFixture {
+    val userId = 1
+    val isbn1 = "9870123456789"
+    val isbn2 = "9879876543210"
+    val libItem1 = LibraryItem(isbn1, userId, Full, Finished, Cfi("/6/4"), 100, clock.now(), clock.now)
+    val libItem2 = LibraryItem(isbn2, userId, Full, Reading, Cfi("/6/4"), 50, clock.now(), clock.now)
+    val catalogueInfo1 = CatalogueInfo(isbn1, "Book Name", "Author Name", "Name, Author", new URI("http://cover/location"), new URI("http://sample/location"))
+    val catalogueInfo2 = CatalogueInfo(isbn2, "Book Other", "Author Other", "Other, Author", new URI("http://cover/location2"), new URI("http://sample/location2"))
+
+    val count = 25
+    val offset = 0
+    when(libraryStore.getLibrary(count, offset, userId)).thenReturn(Future.successful(List(libItem1, libItem2)))
+    when(libraryStore.getBooksMedia(List(isbn1, isbn2))).
+      thenReturn(Future.successful(Map(
+      (isbn1 -> List(Link(SampleEpub, catalogueInfo1.sampleEpubUrl))),
+      (isbn2 -> List(Link(SampleEpub, catalogueInfo2.sampleEpubUrl)))
+    )))
+    when(catalogueService.getBulkInfoFor(List(isbn1, isbn2))).thenReturn(Future.successful(List(catalogueInfo1)))
+    failingWith[CatalogueInfoMissingException](service.getLibrary(count, offset))
+  }
+
   class TestFixture extends TimeSupport {
     val clock = StoppedClock()
 

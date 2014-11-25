@@ -61,12 +61,15 @@ class DefaultCatalogueV1Service(client: Client)(implicit ec: ExecutionContext) e
   }
 
   def getBulkBookInfo(isbns: List[String]): Future[BulkBookInfo] = {
-    val isbnQueryString = isbns.mkString(start = "id=", sep = "&id=", end = "")
-    val req = Get(s"${client.config.url}/catalogue/books?$isbnQueryString")
-    client.dataRequest[BulkBookInfo](req, credentials = None).transform(identity, {
-      case e: NotFoundException =>
-        new CatalogueInfoMissingException(s"Catalogue does not have a book with the following isbns: $isbns", e)
-    })
+    if (isbns.isEmpty) { Future.successful(BulkBookInfo(0, List.empty[BookInfo])) }
+    else {
+      val isbnQueryString = isbns.mkString(start = "id=", sep = "&id=", end = "")
+      val req = Get(s"${client.config.url}/catalogue/books?$isbnQueryString")
+      client.dataRequest[BulkBookInfo](req, credentials = None).transform(identity, {
+        case e: NotFoundException =>
+          new CatalogueInfoMissingException(s"Catalogue does not have a book with the following isbns: $isbns", e)
+      })
+    }
   }
 
   override def getContributorInfo(contributorId: String): Future[ContributorInfo] = {

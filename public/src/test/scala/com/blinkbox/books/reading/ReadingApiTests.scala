@@ -62,16 +62,23 @@ class ReadingApiTests extends FlatSpec with ScalatestRouteTest with MockitoSyrup
     }
   }
 
+  // This test is quite complicated as it's trying to mock the database and Catalogue Service such that the
+  // database returns books that the catalogue service has no information in. We want the to make sure that when
+  // we get the wrong number of media links or book information, the system simply does not return the library with
+  // incomplete data
   it should "return a 500 if the Catalogue Service does not contain all the books info" in new StoreFixture {
+    implicit val user = authenticatedUser
     val isbn1 = "9870123456789"
     val isbn2 = "9879876543210"
     val libItem1 = LibraryItem(isbn1, authenticatedUser.id, Full, Finished, Cfi("/6/4"), 100, clock.now(), clock.now)
     val libItem2 = LibraryItem(isbn2, authenticatedUser.id, Full, Reading, Cfi("/6/4"), 50, clock.now(), clock.now)
     val catalogueInfo1 = CatalogueInfo(isbn1, "Book Name", "Author Name", "Name, Author", new URI("http://cover/location"), new URI("http://sample/location"))
-    when(libraryStore.getLibrary(25, 0, authenticatedUser.id)).thenReturn(Future.successful(List(libItem1, libItem2)))
+    val count = 25
+    val offset = 0
+    when(libraryStore.getLibrary(count, offset, authenticatedUser.id)).thenReturn(Future.successful(List(libItem1, libItem2)))
     when(libraryStore.getBooksMedia(List(isbn1, isbn2))).thenReturn(Future.successful(Map((isbn1 -> List(Link(SampleEpub, catalogueInfo1.sampleEpubUrl), Link(CoverImage, catalogueInfo1.coverImageUrl))))))
     when(catalogueService.getBulkInfoFor(List(isbn1, isbn2))).thenReturn(Future.successful(List(catalogueInfo1)))
-
+    when(authenticator.apply(any[RequestContext])).thenReturn(Future.successful(Right(authenticatedUser)))
     Get(s"/my/library") ~> Authorization(OAuth2BearerToken(accessToken)) ~> routes ~> check {
       assert(status == InternalServerError)
     }

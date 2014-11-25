@@ -3,6 +3,7 @@ package com.blinkbox.books.reading
 import akka.actor.ActorRefFactory
 import com.blinkbox.books.auth.Elevation.Unelevated
 import com.blinkbox.books.auth.User
+import com.blinkbox.books.clients.catalogue.MediaCatalogueException
 import com.blinkbox.books.config.ApiConfig
 import com.blinkbox.books.reading._
 import com.blinkbox.books.spray.Directives.{paged, rootPath}
