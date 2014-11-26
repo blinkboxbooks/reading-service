@@ -4,12 +4,12 @@ import akka.actor.ActorRefFactory
 import com.blinkbox.books.auth.Elevation.Unelevated
 import com.blinkbox.books.auth.User
 import com.blinkbox.books.config.ApiConfig
-import com.blinkbox.books.reading.common._
-import com.blinkbox.books.spray.Directives.rootPath
+import com.blinkbox.books.spray.Directives.{paged, rootPath}
 import com.blinkbox.books.spray.MonitoringDirectives.monitor
 import com.blinkbox.books.spray.v2.Implicits.throwableMarshaller
 import com.blinkbox.books.spray.{ElevatedContextAuthenticator, JsonFormats, url2uri, v2}
-import org.slf4j.LoggerFactory
+import com.typesafe.scalalogging.StrictLogging
+import spray.http.StatusCodes._
 import spray.routing._
 
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -17,26 +17,39 @@ import scala.concurrent.ExecutionContext.Implicits.global
 class ReadingApi(
   apiConfig: ApiConfig,
   authenticator: ElevatedContextAuthenticator[User],
-  libraryService: LibraryService)(implicit val actorRefFactory: ActorRefFactory) extends HttpService with v2.JsonSupport {
+  libraryService: LibraryService)(implicit val actorRefFactory: ActorRefFactory) extends HttpService with v2.JsonSupport with StrictLogging {
 
   import ReadingApi._
 
-  val log = LoggerFactory.getLogger(classOf[ReadingApi])
+  val defaultPageSize = 25
   implicit override val jsonFormats = JsonFormats.blinkboxFormat() + ReadingPositionSerializer + MediaTypeSerializer + BookTypeSerializer + ReadingStatusSerializer + BookDetailsSerializer
+
+  val getLibrary = get {
+    path("my" / "library") {
+      authenticate(authenticator.withElevation(Unelevated)) { implicit user =>
+        paged(defaultPageSize) { page =>
+          onSuccess(libraryService.getLibrary(page.count, page.offset)) { res =>
+            val items = Map("items" -> res)
+            complete(OK, items)
+          }
+        }
+      }
+    }
+  }
 
   val getBookDetails = get {
     path("my" / "library" / Isbn) { isbn =>
-      authenticate(authenticator.withElevation(Unelevated)) { user =>
-        onSuccess(libraryService.getBook(isbn, user.id)) { res =>
+      authenticate(authenticator.withElevation(Unelevated)) { implicit user =>
+        onSuccess(libraryService.getBook(isbn)) { res =>
           complete(res)
         }
       }
     }
   }
 
-  val routes = monitor(log, throwableMarshaller) {
+  val routes = monitor(logger, throwableMarshaller) {
     rootPath(apiConfig.localUrl.path) {
-      getBookDetails
+      getBookDetails ~ getLibrary
     }
   }
 }

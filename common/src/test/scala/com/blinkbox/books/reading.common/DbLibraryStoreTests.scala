@@ -1,8 +1,8 @@
-package com.blinkbox.books.reading.common
+package com.blinkbox.books.reading
 
 import java.net.URI
 
-import com.blinkbox.books.reading.common.persistence._
+import com.blinkbox.books.reading.persistence._
 import com.blinkbox.books.slick.{DatabaseComponent, H2DatabaseSupport, TablesContainer}
 import com.blinkbox.books.spray.v2.Link
 import com.blinkbox.books.test.{FailHelper, MockitoSyrup}
@@ -28,15 +28,31 @@ class DbLibraryStoreTests extends FlatSpec with MockitoSyrup with ScalaFutures w
 
   "Library store" should "retrieve a book in user's library" in new PopulatedDbFixture {
     db.withSession { implicit session =>
-      whenReady(libraryStore.getBook(2, ISBN1)) { item =>
+      whenReady(libraryStore.getBook(ISBN1, 2)) { item =>
         assert(item == Some(libItem3))
+      }
+    }
+  }
+
+  it should "retrieve all books in a user's library" in new PopulatedDbFixture {
+    db.withSession { implicit session =>
+      whenReady(libraryStore.getLibrary(count, offset, 1)) { items =>
+        assert(items == List(libItem1, libItem2))
+      }
+    }
+  }
+
+  it should "return an empty list for a user's library if he has no items" in new PopulatedDbFixture {
+    db.withSession { implicit session =>
+      whenReady(libraryStore.getLibrary(count, offset, 9001)) { items =>
+        assert(items.isEmpty)
       }
     }
   }
 
   it should "return None for a book that is not in user's library" in new PopulatedDbFixture {
     db.withSession { implicit session =>
-      whenReady(libraryStore.getBook(1, "nonexistent-isbn")) { item =>
+      whenReady(libraryStore.getBook("nonexistent-isbn", 2)) { item =>
        assert(item == None)
       }
     }
@@ -63,6 +79,10 @@ class DbLibraryStoreTests extends FlatSpec with MockitoSyrup with ScalaFutures w
     db.withSession { implicit session =>
       assert(tables.libraryItems.list == List(libItem1, libItem2, libItem3, libItem4))
     }
+  }
+
+  it should "throw LibraryMediaMissingException when there are no media links for one of many books" in new PopulatedDbFixture {
+    failingWith[LibraryMediaMissingException](libraryStore.getBooksMedia(List("1", "2", "3"), 1))
   }
 
   class EmptyDbFixture extends TestDbComponent {
@@ -111,6 +131,9 @@ class DbLibraryStoreTests extends FlatSpec with MockitoSyrup with ScalaFutures w
   trait TestDbComponent extends DatabaseComponent {
     override val DB = new H2DatabaseSupport
     override type Tables = TablesContainer[DB.Profile]
+
+    val count = 10
+    val offset = 0
 
     override def db = {
       val threadId = Thread.currentThread.getId

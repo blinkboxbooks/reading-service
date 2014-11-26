@@ -1,17 +1,19 @@
-package com.blinkbox.books.reading.common.persistence
+package com.blinkbox.books.reading.persistence
 
 import com.blinkbox.books.config.DatabaseConfig
 import com.blinkbox.books.slick.{DatabaseComponent, DatabaseSupport, MySQLDatabaseSupport, TablesContainer}
 import com.blinkbox.books.spray.v2.Link
-import com.typesafe.scalalogging.slf4j.StrictLogging
+import com.typesafe.scalalogging.StrictLogging
 
 import scala.concurrent.{ExecutionContext, Future}
 import scala.slick.driver.MySQLDriver
 import scala.slick.jdbc.JdbcBackend.Database
 
 trait LibraryStore {
-  def getBook(userId: Int, isbn: String): Future[Option[LibraryItem]]
+  def getBook(isbn: String, userId: Int): Future[Option[LibraryItem]]
   def getBookMedia(isbn: String): Future[List[Link]]
+  def getBooksMedia(isbns: List[String], userId: Int): Future[Map[String, List[Link]]]
+  def getLibrary(count: Int, offset: Int, userId: Int): Future[List[LibraryItem]]
 }
 
 class DbLibraryStore[DB <: DatabaseSupport](db: DB#Database, tables: LibraryTables[DB#Profile], exceptionFilter: DB#ExceptionFilter)(implicit val ec: ExecutionContext) extends LibraryStore with StrictLogging {
@@ -19,7 +21,7 @@ class DbLibraryStore[DB <: DatabaseSupport](db: DB#Database, tables: LibraryTabl
   import tables._
   import driver.simple._
 
-  override def getBook(userId: Int, isbn: String): Future[Option[LibraryItem]] = Future {
+  override def getBook(isbn: String, userId: Int): Future[Option[LibraryItem]] = Future {
     db.withSession { implicit session =>
       tables.getLibraryItemBy(userId, isbn).firstOption
     }
@@ -30,6 +32,29 @@ class DbLibraryStore[DB <: DatabaseSupport](db: DB#Database, tables: LibraryTabl
       val links = tables.getLibraryItemLinkFor(isbn).list
       if (links.isEmpty) throw new LibraryMediaMissingException(s"media (full ePub & key URLs) for $isbn does not exist")
       else links.map(l => Link(l.mediaType, l.uri))
+    }
+  }
+
+  override def getBooksMedia(isbns: List[String], userId: Int): Future[Map[String, List[Link]]] = Future {
+    if (isbns.isEmpty) { Map.empty }
+    else db.withSession { implicit session =>
+      val links = tables.getBulkLibraryItemMedia(isbns).list
+      if (links.isEmpty) throw new LibraryMediaMissingException(s"media (full ePub & key URLs) for $isbns does not exist")
+      else {
+        val map = links.groupBy(_.isbn).map{ case (k,list) => ( k -> list.map(l => Link(l.mediaType, l.uri)))}
+        if (map.size < isbns.size) {
+          val errorMessage = s"Cannot find media links for all the books that belong to userId ${userId}"
+          logger.error(errorMessage)
+          throw new LibraryMediaMissingException(errorMessage)
+        }
+        map
+      }
+    }
+  }
+
+  override def getLibrary(count: Int, offset: Int, userId: Int): Future[List[LibraryItem]] = Future {
+    db.withSession { implicit session =>
+      tables.getUserLibraryById(count, offset, userId).list
     }
   }
 }

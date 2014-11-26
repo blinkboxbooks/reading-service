@@ -1,5 +1,27 @@
 # Change log
 
+## 0.4.0 ([#20](https://git.mobcastdev.com/Agora/reading-service/pull/20) 2014-11-26 14:53:22)
+
+Added health endpoint
+
+### New feature
+
+- Added health endpoint
+
+## 0.3.0 ([#17](https://git.mobcastdev.com/Agora/reading-service/pull/17) 2014-11-26 14:33:04)
+
+Get library
+
+A new feature - the get library endpoint
+
+## 0.2.0 ([#18](https://git.mobcastdev.com/Agora/reading-service/pull/18) 2014-11-26 13:39:20)
+
+Walking skeleton
+
+### New Feature
+
+Walking skeleton for admin API.
+
 ## 0.1.4 ([#15](https://git.mobcastdev.com/Agora/reading-service/pull/15) 2014-11-19 17:59:41)
 
 Spec update

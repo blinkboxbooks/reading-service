@@ -5,10 +5,10 @@ import com.blinkbox.books.auth.{ZuulElevationChecker, ZuulTokenDecoder, ZuulToke
 import com.blinkbox.books.clients.catalogue.{DefaultClient, DefaultCatalogueV1Service}
 import com.blinkbox.books.config.{ApiConfig, Configuration}
 import com.blinkbox.books.logging.Loggers
-import com.blinkbox.books.reading.common.persistence.{DbLibraryStore, DefaultDatabaseComponent}
+import com.blinkbox.books.reading.persistence.{DbLibraryStore, DefaultDatabaseComponent}
 import com.blinkbox.books.slick.MySQLDatabaseSupport
 import com.blinkbox.books.spray.{BearerTokenAuthenticator, HttpServer, url2uri}
-import com.typesafe.scalalogging.slf4j.StrictLogging
+import com.typesafe.scalalogging.StrictLogging
 import spray.can.Http
 import spray.routing.HttpServiceActor
 

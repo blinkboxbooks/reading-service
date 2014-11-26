@@ -1,8 +1,8 @@
-package com.blinkbox.books.reading.common.persistence
+package com.blinkbox.books.reading.persistence
 
 import java.net.URI
 
-import com.blinkbox.books.reading.common._
+import com.blinkbox.books.reading._
 import com.blinkbox.books.slick.TablesContainer
 import org.joda.time.DateTime
 
@@ -111,11 +111,18 @@ trait LibraryTables[Profile <: JdbcProfile] extends TablesContainer[Profile] {
   private def getLibraryItem(userId: Column[Int], isbn: Column[String]): lifted.Query[LibraryItems, LibraryItem, Seq] =
     libraryItems.filter(b => b.isbn === isbn && b.userId === userId)
 
+  private def getUserLibrary(count: ConstColumn[Long], offset: ConstColumn[Long], userId: Column[Int]):  lifted.Query[LibraryItems, LibraryItem, Seq] =
+    libraryItems.filter(_.userId === userId).drop(offset).take(count)
+
   private def getLibraryItemMedia(isbn: Column[String]): lifted.Query[LibraryMedia, LibraryItemLink, Seq] =
     libraryMedia.filter(_.isbn === isbn)
 
+  def getBulkLibraryItemMedia(isbns: List[String]): lifted.Query[LibraryMedia, LibraryItemLink, Seq] =
+    libraryMedia.filter(_.isbn inSet isbns)
+
   lazy val getLibraryItemBy = Compiled(getLibraryItem _)
   lazy val getLibraryItemLinkFor = Compiled(getLibraryItemMedia _)
+  lazy val getUserLibraryById = Compiled(getUserLibrary _)
 }
 
 object LibraryTables {
