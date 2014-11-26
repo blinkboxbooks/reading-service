@@ -1,5 +1,11 @@
 # Change log
 
+## 0.3.0 ([#17](https://git.mobcastdev.com/Agora/reading-service/pull/17) 2014-11-26 14:33:04)
+
+Get library
+
+A new feature - the get library endpoint
+
 ## 0.2.0 ([#18](https://git.mobcastdev.com/Agora/reading-service/pull/18) 2014-11-26 13:39:20)
 
 Walking skeleton
