@@ -9,7 +9,7 @@ import com.blinkbox.books.spray.Directives.rootPath
 import com.blinkbox.books.spray.MonitoringDirectives.monitor
 import com.blinkbox.books.spray.v2.Implicits.throwableMarshaller
 import com.blinkbox.books.spray.{ElevatedContextAuthenticator, JsonFormats, url2uri, v2}
-import org.slf4j.LoggerFactory
+import com.typesafe.scalalogging.StrictLogging
 import spray.routing._
 
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -17,11 +17,10 @@ import scala.concurrent.ExecutionContext.Implicits.global
 class ReadingApi(
   apiConfig: ApiConfig,
   authenticator: ElevatedContextAuthenticator[User],
-  libraryService: LibraryService)(implicit val actorRefFactory: ActorRefFactory) extends HttpService with v2.JsonSupport {
+  libraryService: LibraryService)(implicit val actorRefFactory: ActorRefFactory) extends HttpService with v2.JsonSupport with StrictLogging {
 
   import ReadingApi._
 
-  val log = LoggerFactory.getLogger(classOf[ReadingApi])
   implicit override val jsonFormats = JsonFormats.blinkboxFormat() + ReadingPositionSerializer + MediaTypeSerializer + BookTypeSerializer + ReadingStatusSerializer + BookDetailsSerializer
 
   val getBookDetails = get {
@@ -34,7 +33,7 @@ class ReadingApi(
     }
   }
 
-  val routes = monitor(log, throwableMarshaller) {
+  val routes = monitor(logger, throwableMarshaller) {
     rootPath(apiConfig.localUrl.path) {
       getBookDetails
     }
