@@ -6,7 +6,7 @@ import com.blinkbox.books.logging.Loggers
 import com.blinkbox.books.reading.common.persistence.{DbLibraryStore, DefaultDatabaseComponent}
 import com.blinkbox.books.slick.MySQLDatabaseSupport
 import com.blinkbox.books.spray.{HttpServer, url2uri}
-import com.typesafe.scalalogging.slf4j.StrictLogging
+import com.typesafe.scalalogging.StrictLogging
 import spray.can.Http
 import spray.routing.HttpServiceActor
 

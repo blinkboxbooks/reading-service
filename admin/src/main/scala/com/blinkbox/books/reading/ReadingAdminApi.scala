@@ -7,16 +7,14 @@ import com.blinkbox.books.spray.MonitoringDirectives.monitor
 import com.blinkbox.books.spray.v2
 import com.blinkbox.books.spray.v2.Implicits.throwableMarshaller
 import com.blinkbox.books.spray.url2uri
-import org.slf4j.LoggerFactory
+import com.typesafe.scalalogging.StrictLogging
 import spray.routing.HttpService
 
 import scala.concurrent.ExecutionContext.Implicits.global
 
 case class Bar(value: String = "bar")
 
-class ReadingAdminApi(apiConfig: ApiConfig)(implicit val actorRefFactory: ActorRefFactory) extends HttpService with v2.JsonSupport {
-
-  val log = LoggerFactory.getLogger(classOf[ReadingAdminApi])
+class ReadingAdminApi(apiConfig: ApiConfig)(implicit val actorRefFactory: ActorRefFactory) extends HttpService with v2.JsonSupport with StrictLogging {
 
   val foo = get {
     path("admin" / "library" / "foo") {
@@ -24,7 +22,7 @@ class ReadingAdminApi(apiConfig: ApiConfig)(implicit val actorRefFactory: ActorR
     }
   }
 
-  val routes = monitor(log, throwableMarshaller) {
+  val routes = monitor(logger, throwableMarshaller) {
     rootPath(apiConfig.localUrl.path) {
       foo
     }
