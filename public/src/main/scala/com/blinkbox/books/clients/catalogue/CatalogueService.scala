@@ -66,7 +66,6 @@ class DefaultCatalogueV1Service(client: Client)(implicit ec: ExecutionContext) e
   def getBulkBookInfo(isbns: List[String], userId: Int): Future[BulkBookInfo] = {
     if (isbns.isEmpty) { Future.successful(BulkBookInfo(0, List.empty[BookInfo])) }
     else {
-      val isbnQueryString = isbns.mkString(start = "id=", sep = "&id=", end = "")
       val req = Get(client.config.url.withPath(Uri.Path("/catalogue/books")).withQuery(isbns.map("id" -> _): _*))
       client.dataRequest[BulkBookInfo](req, credentials = None).transform(identity, {
         case e: NotFoundException =>
@@ -91,8 +90,7 @@ class DefaultCatalogueV1Service(client: Client)(implicit ec: ExecutionContext) e
   }
 
   override def getBulkContributorInfo(contributorIds: List[String]): Future[BulkContributorInfo] = {
-    val queryString = contributorIds.map(id => s"id=${id}").foldRight("")((a,b) => s"${a}&${b}")
-    val req = Get(s"${client.config.url}/catalogue/contributors?$queryString")
+    val req = Get(client.config.url.withPath(Uri.Path("/catalogue/contributors")).withQuery(contributorIds.map("id" -> _): _*))
     client.dataRequest[BulkContributorInfo](req, credentials = None).transform(identity, {
       case e: NotFoundException =>
         new CatalogueInfoMissingException(s"Catalogue does not have a contributor with id: $contributorIds", e)
