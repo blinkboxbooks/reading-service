@@ -1,3 +1,3 @@
 When(/^I request my library$/) do
-  pending
+  get_library
 end
