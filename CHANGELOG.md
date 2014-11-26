@@ -1,5 +1,13 @@
 # Change log
 
+## 0.4.0 ([#20](https://git.mobcastdev.com/Agora/reading-service/pull/20) 2014-11-26 14:53:22)
+
+Added health endpoint
+
+### New feature
+
+- Added health endpoint
+
 ## 0.3.0 ([#17](https://git.mobcastdev.com/Agora/reading-service/pull/17) 2014-11-26 14:33:04)
 
 Get library
