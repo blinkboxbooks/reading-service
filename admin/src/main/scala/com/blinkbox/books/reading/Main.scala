@@ -3,7 +3,7 @@ package com.blinkbox.books.reading
 import akka.actor.{ActorSystem, Props}
 import com.blinkbox.books.config.{ApiConfig, Configuration}
 import com.blinkbox.books.logging.Loggers
-import com.blinkbox.books.reading.common.persistence.{DbLibraryStore, DefaultDatabaseComponent}
+import com.blinkbox.books.reading.persistence.{DbLibraryStore, DefaultDatabaseComponent}
 import com.blinkbox.books.slick.MySQLDatabaseSupport
 import com.blinkbox.books.spray.{HttpServer, url2uri}
 import com.typesafe.scalalogging.StrictLogging

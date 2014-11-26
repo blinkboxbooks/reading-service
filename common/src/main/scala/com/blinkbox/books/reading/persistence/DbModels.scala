@@ -1,8 +1,8 @@
-package com.blinkbox.books.reading.common.persistence
+package com.blinkbox.books.reading.persistence
 
 import java.net.URI
 
-import com.blinkbox.books.reading.common.{ReadingStatus, BookType, LibraryMediaLinkType, Cfi}
+import com.blinkbox.books.reading.{ReadingStatus, BookType, LibraryMediaLinkType, Cfi}
 import org.joda.time.DateTime
 
 case class LibraryItem(
@@ -18,7 +18,7 @@ case class LibraryItem(
 
 case class LibraryItemLink(
   isbn: String, mediaType: LibraryMediaLinkType,
-  uri: URI, 
-  createdAt: DateTime, 
+  uri: URI,
+  createdAt: DateTime,
   updatedAt: DateTime
 )

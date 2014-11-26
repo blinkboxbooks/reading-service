@@ -1,10 +1,8 @@
 name := "reading-service-common"
 
 libraryDependencies ++= {
-  val akkaV = "2.3.7"
   val sprayV = "1.3.2"
   Seq(
-    "com.typesafe.akka"         %%  "akka-slf4j"            % akkaV,
     "com.blinkbox.books"        %%  "common-json"           % "0.2.4",
     "com.blinkbox.books"        %%  "common-lang"           % "0.2.1",
     "com.blinkbox.books"        %%  "common-slick"          % "0.3.2",
