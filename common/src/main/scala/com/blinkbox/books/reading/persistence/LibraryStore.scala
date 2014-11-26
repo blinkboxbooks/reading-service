@@ -12,7 +12,7 @@ import scala.slick.jdbc.JdbcBackend.Database
 trait LibraryStore {
   def getBook(isbn: String, userId: Int): Future[Option[LibraryItem]]
   def getBookMedia(isbn: String): Future[List[Link]]
-  def getBooksMedia(isbns: List[String]): Future[Map[String, List[Link]]]
+  def getBooksMedia(isbns: List[String], userId: Int): Future[Map[String, List[Link]]]
   def getLibrary(count: Int, offset: Int, userId: Int): Future[List[LibraryItem]]
 }
 
@@ -35,12 +35,20 @@ class DbLibraryStore[DB <: DatabaseSupport](db: DB#Database, tables: LibraryTabl
     }
   }
 
-  override def getBooksMedia(isbns: List[String]): Future[Map[String, List[Link]]] = Future {
+  override def getBooksMedia(isbns: List[String], userId: Int): Future[Map[String, List[Link]]] = Future {
     if (isbns.isEmpty) { Map.empty }
     else db.withSession { implicit session =>
       val links = tables.getBulkLibraryItemMedia(isbns).list
       if (links.isEmpty) throw new LibraryMediaMissingException(s"media (full ePub & key URLs) for $isbns does not exist")
-      else links.groupBy(_.isbn).map{ case (k,list) => ( k -> list.map(l => Link(l.mediaType, l.uri)))}
+      else {
+        val map = links.groupBy(_.isbn).map{ case (k,list) => ( k -> list.map(l => Link(l.mediaType, l.uri)))}
+        if (map.size < isbns.size) {
+          val errorMessage = s"Cannot find media links for all the books that belong to userId ${userId}"
+          logger.error(errorMessage)
+          throw new LibraryMediaMissingException(errorMessage)
+        }
+        map
+      }
     }
   }
 

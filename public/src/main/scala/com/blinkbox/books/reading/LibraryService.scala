@@ -22,18 +22,8 @@ class DefaultLibraryService(
   override def getLibrary(count: Int, offset: Int)(implicit user: User): Future[List[BookDetails]] = for {
     library <- libraryStore.getLibrary(count, offset, user.id)
     isbns = library.map(_.isbn)
-    itemMediaLinks <- libraryStore.getBooksMedia(isbns)
-    _ = if (itemMediaLinks.size < library.size) {
-      val errorMessage = s"Cannot find media links for all the books that belong to userId ${user.id}"
-      logger.error(errorMessage)
-      throw new LibraryMediaMissingException(errorMessage)
-    }
-    catalogueInfo <- catalogueService.getBulkInfoFor(isbns)
-    _ = if (catalogueInfo.size < library.size) {
-      val errorMessage = s"Cannot find book infos for all the books that belong to userId ${user.id}"
-      logger.error(errorMessage)
-      throw new CatalogueInfoMissingException(errorMessage)
-    }
+    itemMediaLinks <- libraryStore.getBooksMedia(isbns, user.id)
+    catalogueInfo <- catalogueService.getBulkInfoFor(isbns, user.id)
     list = library.map { b => buildBookDetails(b, itemMediaLinks.get(b.isbn).get, catalogueInfo.filter(c => c.id == b.isbn).head) }
   } yield list
 

@@ -94,12 +94,12 @@ class LibraryServiceTests extends FlatSpec with MockitoSyrup with ScalaFutures w
     val expectedBookDetail2 =
       BookDetails(isbn2, catalogueInfo2.title, catalogueInfo2.author, catalogueInfo2.sortableAuthor, clock.now(), libItem2.bookType, libItem2.readingStatus, ReadingPosition(libItem2.progressCfi, libItem2.progressPercentage), List(Image(CoverImage, catalogueInfo2.coverImageUrl)), List(Link(SampleEpub, catalogueInfo2.sampleEpubUrl), Link(SampleEpub, catalogueInfo2.sampleEpubUrl)))
     when(libraryStore.getLibrary(count, offset, userId)).thenReturn(Future.successful(List(libItem1, libItem2)))
-    when(libraryStore.getBooksMedia(List(isbn1, isbn2))).
+    when(libraryStore.getBooksMedia(List(isbn1, isbn2), user.id)).
       thenReturn(Future.successful(Map(
       (isbn1 -> List(Link(SampleEpub, catalogueInfo1.sampleEpubUrl))),
       (isbn2 -> List(Link(SampleEpub, catalogueInfo2.sampleEpubUrl)))
     )))
-    when(catalogueService.getBulkInfoFor(List(isbn1, isbn2))).thenReturn(Future.successful(List(catalogueInfo1, catalogueInfo2)))
+    when(catalogueService.getBulkInfoFor(List(isbn1, isbn2), user.id)).thenReturn(Future.successful(List(catalogueInfo1, catalogueInfo2)))
 
     whenReady(service.getLibrary(count, offset)) { res =>
       assert(res.size == 2)
@@ -110,8 +110,8 @@ class LibraryServiceTests extends FlatSpec with MockitoSyrup with ScalaFutures w
 
   it should "return successfully when a user has no items in his library" in new TestFixture {
     when(libraryStore.getLibrary(count, offset, UserId)).thenReturn(Future.successful(List.empty[LibraryItem]))
-    when(catalogueService.getBulkInfoFor(List.empty[String])).thenReturn(Future.successful(List.empty[CatalogueInfo]))
-    when(libraryStore.getBooksMedia(List.empty[String])).thenReturn(Future.successful(Map.empty[String, List[Link]])) // compiler needs type hint here
+    when(catalogueService.getBulkInfoFor(List.empty[String], user.id)).thenReturn(Future.successful(List.empty[CatalogueInfo]))
+    when(libraryStore.getBooksMedia(List.empty[String], user.id)).thenReturn(Future.successful(Map.empty[String, List[Link]])) // compiler needs type hint here
 
     whenReady(service.getLibrary(count, offset)) { res =>
       assert(res == List.empty[BookDetails])
@@ -121,23 +121,21 @@ class LibraryServiceTests extends FlatSpec with MockitoSyrup with ScalaFutures w
   it should "return a LibraryMediaMissingException in a bulk request for library medias if there are missing media for a book" in new TestFixture {
 
     when(libraryStore.getLibrary(count, offset, userId)).thenReturn(Future.successful(List(libItem1, libItem2)))
-    when(libraryStore.getBooksMedia(List(isbn1, isbn2))).
-      thenReturn(Future.successful(Map(
-      (isbn1 -> List(Link(SampleEpub, catalogueInfo1.sampleEpubUrl)))
-    )))
-    when(catalogueService.getBulkInfoFor(List(isbn1, isbn2))).thenReturn(Future.successful(List(catalogueInfo1, catalogueInfo2)))
+    when(libraryStore.getBooksMedia(List(isbn1, isbn2), user.id)).
+      thenReturn(Future.failed(new LibraryMediaMissingException("failed test")))
+    when(catalogueService.getBulkInfoFor(List(isbn1, isbn2), user.id)).thenReturn(Future.successful(List(catalogueInfo1, catalogueInfo2)))
 
     failingWith[LibraryMediaMissingException](service.getLibrary(count, offset))
   }
 
   it should "return a CatalogueInfoMissingException in a bulk request for book infos if there is missing information for a book" in new TestFixture {
     when(libraryStore.getLibrary(count, offset, userId)).thenReturn(Future.successful(List(libItem1, libItem2)))
-    when(libraryStore.getBooksMedia(List(isbn1, isbn2))).
+    when(libraryStore.getBooksMedia(List(isbn1, isbn2), user.id)).
       thenReturn(Future.successful(Map(
       (isbn1 -> List(Link(SampleEpub, catalogueInfo1.sampleEpubUrl))),
       (isbn2 -> List(Link(SampleEpub, catalogueInfo2.sampleEpubUrl)))
     )))
-    when(catalogueService.getBulkInfoFor(List(isbn1, isbn2))).thenReturn(Future.successful(List(catalogueInfo1)))
+    when(catalogueService.getBulkInfoFor(List(isbn1, isbn2), user.id)).thenReturn(Future.failed(new CatalogueInfoMissingException("failed test")))
     failingWith[CatalogueInfoMissingException](service.getLibrary(count, offset))
   }
 

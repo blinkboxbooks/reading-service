@@ -4,9 +4,9 @@ import java.net.{URI, URL}
 
 import akka.actor.ActorRefFactory
 import com.blinkbox.books.auth.{Elevation, User}
-import com.blinkbox.books.clients.catalogue.{CatalogueInfo, CatalogueService, CatalogueV1Responses, CatalogueInfoMissingException}
+import com.blinkbox.books.clients.catalogue.{CatalogueService, CatalogueInfoMissingException}
 import com.blinkbox.books.config.ApiConfig
-import com.blinkbox.books.reading.persistence.{LibraryItem, LibraryStore, LibraryMediaMissingException}
+import com.blinkbox.books.reading.persistence.{LibraryStore, LibraryMediaMissingException}
 import com.blinkbox.books.spray.BearerTokenAuthenticator.credentialsInvalidHeaders
 import com.blinkbox.books.spray.v2.{Link, `application/vnd.blinkbox.books.v2+json`}
 import com.blinkbox.books.spray.{BearerTokenAuthenticator, v2}
@@ -30,7 +30,7 @@ import scala.concurrent.Future
 class ReadingApiTests extends FlatSpec with ScalatestRouteTest with MockitoSyrup with v2.JsonSupport {
 
   "Book details endpoint" should "return book details for a valid request" in new TestFixture {
-    when(libraryService.getBook(testBook.isbn)(authenticatedUser)).thenReturn(Future.successful(Some(testBook)))
+    when(libraryService.getBook(testBook.isbn)).thenReturn(Future.successful(Some(testBook)))
     when(authenticator.apply(any[RequestContext])).thenReturn(Future.successful(Right(authenticatedUser)))
 
     Get(s"/my/library/${testBook.isbn}") ~> Authorization(OAuth2BearerToken(accessToken)) ~> routes ~> check {
@@ -41,7 +41,7 @@ class ReadingApiTests extends FlatSpec with ScalatestRouteTest with MockitoSyrup
   }
 
   it should "return entire user's library for a valid request" in new TestFixture {
-    when(libraryService.getLibrary(25, 0)(authenticatedUser)).thenReturn(Future.successful(List(testBook, testBook2)))
+    when(libraryService.getLibrary(25, 0)).thenReturn(Future.successful(List(testBook, testBook2)))
     when(authenticator.apply(any[RequestContext])).thenReturn(Future.successful(Right(authenticatedUser)))
     Get("/my/library") ~> Authorization(OAuth2BearerToken(accessToken)) ~> routes ~> check {
       assert(status == OK)
@@ -51,33 +51,12 @@ class ReadingApiTests extends FlatSpec with ScalatestRouteTest with MockitoSyrup
   }
 
   it should "return an empty library for a valid request of a user who does not have a library yet" in new TestFixture {
-    when(libraryService.getLibrary(25, 0)(authenticatedUser)).thenReturn(Future.successful(List.empty))
+    when(libraryService.getLibrary(25, 0)).thenReturn(Future.successful(List.empty))
     when(authenticator.apply(any[RequestContext])).thenReturn(Future.successful(Right(authenticatedUser)))
     Get("/my/library") ~> Authorization(OAuth2BearerToken(accessToken)) ~> routes ~> check {
       assert(status == OK)
       assert(mediaType == `application/vnd.blinkbox.books.v2+json`)
       assert(body.asString == """{"items":[]}""")
-    }
-  }
-
-  // This test is quite complicated as it's trying to mock the database and Catalogue Service such that the
-  // database returns books that the catalogue service has no information in. We want the to make sure that when
-  // we get the wrong number of media links or book information, the system simply does not return the library with
-  // incomplete data
-  it should "return a 500 if the Catalogue Service does not contain all the books info" in new StoreFixture {
-    val isbn1 = "9870123456789"
-    val isbn2 = "9879876543210"
-    val libItem1 = LibraryItem(isbn1, authenticatedUser.id, Full, Finished, Cfi("/6/4"), 100, clock.now(), clock.now)
-    val libItem2 = LibraryItem(isbn2, authenticatedUser.id, Full, Reading, Cfi("/6/4"), 50, clock.now(), clock.now)
-    val catalogueInfo1 = CatalogueInfo(isbn1, "Book Name", "Author Name", "Name, Author", new URI("http://cover/location"), new URI("http://sample/location"))
-    val count = 25
-    val offset = 0
-    when(libraryStore.getLibrary(count, offset, authenticatedUser.id)).thenReturn(Future.successful(List(libItem1, libItem2)))
-    when(libraryStore.getBooksMedia(List(isbn1, isbn2))).thenReturn(Future.successful(Map((isbn1 -> List(Link(SampleEpub, catalogueInfo1.sampleEpubUrl), Link(CoverImage, catalogueInfo1.coverImageUrl))))))
-    when(catalogueService.getBulkInfoFor(List(isbn1, isbn2))).thenReturn(Future.successful(List(catalogueInfo1)))
-    when(authenticator.apply(any[RequestContext])).thenReturn(Future.successful(Right(authenticatedUser)))
-    Get(s"/my/library") ~> Authorization(OAuth2BearerToken(accessToken)) ~> routes ~> check {
-      assert(status == InternalServerError)
     }
   }
 
@@ -93,7 +72,7 @@ class ReadingApiTests extends FlatSpec with ScalatestRouteTest with MockitoSyrup
   }
 
   it should "return 404 NotFound when user does not have the requested book in the library" in new TestFixture {
-    when(libraryService.getBook(testBook.isbn)(authenticatedUser)).thenReturn(Future.successful(None))
+    when(libraryService.getBook(testBook.isbn)).thenReturn(Future.successful(None))
     when(authenticator.apply(any[RequestContext])).thenReturn(Future.successful(Right(authenticatedUser)))
 
     Get(s"/my/library/${testBook.isbn}") ~> Authorization(OAuth2BearerToken(accessToken)) ~> routes ~> check {
@@ -105,7 +84,7 @@ class ReadingApiTests extends FlatSpec with ScalatestRouteTest with MockitoSyrup
   }
 
   it should "return 500 Internal Error when media links of a book in user's library are missing" in new TestFixture {
-    when(libraryService.getBook(testBook.isbn)(authenticatedUser))
+    when(libraryService.getBook(testBook.isbn))
       .thenReturn(Future.failed(new LibraryMediaMissingException("test exception")))
     when(authenticator.apply(any[RequestContext])).thenReturn(Future.successful(Right(authenticatedUser)))
 
@@ -117,7 +96,7 @@ class ReadingApiTests extends FlatSpec with ScalatestRouteTest with MockitoSyrup
   }
 
   it should "return 500 Internal Error when catalogue info of a book in user's library is missing" in new TestFixture {
-    when(libraryService.getBook(testBook.isbn)(authenticatedUser)).thenReturn(Future.failed(new CatalogueInfoMissingException("test exception")))
+    when(libraryService.getBook(testBook.isbn)).thenReturn(Future.failed(new CatalogueInfoMissingException("test exception")))
     when(authenticator.apply(any[RequestContext])).thenReturn(Future.successful(Right(authenticatedUser)))
 
     Get(s"/my/library/${testBook.isbn}") ~> Authorization(OAuth2BearerToken(accessToken)) ~> routes ~> check {
@@ -133,7 +112,7 @@ class ReadingApiTests extends FlatSpec with ScalatestRouteTest with MockitoSyrup
 
     val accessToken = "accessToken"
 
-    val authenticatedUser = User(accessToken, claims = Map("sub" -> "urn:blinkbox:zuul:user:1", "sso/at" -> "ssoToken"))
+    implicit val authenticatedUser = User(accessToken, claims = Map("sub" -> "urn:blinkbox:zuul:user:1", "sso/at" -> "ssoToken"))
 
     val images = List(Image(CoverImage, new URI("http://media.blinkboxbooks.com/9780/141/909/837/cover.png")))
 

@@ -81,6 +81,10 @@ class DbLibraryStoreTests extends FlatSpec with MockitoSyrup with ScalaFutures w
     }
   }
 
+  it should "throw LibraryMediaMissingException when there are no media links for one of many books" in new PopulatedDbFixture {
+    failingWith[LibraryMediaMissingException](libraryStore.getBooksMedia(List("1", "2", "3"), 1))
+  }
+
   class EmptyDbFixture extends TestDbComponent {
     import tables.driver.simple._
 
