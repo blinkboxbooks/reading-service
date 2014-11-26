@@ -4,7 +4,7 @@ import java.net.URI
 
 import com.blinkbox.books.spray.v1
 import com.blinkbox.books.spray.v1.Version1JsonSupport
-import com.typesafe.scalalogging.slf4j.StrictLogging
+import com.typesafe.scalalogging.StrictLogging
 import spray.http.Uri
 import spray.httpx.RequestBuilding.Get
 import com.blinkbox.books.spray.url2uri

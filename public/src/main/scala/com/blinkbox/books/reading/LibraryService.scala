@@ -5,7 +5,7 @@ import com.blinkbox.books.clients.catalogue._
 import com.blinkbox.books.reading._
 import com.blinkbox.books.reading.persistence.{LibraryMediaMissingException, LibraryItem, LibraryStore}
 import com.blinkbox.books.spray.v2.Link
-import com.typesafe.scalalogging.slf4j.StrictLogging
+import com.typesafe.scalalogging.StrictLogging
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future

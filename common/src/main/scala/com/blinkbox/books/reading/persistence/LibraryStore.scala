@@ -3,7 +3,7 @@ package com.blinkbox.books.reading.persistence
 import com.blinkbox.books.config.DatabaseConfig
 import com.blinkbox.books.slick.{DatabaseComponent, DatabaseSupport, MySQLDatabaseSupport, TablesContainer}
 import com.blinkbox.books.spray.v2.Link
-import com.typesafe.scalalogging.slf4j.StrictLogging
+import com.typesafe.scalalogging.StrictLogging
 
 import scala.concurrent.{ExecutionContext, Future}
 import scala.slick.driver.MySQLDriver

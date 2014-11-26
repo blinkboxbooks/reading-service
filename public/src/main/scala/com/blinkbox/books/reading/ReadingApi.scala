@@ -8,7 +8,7 @@ import com.blinkbox.books.spray.Directives.{paged, rootPath}
 import com.blinkbox.books.spray.MonitoringDirectives.monitor
 import com.blinkbox.books.spray.v2.Implicits.throwableMarshaller
 import com.blinkbox.books.spray.{ElevatedContextAuthenticator, JsonFormats, url2uri, v2}
-import com.typesafe.scalalogging.slf4j.StrictLogging
+import com.typesafe.scalalogging.StrictLogging
 import org.slf4j.LoggerFactory
 import spray.http.StatusCodes._
 import spray.routing._
@@ -22,7 +22,6 @@ class ReadingApi(
 
   import ReadingApi._
 
-  val log = LoggerFactory.getLogger(classOf[ReadingApi])
   val defaultPageSize = 25
   implicit override val jsonFormats = JsonFormats.blinkboxFormat() + ReadingPositionSerializer + MediaTypeSerializer + BookTypeSerializer + ReadingStatusSerializer + BookDetailsSerializer
 
@@ -49,7 +48,7 @@ class ReadingApi(
     }
   }
 
-  val routes = monitor(log, throwableMarshaller) {
+  val routes = monitor(logger, throwableMarshaller) {
     rootPath(apiConfig.localUrl.path) {
       getBookDetails ~ getLibrary
     }
