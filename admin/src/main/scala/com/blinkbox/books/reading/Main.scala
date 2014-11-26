@@ -41,7 +41,6 @@ object Main extends App with Configuration with Loggers with StrictLogging {
     HttpServer(Http.Bind(service, localUrl.getHost, localUrl.effectivePort))
 
   } catch {
-    case ex: ControlThrowable => throw ex
     case ex: Throwable =>
       logger.error("Error during initialization of the service", ex)
       System.exit(1)
