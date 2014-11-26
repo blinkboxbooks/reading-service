@@ -35,7 +35,6 @@ object Main extends App with Configuration with Loggers with StrictLogging {
     val dbComponent = new DefaultDatabaseComponent(appConfig.db)
     val libraryStore = new DbLibraryStore[MySQLDatabaseSupport](dbComponent.db, dbComponent.tables, dbComponent.exceptionFilter)
 
-
     val service = system.actorOf(Props(new WebService(appConfig.api)), "reading-service-public")
 
     val localUrl = appConfig.api.localUrl
