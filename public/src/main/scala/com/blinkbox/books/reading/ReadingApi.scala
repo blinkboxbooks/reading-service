@@ -9,7 +9,6 @@ import com.blinkbox.books.spray.MonitoringDirectives.monitor
 import com.blinkbox.books.spray.v2.Implicits.throwableMarshaller
 import com.blinkbox.books.spray.{ElevatedContextAuthenticator, JsonFormats, url2uri, v2}
 import com.typesafe.scalalogging.StrictLogging
-import org.slf4j.LoggerFactory
 import spray.http.StatusCodes._
 import spray.routing._
 
