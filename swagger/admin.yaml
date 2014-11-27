@@ -28,9 +28,9 @@ paths:
           in: body
           required: true
           schema:
-            $ref: BookIsbn
+            $ref: public.yaml#/definitions/LibraryItem
       responses:
-        200:
+        204:
           description: Book successfully added
         400:
           description: Book not in the catalogue
@@ -40,12 +40,3 @@ paths:
           description: User not authorised (needs CSR/CSM role)
         409:
           description: Book already in the library
-definitions:
-  BookIsbn:
-    properties:
-      isbn:
-        type: string
-      bookType:
-        description: Indicates what type of book is added.
-        type: string
-        enum: [Full, Sample]

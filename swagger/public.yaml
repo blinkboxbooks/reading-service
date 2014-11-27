@@ -188,7 +188,7 @@ definitions:
           $ref: LibraryItem
   LibraryItem:
     type: object
-    description: A minimal representation of a book
+    description: A representation of a book
     required:
       - isbn
       - title
@@ -211,27 +211,33 @@ definitions:
       title:
         type: string
         description: The full title of the book
+        readOnly: true
       author:
         type: string
         description: The author of the book
+        readOnly: true
       sortableAuthor:
         type: string
         description: The non-displayable author name used for sorting books by author name
-      bookType:
-        description: indicates whether the library contains only the sample of the book
+        readOnly: true
+      ownership:
+        description: indicates the type of book ownership
         enum:
+          - Owned
           - Sample
-          - Full
       archived:
         type: boolean
         description: indicates whether the book is archived
+        readOnly: true
       readingStatus:
         enum:
           - NotStarted
           - Reading
           - Finished
+        readOnly: true
       readingPosition:
         $ref: ReadingPosition
+        readOnly: true
       images:
         type: array
         description: The urls for the image displayed in a user's library
@@ -242,13 +248,16 @@ definitions:
               type: string
             url:
               type: string
+        readOnly: true
       addedTime:
         type: string
         format: date-time
         description: The date and time the book was added to the user's library
+        readOnly: true
       version:
         type: string
         description: The version of the epub
+        readOnly: true
   ReadingPosition:
     description: Current reading postion
     type: object
