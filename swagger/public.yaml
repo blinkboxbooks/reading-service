@@ -1,6 +1,6 @@
 swagger: "2.0"
 info:
-  title: Reading Service API
+  title: Reading Service public API
   description: A service for managing a user's library
   version: 0.0.1
 host: api.blinkboxbooks.com
