@@ -20,7 +20,7 @@ paths:
           type: string
           required: true
           format: "/^Bearer .+/"
-          x-elevation: none
+          x-elevation: critical
         - name: userId
           in: path
           required: true
