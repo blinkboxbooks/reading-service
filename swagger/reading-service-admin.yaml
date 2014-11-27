@@ -28,7 +28,7 @@ paths:
           in: body
           required: true
           schema:
-            $ref: public.yaml#/definitions/LibraryItem
+            $ref: reading-service-public.yaml#/definitions/LibraryItem
       responses:
         204:
           description: Book successfully added
