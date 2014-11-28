@@ -94,7 +94,6 @@ class DefaultCatalogueV1Service(client: Client)(implicit ec: ExecutionContext) e
     if (contributorIds.isEmpty) { Future.successful(BulkContributorInfo(0, List.empty[ContributorInfo])) }
     else {
       val requestUrl = Uri(s"${client.config.url}/catalogue/contributors").withQuery(contributorIds.map("id" -> _): _*)
-      println(requestUrl)
       val req = Get(requestUrl)
 
       client.dataRequest[BulkContributorInfo](req, credentials = None).transform(identity, {
