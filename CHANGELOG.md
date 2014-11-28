@@ -1,5 +1,11 @@
 # Change log
 
+## 0.5.1 ([#22](https://git.mobcastdev.com/Agora/reading-service/pull/22) 2014-11-28 18:47:09)
+
+Fix catalogue url
+
+A patch to fix the url that calls the catalogue service.
+
 ## 0.5.0 ([#21](https://git.mobcastdev.com/Agora/reading-service/pull/21) 2014-11-28 10:45:18)
 
 Add full book endpoint spec
