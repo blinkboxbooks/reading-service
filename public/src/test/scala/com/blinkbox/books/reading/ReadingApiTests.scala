@@ -4,9 +4,9 @@ import java.net.{URI, URL}
 
 import akka.actor.ActorRefFactory
 import com.blinkbox.books.auth.{Elevation, User}
-import com.blinkbox.books.clients.catalogue.{CatalogueService, CatalogueInfoMissingException}
+import com.blinkbox.books.clients.catalogue.CatalogueInfoMissingException
 import com.blinkbox.books.config.ApiConfig
-import com.blinkbox.books.reading.persistence.{LibraryStore, LibraryMediaMissingException}
+import com.blinkbox.books.reading.persistence.LibraryMediaMissingException
 import com.blinkbox.books.spray.BearerTokenAuthenticator.credentialsInvalidHeaders
 import com.blinkbox.books.spray.v2.{Link, `application/vnd.blinkbox.books.v2+json`}
 import com.blinkbox.books.spray.{BearerTokenAuthenticator, v2}
@@ -37,26 +37,6 @@ class ReadingApiTests extends FlatSpec with ScalatestRouteTest with MockitoSyrup
       assert(status == OK)
       assert(mediaType == `application/vnd.blinkbox.books.v2+json`)
       assert(body.asString == testBookJson)
-    }
-  }
-
-  it should "return entire user's library for a valid request" in new TestFixture {
-    when(libraryService.getLibrary(25, 0)).thenReturn(Future.successful(List(testBook, testBook2)))
-    when(authenticator.apply(any[RequestContext])).thenReturn(Future.successful(Right(authenticatedUser)))
-    Get("/my/library") ~> Authorization(OAuth2BearerToken(accessToken)) ~> routes ~> check {
-      assert(status == OK)
-      assert(mediaType == `application/vnd.blinkbox.books.v2+json`)
-      assert(body.asString == libraryJson)
-    }
-  }
-
-  it should "return an empty library for a valid request of a user who does not have a library yet" in new TestFixture {
-    when(libraryService.getLibrary(25, 0)).thenReturn(Future.successful(List.empty))
-    when(authenticator.apply(any[RequestContext])).thenReturn(Future.successful(Right(authenticatedUser)))
-    Get("/my/library") ~> Authorization(OAuth2BearerToken(accessToken)) ~> routes ~> check {
-      assert(status == OK)
-      assert(mediaType == `application/vnd.blinkbox.books.v2+json`)
-      assert(body.asString == """{"items":[]}""")
     }
   }
 
@@ -106,6 +86,26 @@ class ReadingApiTests extends FlatSpec with ScalatestRouteTest with MockitoSyrup
     }
   }
 
+  "Library endpoint" should "return entire user's library for a valid request" in new TestFixture {
+    when(libraryService.getLibrary(25, 0)).thenReturn(Future.successful(List(testBook, testBook2)))
+    when(authenticator.apply(any[RequestContext])).thenReturn(Future.successful(Right(authenticatedUser)))
+    Get("/my/library") ~> Authorization(OAuth2BearerToken(accessToken)) ~> routes ~> check {
+      assert(status == OK)
+      assert(mediaType == `application/vnd.blinkbox.books.v2+json`)
+      assert(body.asString == libraryJson)
+    }
+  }
+
+  it should "return an empty library for a valid request of a user who does not have a library yet" in new TestFixture {
+    when(libraryService.getLibrary(25, 0)).thenReturn(Future.successful(List.empty))
+    when(authenticator.apply(any[RequestContext])).thenReturn(Future.successful(Right(authenticatedUser)))
+    Get("/my/library") ~> Authorization(OAuth2BearerToken(accessToken)) ~> routes ~> check {
+      assert(status == OK)
+      assert(mediaType == `application/vnd.blinkbox.books.v2+json`)
+      assert(body.asString == """{"items":[]}""")
+    }
+  }
+
   class TestFixture extends HttpService with TimeSupport {
 
     val clock = StoppedClock()
@@ -127,7 +127,7 @@ class ReadingApiTests extends FlatSpec with ScalatestRouteTest with MockitoSyrup
 
     val testBookJson = s"""{"isbn":"9780141909837","title":"Title","author":"Author","sortableAuthor":"Sortable Author","addedDate":"${clock.now()}","ownership":"Owned","readingStatus":"Reading","readingPosition":{"cfi":"someCfi","percentage":15},"images":[{"rel":"CoverImage","url":"http://media.blinkboxbooks.com/9780/141/909/837/cover.png"}],"links":[{"rel":"EpubFull","url":"http://media.blinkboxbooks.com/9780/141/909/837/8c9771c05e504f836e8118804e02f64c.epub"},{"rel":"EpubSample","url":"http://media.blinkboxbooks.com/9780/141/909/837/8c9771c05e504f836e8118804e02f64c.sample.epub"},{"rel":"EpubKey","url":"https://keys.mobcastdev.com/9780/141/909/837/e237e27468c6b37a5679fab718a893e6.epub.9780141909837.key"}]}"""
     val testBook2Json = s"""{"isbn":"9780234123501","title":"Other Title","author":"Other Author","sortableAuthor":"Author, Other","addedDate":"${clock.now()}","ownership":"Owned","readingStatus":"Reading","readingPosition":{"cfi":"someCfi","percentage":30},"images":[{"rel":"CoverImage","url":"http://media.blinkboxbooks.com/9780/141/909/837/cover.png"}],"links":[{"rel":"EpubFull","url":"http://media.blinkboxbooks.com/9780/141/909/837/8c9771c05e504f836e8118804e02f64c.epub"},{"rel":"EpubSample","url":"http://media.blinkboxbooks.com/9780/141/909/837/8c9771c05e504f836e8118804e02f64c.sample.epub"},{"rel":"EpubKey","url":"https://keys.mobcastdev.com/9780/141/909/837/e237e27468c6b37a5679fab718a893e6.epub.9780141909837.key"}]}"""
-    val libraryJson = s"""{"items":[${testBookJson},${testBook2Json}]}"""
+    val libraryJson = s"""{"items":[$testBookJson,$testBook2Json]}"""
     val apiConfig = mock[ApiConfig]
     when(apiConfig.localUrl).thenReturn(new URL("http://localhost"))
 
@@ -140,34 +140,5 @@ class ReadingApiTests extends FlatSpec with ScalatestRouteTest with MockitoSyrup
     def routes = testService.routes
 
     override implicit def actorRefFactory: ActorRefFactory = system
-  }
-
-  // To be used only to test the failing cases for when the catalogue service does not return the correct number of results
-  class StoreFixture extends HttpService with TimeSupport {
-
-    // Akka system
-    override implicit def actorRefFactory: ActorRefFactory = system
-
-    // Add a stopped clock
-    override val clock = StoppedClock()
-
-    // The library service with the mocked out stores
-    val libraryStore = mock[LibraryStore]
-    val catalogueService = mock[CatalogueService]
-    val libraryService = new DefaultLibraryService(libraryStore, catalogueService)
-
-    // Authenticator mock
-    val accessToken = "accessToken"
-    implicit val authenticatedUser = User(accessToken, claims = Map("sub" -> "urn:blinkbox:zuul:user:1", "sso/at" -> "ssoToken"))
-    val authenticator = mock[BearerTokenAuthenticator]
-    when(authenticator.withElevation(Elevation.Unelevated)).thenReturn(authenticator)
-
-    // Setting up the Reading Api
-    val apiConfig = mock[ApiConfig]
-    when(apiConfig.localUrl).thenReturn(new URL("http://localhost"))
-    val testService = new ReadingApi(apiConfig, authenticator, libraryService)(system)
-
-    // Set the routes of this service to be that of the testService
-    def routes = testService.routes
   }
 }
