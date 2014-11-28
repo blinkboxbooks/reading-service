@@ -77,7 +77,7 @@ trait LibraryTables[Profile <: JdbcProfile] extends TablesContainer[Profile] {
     def userId = column[Int]("user_id")
     def ownership = column[Ownership]("ownership_type_id")
     def readingStatus = column[ReadingStatus]("reading_status_id")
-    def progressCfi = column[Cfi]("progress_cfi", DBType("VARCHAR(255)"))
+    def progressCfi = column[Option[Cfi]]("progress_cfi", DBType("VARCHAR(255)"))
     def progressPercentage = column[Int]("progress_percentage")
     def createdAt = column[DateTime]("created_at")
     def updatedAt = column[DateTime]("updated_at")

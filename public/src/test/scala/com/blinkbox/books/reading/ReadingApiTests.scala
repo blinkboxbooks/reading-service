@@ -40,6 +40,17 @@ class ReadingApiTests extends FlatSpec with ScalatestRouteTest with MockitoSyrup
     }
   }
 
+  it should "return book details without cfi if book's reading status is NotStarted" in new TestFixture {
+    when(libraryService.getBook(unreadBook.isbn)).thenReturn(Future.successful(Some(unreadBook)))
+    when(authenticator.apply(any[RequestContext])).thenReturn(Future.successful(Right(authenticatedUser)))
+
+    Get(s"/my/library/${unreadBook.isbn}") ~> Authorization(OAuth2BearerToken(accessToken)) ~> routes ~> check {
+      assert(status == OK)
+      assert(mediaType == `application/vnd.blinkbox.books.v2+json`)
+      assert(body.asString == unreadBookJson)
+    }
+  }
+
   it should "return 401 Unauthorized when user request has invalid access token" in new TestFixture {
     when(authenticator.apply(any[RequestContext]))
       .thenReturn(Future.successful(Left(AuthenticationFailedRejection(CredentialsRejected, credentialsInvalidHeaders))))
@@ -121,10 +132,12 @@ class ReadingApiTests extends FlatSpec with ScalatestRouteTest with MockitoSyrup
       Link(SampleEpub, new URI("http://media.blinkboxbooks.com/9780/141/909/837/8c9771c05e504f836e8118804e02f64c.sample.epub")),
       Link(EpubKey, new URI("https://keys.mobcastdev.com/9780/141/909/837/e237e27468c6b37a5679fab718a893e6.epub.9780141909837.key"))
     )
-    val testBook = BookDetails("9780141909837", "Title", "Author", "Sortable Author", clock.now(), Owned, Reading, ReadingPosition(Cfi("someCfi"), 15), images, links)
+    val unreadBook = BookDetails("9780141909836", "Title", "Author", "Sortable Author", clock.now(), Owned, NotStarted, ReadingPosition(None, 0), images, links)
+    val testBook = BookDetails("9780141909837", "Title", "Author", "Sortable Author", clock.now(), Owned, Reading, ReadingPosition(Some(Cfi("someCfi")), 15), images, links)
     // For brevity, I'm using the same sets of images and links
-    val testBook2 = BookDetails("9780234123501", "Other Title", "Other Author", "Author, Other", clock.now(), Owned, Reading, ReadingPosition(Cfi("someCfi"), 30), images, links)
+    val testBook2 = BookDetails("9780234123501", "Other Title", "Other Author", "Author, Other", clock.now(), Owned, Reading, ReadingPosition(Some(Cfi("someCfi")), 30), images, links)
 
+    val unreadBookJson = s"""{"isbn":"9780141909836","title":"Title","author":"Author","sortableAuthor":"Sortable Author","addedDate":"${clock.now()}","ownership":"Owned","readingStatus":"NotStarted","readingPosition":{"percentage":0},"images":[{"rel":"CoverImage","url":"http://media.blinkboxbooks.com/9780/141/909/837/cover.png"}],"links":[{"rel":"EpubFull","url":"http://media.blinkboxbooks.com/9780/141/909/837/8c9771c05e504f836e8118804e02f64c.epub"},{"rel":"EpubSample","url":"http://media.blinkboxbooks.com/9780/141/909/837/8c9771c05e504f836e8118804e02f64c.sample.epub"},{"rel":"EpubKey","url":"https://keys.mobcastdev.com/9780/141/909/837/e237e27468c6b37a5679fab718a893e6.epub.9780141909837.key"}]}"""
     val testBookJson = s"""{"isbn":"9780141909837","title":"Title","author":"Author","sortableAuthor":"Sortable Author","addedDate":"${clock.now()}","ownership":"Owned","readingStatus":"Reading","readingPosition":{"cfi":"someCfi","percentage":15},"images":[{"rel":"CoverImage","url":"http://media.blinkboxbooks.com/9780/141/909/837/cover.png"}],"links":[{"rel":"EpubFull","url":"http://media.blinkboxbooks.com/9780/141/909/837/8c9771c05e504f836e8118804e02f64c.epub"},{"rel":"EpubSample","url":"http://media.blinkboxbooks.com/9780/141/909/837/8c9771c05e504f836e8118804e02f64c.sample.epub"},{"rel":"EpubKey","url":"https://keys.mobcastdev.com/9780/141/909/837/e237e27468c6b37a5679fab718a893e6.epub.9780141909837.key"}]}"""
     val testBook2Json = s"""{"isbn":"9780234123501","title":"Other Title","author":"Other Author","sortableAuthor":"Author, Other","addedDate":"${clock.now()}","ownership":"Owned","readingStatus":"Reading","readingPosition":{"cfi":"someCfi","percentage":30},"images":[{"rel":"CoverImage","url":"http://media.blinkboxbooks.com/9780/141/909/837/cover.png"}],"links":[{"rel":"EpubFull","url":"http://media.blinkboxbooks.com/9780/141/909/837/8c9771c05e504f836e8118804e02f64c.epub"},{"rel":"EpubSample","url":"http://media.blinkboxbooks.com/9780/141/909/837/8c9771c05e504f836e8118804e02f64c.sample.epub"},{"rel":"EpubKey","url":"https://keys.mobcastdev.com/9780/141/909/837/e237e27468c6b37a5679fab718a893e6.epub.9780141909837.key"}]}"""
     val libraryJson = s"""{"items":[$testBookJson,$testBook2Json]}"""
