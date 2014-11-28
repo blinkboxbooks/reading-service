@@ -3,7 +3,7 @@ package com.blinkbox.books.clients.catalogue
 import java.net.{URI, URL}
 
 import akka.actor.{ActorRefFactory, ActorSystem}
-import com.blinkbox.books.reading.ClientConfig
+import com.blinkbox.books.clients.ClientConfig
 import com.blinkbox.books.spray.v1
 import com.blinkbox.books.spray.v1.`application/vnd.blinkboxbooks.data.v1+json`
 import com.blinkbox.books.test.{FailHelper, MockitoSyrup}
@@ -19,9 +19,9 @@ import spray.client.pipelining._
 import spray.http.StatusCodes._
 import spray.http._
 
+import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration._
 import scala.concurrent.{ExecutionContext, Future}
-import scala.concurrent.ExecutionContext.Implicits.global
 
 @RunWith(classOf[JUnitRunner])
 class CatalogueServiceClientTests extends FlatSpec with ScalaFutures with FailHelper with MockitoSyrup {

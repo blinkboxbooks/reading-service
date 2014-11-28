@@ -2,7 +2,7 @@ package com.blinkbox.books.clients.catalogue
 
 import akka.actor.{ActorRefFactory, ActorSystem}
 import akka.util.Timeout
-import com.blinkbox.books.reading.ClientConfig
+import com.blinkbox.books.clients.ClientConfig
 import spray.client.pipelining._
 import spray.http.StatusCodes._
 import spray.http._
