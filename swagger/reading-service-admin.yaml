@@ -1,0 +1,42 @@
+swagger: "2.0"
+info:
+  title: Reading Service admin API
+  description: A service for managing a user's library
+  version: 0.0.1
+host: api.blinkboxbooks.com
+schemes:
+  - https
+produces:
+  - application/vnd.blinkbox.books.v2+json
+paths:
+  /admin/users/{userId}/library:
+    post:
+      summary: Add book to user's library
+      description: An endpoint to add books to user's library. Can be used both by customer service representatives and other services.
+      parameters:
+        - name: Authorization
+          in: header
+          description: The bearer token from the Auth server describing the user who adds the book.
+          type: string
+          required: true
+          format: "/^Bearer .+/"
+          x-elevation: critical
+        - name: userId
+          in: path
+          required: true
+        - name: body
+          in: body
+          required: true
+          schema:
+            $ref: reading-service-public.yaml#/definitions/LibraryItem
+      responses:
+        204:
+          description: Book successfully added
+        400:
+          description: Book not in the catalogue
+        401:
+          description: Not authenticated
+        403:
+          description: User not authorised (needs CSR/CSM role)
+        409:
+          description: Book already in the library
