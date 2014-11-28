@@ -56,7 +56,7 @@ class DefaultCatalogueV1Service(client: Client)(implicit ec: ExecutionContext) e
     links.find(_.rel == "urn:blinkboxbooks:schema:samplemedia").map(l => new URI(l.href))
 
   override def getBookInfo(isbn: String): Future[BookInfo] = {
-    val req = Get(s"${client.config.url}catalogue/books/$isbn")
+    val req = Get(s"${client.config.url}/catalogue/books/$isbn")
     client.dataRequest[BookInfo](req, credentials = None).transform(identity, {
       case e: NotFoundException =>
         new CatalogueInfoMissingException(s"Catalogue does not have a book with isbn: $isbn", e)
@@ -66,8 +66,8 @@ class DefaultCatalogueV1Service(client: Client)(implicit ec: ExecutionContext) e
   def getBulkBookInfo(isbns: List[String], userId: Int): Future[BulkBookInfo] = {
     if (isbns.isEmpty) { Future.successful(BulkBookInfo(0, List.empty[BookInfo])) }
     else {
-      val req = Get(client.config.url.withPath(Uri.Path(s"${client.config.url.getPath}catalogue/contributors")).
-        withQuery(isbns.map("id" -> _): _*))
+      val requestUri = Uri(s"${client.config.url}/catalogue/books").withQuery(isbns.map("id" -> _): _*)
+      val req = Get(requestUri)
       client.dataRequest[BulkBookInfo](req, credentials = None).transform(identity, {
         case e: NotFoundException =>
           new CatalogueInfoMissingException(s"Catalogue does not have a book with the following isbns: $isbns", e)
@@ -83,7 +83,7 @@ class DefaultCatalogueV1Service(client: Client)(implicit ec: ExecutionContext) e
   }
 
   override def getContributorInfo(contributorId: String): Future[ContributorInfo] = {
-    val req = Get(s"${client.config.url}catalogue/contributors/$contributorId")
+    val req = Get(s"${client.config.url}/catalogue/contributors/$contributorId")
     client.dataRequest[ContributorInfo](req, credentials = None).transform(identity, {
       case e: NotFoundException =>
         new CatalogueInfoMissingException(s"Catalogue does not have a contributor with id: $contributorId", e)
@@ -93,8 +93,10 @@ class DefaultCatalogueV1Service(client: Client)(implicit ec: ExecutionContext) e
   override def getBulkContributorInfo(contributorIds: List[String]): Future[BulkContributorInfo] = {
     if (contributorIds.isEmpty) { Future.successful(BulkContributorInfo(0, List.empty[ContributorInfo])) }
     else {
-      val req = Get(client.config.url.withPath(Uri.Path(s"${client.config.url.getPath}catalogue/contributors")).
-        withQuery(contributorIds.map("id" -> _): _*))
+      val requestUrl = Uri(s"${client.config.url}/catalogue/contributors").withQuery(contributorIds.map("id" -> _): _*)
+      println(requestUrl)
+      val req = Get(requestUrl)
+
       client.dataRequest[BulkContributorInfo](req, credentials = None).transform(identity, {
         case e: NotFoundException =>
           new CatalogueInfoMissingException(s"Catalogue does not have a contributor with id: $contributorIds", e)
