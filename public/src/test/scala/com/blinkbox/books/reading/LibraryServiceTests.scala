@@ -4,7 +4,6 @@ import java.net.URI
 
 import com.blinkbox.books.auth.User
 import com.blinkbox.books.clients.catalogue.{CatalogueInfo, CatalogueInfoMissingException, CatalogueService}
-import com.blinkbox.books.reading._
 import com.blinkbox.books.reading.persistence.{LibraryItem, LibraryMediaMissingException, LibraryStore}
 import com.blinkbox.books.spray.v2.Link
 import com.blinkbox.books.test.{FailHelper, MockitoSyrup}
@@ -96,8 +95,8 @@ class LibraryServiceTests extends FlatSpec with MockitoSyrup with ScalaFutures w
     when(libraryStore.getLibrary(count, offset, userId)).thenReturn(Future.successful(List(libItem1, libItem2)))
     when(libraryStore.getBooksMedia(List(isbn1, isbn2), user.id)).
       thenReturn(Future.successful(Map(
-      (isbn1 -> List(Link(SampleEpub, catalogueInfo1.sampleEpubUrl))),
-      (isbn2 -> List(Link(SampleEpub, catalogueInfo2.sampleEpubUrl)))
+      isbn1 -> List(Link(SampleEpub, catalogueInfo1.sampleEpubUrl)),
+      isbn2 -> List(Link(SampleEpub, catalogueInfo2.sampleEpubUrl))
     )))
     when(catalogueService.getBulkInfoFor(List(isbn1, isbn2), user.id)).thenReturn(Future.successful(List(catalogueInfo1, catalogueInfo2)))
 
@@ -132,8 +131,8 @@ class LibraryServiceTests extends FlatSpec with MockitoSyrup with ScalaFutures w
     when(libraryStore.getLibrary(count, offset, userId)).thenReturn(Future.successful(List(libItem1, libItem2)))
     when(libraryStore.getBooksMedia(List(isbn1, isbn2), user.id)).
       thenReturn(Future.successful(Map(
-      (isbn1 -> List(Link(SampleEpub, catalogueInfo1.sampleEpubUrl))),
-      (isbn2 -> List(Link(SampleEpub, catalogueInfo2.sampleEpubUrl)))
+      isbn1 -> List(Link(SampleEpub, catalogueInfo1.sampleEpubUrl)),
+      isbn2 -> List(Link(SampleEpub, catalogueInfo2.sampleEpubUrl))
     )))
     when(catalogueService.getBulkInfoFor(List(isbn1, isbn2), user.id)).thenReturn(Future.failed(new CatalogueInfoMissingException("failed test")))
     failingWith[CatalogueInfoMissingException](service.getLibrary(count, offset))
@@ -167,11 +166,10 @@ class LibraryServiceTests extends FlatSpec with MockitoSyrup with ScalaFutures w
     val userId = 1
     val isbn1 = "9870123456789"
     val isbn2 = "9879876543210"
-    val libItem1 = LibraryItem(isbn1, userId, Owned, Finished, Cfi("/6/4"), 100, clock.now(), clock.now)
-    val libItem2 = LibraryItem(isbn2, userId, Owned, Reading, Cfi("/6/4"), 50, clock.now(), clock.now)
+    val libItem1 = LibraryItem(isbn1, userId, Owned, Finished, Cfi("/6/4"), 100, clock.now(), clock.now())
+    val libItem2 = LibraryItem(isbn2, userId, Owned, Reading, Cfi("/6/4"), 50, clock.now(), clock.now())
     val catalogueInfo1 = CatalogueInfo(isbn1, "Book Name", "Author Name", "Name, Author", new URI("http://cover/location"), new URI("http://sample/location"))
     val catalogueInfo2 = CatalogueInfo(isbn2, "Book Other", "Author Other", "Other, Author", new URI("http://cover/location2"), new URI("http://sample/location2"))
-    /*******************************************************************/
 
     val count = 25
     val offset = 0
