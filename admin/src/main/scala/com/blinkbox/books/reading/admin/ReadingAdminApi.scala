@@ -10,12 +10,12 @@ import com.blinkbox.books.spray.AuthDirectives.authenticateAndAuthorize
 import com.blinkbox.books.spray.Directives.rootPath
 import com.blinkbox.books.spray.MonitoringDirectives.monitor
 import com.blinkbox.books.spray.v2.Implicits.throwableMarshaller
-import com.blinkbox.books.spray.{JsonFormats, BearerTokenAuthenticator, url2uri, v2}
+import com.blinkbox.books.spray.{BearerTokenAuthenticator, JsonFormats, url2uri, v2}
 import com.typesafe.scalalogging.StrictLogging
-import org.json4s._
 import org.json4s.JsonAST.JString
-import spray.http.{IllegalRequestException, HttpRequest, StatusCodes}
-import spray.routing.{ValidationRejection, ExceptionHandler, HttpService}
+import org.json4s._
+import spray.http.{IllegalRequestException, StatusCodes}
+import spray.routing.{ExceptionHandler, HttpService, ValidationRejection}
 
 import scala.concurrent.ExecutionContext.Implicits.global
 
