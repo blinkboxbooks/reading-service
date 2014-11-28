@@ -35,6 +35,12 @@ class DbLibraryStore[DB <: DatabaseSupport](db: DB#Database, tables: LibraryTabl
     }
   }
 
+  def addSample(item: LibraryItem): Future[Unit] = Future {
+    db.withSession { implicit session =>
+
+    }
+  }
+
   override def getBooksMedia(isbns: List[String], userId: Int): Future[Map[String, List[Link]]] = Future {
     if (isbns.isEmpty) { Map.empty }
     else db.withSession { implicit session =>
