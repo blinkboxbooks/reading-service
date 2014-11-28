@@ -26,13 +26,13 @@ trait LibraryTables[Profile <: JdbcProfile] extends TablesContainer[Profile] {
       case 1 => FullEpub
     }
   )
-  implicit lazy val bookTypeColumnType = MappedColumnType.base[BookType, Int](
+  implicit lazy val bookTypeColumnType = MappedColumnType.base[Ownership, Int](
     {
-      case Full => 0
+      case Owned => 0
       case Sample => 1
     },
     {
-      case 0 => Full
+      case 0 => Owned
       case 1 => Sample
     }
   )
@@ -50,11 +50,11 @@ trait LibraryTables[Profile <: JdbcProfile] extends TablesContainer[Profile] {
   )
 
   // Reference tables
-  class BookTypes(tag: Tag) extends Table[(BookType, String)](tag, "book_types") {
-    def id = column[BookType]("id")
-    def bookType = column[String]("type")
+  class OwnershipTypes(tag: Tag) extends Table[(Ownership, String)](tag, "ownership_types") {
+    def id = column[Ownership]("id")
+    def ownership = column[String]("type")
 
-    override def * = (id, bookType)
+    override def * = (id, ownership)
   }
 
   class ReadingStatuses(tag: Tag) extends Table[(ReadingStatus, String)](tag, "reading_statuses") {
@@ -75,7 +75,7 @@ trait LibraryTables[Profile <: JdbcProfile] extends TablesContainer[Profile] {
 
     def isbn = column[String]("isbn", DBType("CHAR(13)"))
     def userId = column[Int]("user_id")
-    def bookType = column[BookType]("book_type_id")
+    def ownership = column[Ownership]("ownership_type_id")
     def readingStatus = column[ReadingStatus]("reading_status_id")
     def progressCfi = column[Cfi]("progress_cfi", DBType("VARCHAR(255)"))
     def progressPercentage = column[Int]("progress_percentage")
@@ -83,10 +83,10 @@ trait LibraryTables[Profile <: JdbcProfile] extends TablesContainer[Profile] {
     def updatedAt = column[DateTime]("updated_at")
 
     def pk = primaryKey("pk_library_items", (isbn, userId))
-    def fk1 = foreignKey("fk_library_items_book_types", bookType, bookTypes)(_.id)
+    def fk1 = foreignKey("fk_library_items_ownership_types", ownership, ownershipTypes)(_.id)
     def fk2 = foreignKey("fk_library_items_reading_statuses", readingStatus, readingStatuses)(_.id)
 
-    def * = (isbn, userId, bookType, readingStatus, progressCfi, progressPercentage, createdAt, updatedAt) <> (LibraryItem.tupled, LibraryItem.unapply)
+    def * = (isbn, userId, ownership, readingStatus, progressCfi, progressPercentage, createdAt, updatedAt) <> (LibraryItem.tupled, LibraryItem.unapply)
   }
 
   class LibraryMedia(tag: Tag) extends Table[LibraryItemLink](tag, "library_media") {
@@ -102,7 +102,7 @@ trait LibraryTables[Profile <: JdbcProfile] extends TablesContainer[Profile] {
     def * = (isbn, linkType, uri, createdAt, updatedAt) <> (LibraryItemLink.tupled, LibraryItemLink.unapply)
   }
 
-  lazy val bookTypes = TableQuery[BookTypes]
+  lazy val ownershipTypes = TableQuery[OwnershipTypes]
   lazy val mediaTypes = TableQuery[MediaTypes]
   lazy val readingStatuses = TableQuery[ReadingStatuses]
   lazy val libraryItems = TableQuery[LibraryItems]

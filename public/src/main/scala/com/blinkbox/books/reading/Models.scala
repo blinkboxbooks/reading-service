@@ -15,7 +15,7 @@ case class BookDetails(
   author: String,
   sortableAuthor: String,
   addedDate: DateTime,
-  bookType: BookType,
+  ownership: Ownership,
   readingStatus: ReadingStatus,
   readingPosition: ReadingPosition,
   images: List[Image] = List.empty,

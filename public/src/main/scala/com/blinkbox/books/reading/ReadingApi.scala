@@ -81,11 +81,11 @@ object ReadingApi {
     case EpubKey => JString("EpubKey")
   }))
 
-  object BookTypeSerializer extends CustomSerializer[BookType](_ => ({
-    case JString("Full") => Full
+  object BookTypeSerializer extends CustomSerializer[Ownership](_ => ({
+    case JString("Owned") => Owned
     case JString("Sample") => Sample
   }, {
-    case Full => JString("Full")
+    case Owned => JString("Owned")
     case Sample => JString("Sample")
   }))
 
