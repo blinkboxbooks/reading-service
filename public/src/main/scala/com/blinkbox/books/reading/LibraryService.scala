@@ -50,7 +50,7 @@ class DefaultLibraryService(
       catalogueInfo.author,
       catalogueInfo.sortableAuthor,
       libItem.createdAt,
-      libItem.bookType,
+      libItem.ownership,
       libItem.readingStatus,
       readingPosition,
       images,

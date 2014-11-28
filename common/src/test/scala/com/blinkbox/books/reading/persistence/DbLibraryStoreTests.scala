@@ -89,7 +89,7 @@ class DbLibraryStoreTests extends FlatSpec with MockitoSyrup with ScalaFutures w
     import tables.driver.simple._
 
     db.withSession { implicit session =>
-      val ddl = tables.libraryItems.ddl ++ tables.libraryMedia.ddl ++ tables.bookTypes.ddl ++ tables.mediaTypes.ddl ++ tables.readingStatuses.ddl
+      val ddl = tables.libraryItems.ddl ++ tables.libraryMedia.ddl ++ tables.ownershipTypes.ddl ++ tables.mediaTypes.ddl ++ tables.readingStatuses.ddl
       try { ddl.drop } catch { case _: JdbcSQLException => /* Do nothing */ }
       ddl.create
     }
@@ -108,9 +108,9 @@ class DbLibraryStoreTests extends FlatSpec with MockitoSyrup with ScalaFutures w
     val ISBN1 = "9780141909837"
     val ISBN2 = "9780141909838"
 
-    val libItem1 = LibraryItem(ISBN1, 1, Full, NotStarted, cfi, percentage, createdAt, updatedAt)
-    val libItem2 = LibraryItem(ISBN2, 1, Full, Reading, cfi, percentage, createdAt, updatedAt)
-    val libItem3 = LibraryItem(ISBN1, 2, Full, Finished, cfi, percentage, createdAt, updatedAt)
+    val libItem1 = LibraryItem(ISBN1, 1, Owned, NotStarted, cfi, percentage, createdAt, updatedAt)
+    val libItem2 = LibraryItem(ISBN2, 1, Owned, Reading, cfi, percentage, createdAt, updatedAt)
+    val libItem3 = LibraryItem(ISBN1, 2, Owned, Finished, cfi, percentage, createdAt, updatedAt)
     val libItem4 = LibraryItem(ISBN2, 2, Sample, Reading, cfi, percentage, createdAt, updatedAt)
 
     val libItem1EpubLink = LibraryItemLink(ISBN1, FullEpub, new URI("http://media.blinkboxbooks.com/9780/141/909/837/8c9771c05e504f836e8118804e02f64c.epub"), DateTime.now, DateTime.now)
@@ -120,7 +120,7 @@ class DbLibraryStoreTests extends FlatSpec with MockitoSyrup with ScalaFutures w
     val libItem2EpubKeyLink = LibraryItemLink(ISBN2, EpubKey, new URI("https://keys.mobcastdev.com/9780/141/909/838/5679fab718a893e6e237e27468c6b37a.epub.9780141909838.key"), DateTime.now, DateTime.now)
 
     db.withSession { implicit session =>
-      tables.bookTypes ++= List((Full, "Full"), (Sample, "Sample"))
+      tables.ownershipTypes ++= List((Owned, "Owned"), (Sample, "Sample"))
       tables.mediaTypes ++= List((EpubKey, "EpubKey"), (FullEpub, "FullEpub"))
       tables.readingStatuses ++= List((NotStarted, "NotStarted"), (Reading, "Reading"), (Finished, "Finished"))
       tables.libraryItems ++= List(libItem1, libItem2, libItem3, libItem4)
