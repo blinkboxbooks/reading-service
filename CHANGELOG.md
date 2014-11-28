@@ -1,5 +1,13 @@
 # Change log
 
+## 0.5.0 ([#21](https://git.mobcastdev.com/Agora/reading-service/pull/21) 2014-11-28 10:45:18)
+
+Add full book endpoint spec
+
+### New feature
+
+- Add full book endpoint spec.
+
 ## 0.4.0 ([#20](https://git.mobcastdev.com/Agora/reading-service/pull/20) 2014-11-26 14:53:22)
 
 Added health endpoint
