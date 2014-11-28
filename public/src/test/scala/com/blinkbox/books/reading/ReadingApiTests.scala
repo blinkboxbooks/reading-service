@@ -129,7 +129,7 @@ class ReadingApiTests extends FlatSpec with ScalatestRouteTest with MockitoSyrup
     val testBook2Json = s"""{"isbn":"9780234123501","title":"Other Title","author":"Other Author","sortableAuthor":"Author, Other","addedDate":"${clock.now()}","bookType":"Full","readingStatus":"Reading","readingPosition":{"cfi":"someCfi","percentage":30},"images":[{"rel":"CoverImage","url":"http://media.blinkboxbooks.com/9780/141/909/837/cover.png"}],"links":[{"rel":"EpubFull","url":"http://media.blinkboxbooks.com/9780/141/909/837/8c9771c05e504f836e8118804e02f64c.epub"},{"rel":"EpubSample","url":"http://media.blinkboxbooks.com/9780/141/909/837/8c9771c05e504f836e8118804e02f64c.sample.epub"},{"rel":"EpubKey","url":"https://keys.mobcastdev.com/9780/141/909/837/e237e27468c6b37a5679fab718a893e6.epub.9780141909837.key"}]}"""
     val libraryJson = s"""{"items":[${testBookJson},${testBook2Json}]}"""
     val apiConfig = mock[ApiConfig]
-    when(apiConfig.localUrl).thenReturn(new URL("http://localhost"))
+    when(apiConfig.localUrl).thenReturn(new URL("http://localhost/"))
 
     val authenticator = mock[BearerTokenAuthenticator]
     when(authenticator.withElevation(Elevation.Unelevated)).thenReturn(authenticator)
@@ -164,7 +164,7 @@ class ReadingApiTests extends FlatSpec with ScalatestRouteTest with MockitoSyrup
 
     // Setting up the Reading Api
     val apiConfig = mock[ApiConfig]
-    when(apiConfig.localUrl).thenReturn(new URL("http://localhost"))
+    when(apiConfig.localUrl).thenReturn(new URL("http://localhost/"))
     val testService = new ReadingApi(apiConfig, authenticator, libraryService)(system)
 
     // Set the routes of this service to be that of the testService
