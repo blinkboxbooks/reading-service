@@ -10,7 +10,7 @@ case class LibraryItem(
   userId: Int,
   ownership: Ownership,
   readingStatus: ReadingStatus,
-  progressCfi: Cfi,
+  progressCfi: Option[Cfi],
   progressPercentage: Int,
   createdAt: DateTime,
   updatedAt: DateTime

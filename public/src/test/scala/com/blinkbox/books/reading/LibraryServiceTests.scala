@@ -145,7 +145,7 @@ class LibraryServiceTests extends FlatSpec with MockitoSyrup with ScalaFutures w
     implicit val user =  User("", Map("sub" -> s"urn:blinkbox:zuul:user:$UserId", "sso/at" -> "ssoToken"))
     val ISBN = "9780141909837"
     val ReadingStatus = Reading
-    val Progress = ReadingPosition(Cfi("someCfi"), 15)
+    val Progress = ReadingPosition(Some(Cfi("someCfi")), 15)
 
     val fullEpubLink = Link(FullEpub, new URI("http://media.blinkboxbooks.com/9780/141/909/837/8c9771c05e504f836e8118804e02f64c.epub"))
     val sampleEpubLink = Link(SampleEpub, new URI("http://media.blinkboxbooks.com/9780/141/909/837/8c9771c05e504f836e8118804e02f64c.sample.epub"))
@@ -166,8 +166,8 @@ class LibraryServiceTests extends FlatSpec with MockitoSyrup with ScalaFutures w
     val userId = 1
     val isbn1 = "9870123456789"
     val isbn2 = "9879876543210"
-    val libItem1 = LibraryItem(isbn1, userId, Owned, Finished, Cfi("/6/4"), 100, clock.now(), clock.now())
-    val libItem2 = LibraryItem(isbn2, userId, Owned, Reading, Cfi("/6/4"), 50, clock.now(), clock.now())
+    val libItem1 = LibraryItem(isbn1, userId, Owned, Finished, Some(Cfi("/6/4")), 100, clock.now(), clock.now())
+    val libItem2 = LibraryItem(isbn2, userId, Owned, Reading, Some(Cfi("/6/4")), 50, clock.now(), clock.now())
     val catalogueInfo1 = CatalogueInfo(isbn1, "Book Name", "Author Name", "Name, Author", new URI("http://cover/location"), new URI("http://sample/location"))
     val catalogueInfo2 = CatalogueInfo(isbn2, "Book Other", "Author Other", "Other, Author", new URI("http://cover/location2"), new URI("http://sample/location2"))
 

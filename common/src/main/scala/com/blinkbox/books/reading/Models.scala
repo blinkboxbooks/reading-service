@@ -7,7 +7,7 @@ object NotStarted extends ReadingStatus
 object Reading extends ReadingStatus
 object Finished extends ReadingStatus
 
-case class ReadingPosition(cfi: Cfi, percentage: Int) {
+case class ReadingPosition(cfi: Option[Cfi], percentage: Int) {
   require(percentage >= 0 && percentage <= 100)
 }
 
