@@ -6,7 +6,7 @@ import com.blinkbox.books.auth.Elevation
 import com.blinkbox.books.auth.UserRole._
 import com.blinkbox.books.clients.catalogue.CatalogueInfoMissingException
 import com.blinkbox.books.config.ApiConfig
-import com.blinkbox.books.reading.{Sample, Owned, Ownership}
+import com.blinkbox.books.reading.{LibraryItemConflict, Owned, Ownership, Sample}
 import com.blinkbox.books.spray.AuthDirectives.authenticateAndAuthorize
 import com.blinkbox.books.spray.Directives.rootPath
 import com.blinkbox.books.spray.MonitoringDirectives.monitor

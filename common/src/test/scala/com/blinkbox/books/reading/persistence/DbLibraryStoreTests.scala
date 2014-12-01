@@ -26,7 +26,31 @@ class DbLibraryStoreTests extends FlatSpec with MockitoSyrup with ScalaFutures w
 
   override implicit val clock = StoppedClock()
 
-  "Library store" should "retrieve a book in user's library" in new PopulatedDbFixture {
+  "Library store" should "add a new book to user's library" in new PopulatedDbFixture {
+     whenReady(libraryStore.addBook("ISBN3", 1, Owned)) { _ =>
+       import tables.driver.simple._
+       db.withSession { implicit session =>
+         val expectedItem = LibraryItem("ISBN3", 1, Owned, NotStarted, None, 0, clock.now(), clock.now())
+         assert(tables.getLibraryItemBy(1, "ISBN3").list == List(expectedItem))
+       }
+     }
+  }
+
+  it should "update ownership status when user has a sample of a book being added" in new PopulatedDbFixture {
+    whenReady(libraryStore.addBook(ISBN2, 2, Owned)) { _ =>
+      import tables.driver.simple._
+      db.withSession { implicit session =>
+        val expectedItem = libItem4.copy(ownership = Owned).copy(updatedAt = clock.now())
+        assert(tables.getLibraryItemBy(2, ISBN2).list == List(expectedItem))
+      }
+    }
+  }
+
+  it should "throw LibraryItemConflict exception when user already has the book with the same ownership type" in new PopulatedDbFixture {
+    failingWith[LibraryItemConflict](libraryStore.addBook(ISBN1, 1, Owned))
+  }
+
+  it should "retrieve a book in user's library" in new PopulatedDbFixture {
     db.withSession { implicit session =>
       whenReady(libraryStore.getBook(ISBN1, 2)) { item =>
         assert(item == Some(libItem3))

@@ -24,3 +24,5 @@ case object SampleEpub extends LinkType
 sealed trait LibraryMediaLinkType extends LinkType
 case object EpubKey extends LibraryMediaLinkType
 case object FullEpub extends LibraryMediaLinkType
+
+class LibraryItemConflict(msg: String, cause: Throwable = null) extends Exception(msg, cause)

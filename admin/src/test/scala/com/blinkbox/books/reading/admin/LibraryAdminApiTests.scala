@@ -5,8 +5,8 @@ import java.net.URL
 import com.blinkbox.books.auth.{Elevation, User, UserRole}
 import com.blinkbox.books.clients.catalogue.CatalogueInfoMissingException
 import com.blinkbox.books.config.ApiConfig
-import com.blinkbox.books.reading.{Owned, Ownership}
 import com.blinkbox.books.reading.admin.ReadingAdminApi.OwnershipSerializer
+import com.blinkbox.books.reading.{LibraryItemConflict, Owned, Ownership}
 import com.blinkbox.books.spray.BearerTokenAuthenticator._
 import com.blinkbox.books.spray.v2._
 import com.blinkbox.books.spray.{BearerTokenAuthenticator, JsonFormats, v2}

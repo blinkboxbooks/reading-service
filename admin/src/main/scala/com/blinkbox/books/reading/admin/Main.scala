@@ -8,6 +8,7 @@ import com.blinkbox.books.logging.Loggers
 import com.blinkbox.books.reading.persistence.{DbLibraryStore, DefaultDatabaseComponent}
 import com.blinkbox.books.slick.MySQLDatabaseSupport
 import com.blinkbox.books.spray.{BearerTokenAuthenticator, HealthCheckHttpService, HttpServer, url2uri}
+import com.blinkbox.books.time.SystemTimeSupport
 import com.typesafe.scalalogging.StrictLogging
 import spray.can.Http
 import spray.http.Uri.Path
@@ -31,7 +32,7 @@ class WebService(
   override def receive: Receive = runRoute(healthService.routes ~ readingAdminApi.routes)
 }
 
-object Main extends App with Configuration with Loggers with StrictLogging {
+object Main extends App with Configuration with Loggers with StrictLogging with SystemTimeSupport {
   try {
     logger.info("Starting Reading service")
     val appConfig = AppConfig(config)
