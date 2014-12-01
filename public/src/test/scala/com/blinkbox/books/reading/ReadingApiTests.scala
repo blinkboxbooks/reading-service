@@ -8,7 +8,7 @@ import com.blinkbox.books.clients.catalogue.CatalogueInfoMissingException
 import com.blinkbox.books.config.ApiConfig
 import com.blinkbox.books.reading.persistence.LibraryMediaMissingException
 import com.blinkbox.books.spray.BearerTokenAuthenticator.credentialsInvalidHeaders
-import com.blinkbox.books.spray.v2.{Link, `application/vnd.blinkbox.books.v2+json`}
+import com.blinkbox.books.spray.v2.{Image, Link, `application/vnd.blinkbox.books.v2+json`}
 import com.blinkbox.books.spray.{BearerTokenAuthenticator, v2}
 import com.blinkbox.books.test.MockitoSyrup
 import com.blinkbox.books.time.{StoppedClock, TimeSupport}

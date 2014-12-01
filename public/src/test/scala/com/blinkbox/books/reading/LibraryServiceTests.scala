@@ -5,7 +5,7 @@ import java.net.URI
 import com.blinkbox.books.auth.User
 import com.blinkbox.books.clients.catalogue.{CatalogueInfo, CatalogueInfoMissingException, CatalogueService}
 import com.blinkbox.books.reading.persistence.{LibraryItem, LibraryMediaMissingException, LibraryStore}
-import com.blinkbox.books.spray.v2.Link
+import com.blinkbox.books.spray.v2.{Image, Link}
 import com.blinkbox.books.test.{FailHelper, MockitoSyrup}
 import com.blinkbox.books.time.{StoppedClock, TimeSupport}
 import org.junit.runner.RunWith
