@@ -30,7 +30,7 @@ class DbLibraryStore[DB <: DatabaseSupport](db: DB#Database, tables: LibraryTabl
       tables.getLibraryItemBy(userId, isbn).firstOption match {
         case Some(item) =>
           if (bookOwnership <= item.ownership)
-            throw new LibraryItemConflict(s"User $userId already has $isbn in library with the same ownership type ($bookOwnership)")
+            throw new LibraryItemConflict(s"User $userId already has $isbn in library with the same or lower ownership type ($bookOwnership)")
 
           val updatedItem = item.copy(ownership = bookOwnership).copy(updatedAt = now)
           tables.getLibraryItemBy(userId, isbn).update(updatedItem)
