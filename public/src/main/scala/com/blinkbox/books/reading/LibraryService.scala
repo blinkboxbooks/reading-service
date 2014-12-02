@@ -3,7 +3,7 @@ package com.blinkbox.books.reading
 import com.blinkbox.books.auth.User
 import com.blinkbox.books.clients.catalogue._
 import com.blinkbox.books.reading.persistence.{LibraryItem, LibraryStore}
-import com.blinkbox.books.spray.v2.Link
+import com.blinkbox.books.spray.v2.{Image, Link}
 import com.typesafe.scalalogging.StrictLogging
 
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -39,7 +39,7 @@ class DefaultLibraryService(
   override def addSample(isbn: String)(implicit user: User): Future[SampleResult] =
     catalogueService.getInfoFor(isbn).flatMap( _ => libraryStore.getBook(isbn, user.id).flatMap {
       case Some(item) =>
-        if (item.bookType == Sample) Future.successful(SampleAlreadyExists)
+        if (item.ownership == Sample) Future.successful(SampleAlreadyExists)
         else throw LibraryConflictException(s"Sample cannot be added as $isbn exists as a full book")
       case None =>
         libraryStore.addSample(isbn, user.id).map( _ => SampleAdded)
@@ -73,7 +73,7 @@ class DefaultLibraryService(
       catalogueInfo.author,
       catalogueInfo.sortableAuthor,
       libItem.createdAt,
-      libItem.bookType,
+      libItem.ownership,
       libItem.readingStatus,
       readingPosition,
       images,

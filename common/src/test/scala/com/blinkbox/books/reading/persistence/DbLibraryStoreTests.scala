@@ -1,8 +1,8 @@
-package com.blinkbox.books.reading
+package com.blinkbox.books.reading.persistence
 
 import java.net.URI
 
-import com.blinkbox.books.reading.persistence._
+import com.blinkbox.books.reading._
 import com.blinkbox.books.slick.{DatabaseComponent, H2DatabaseSupport, TablesContainer}
 import com.blinkbox.books.spray.v2.Link
 import com.blinkbox.books.test.{FailHelper, MockitoSyrup}
@@ -26,12 +26,40 @@ class DbLibraryStoreTests extends FlatSpec with MockitoSyrup with ScalaFutures w
 
   override implicit val clock = StoppedClock()
 
-  "Library store" should "retrieve a book in user's library" in new PopulatedDbFixture {
+  "Library store" should "add a new book to user's library" in new PopulatedDbFixture {
+     whenReady(libraryStore.addBook("ISBN3", 1, Owned)) { _ =>
+       import tables.driver.simple._
+       db.withSession { implicit session =>
+         val expectedItem = LibraryItem("ISBN3", 1, Owned, NotStarted, None, 0, clock.now(), clock.now())
+         assert(tables.getLibraryItemBy(1, "ISBN3").list == List(expectedItem))
+       }
+     }
+  }
+
+  it should "update ownership status when user has a sample of a book being added" in new PopulatedDbFixture {
+    whenReady(libraryStore.addBook(ISBN2, 2, Owned)) { _ =>
+      import tables.driver.simple._
+      db.withSession { implicit session =>
+        val expectedItem = libItem4.copy(ownership = Owned).copy(updatedAt = clock.now())
+        assert(tables.getLibraryItemBy(2, ISBN2).list == List(expectedItem))
+      }
+    }
+  }
+
+  it should "throw LibraryItemConflict exception when user already has the book with the same ownership type" in new PopulatedDbFixture {
+    failingWith[LibraryItemConflict](libraryStore.addBook(ISBN1, 1, Owned))
+  }
+
+  it should "retrieve a book in user's library" in new PopulatedDbFixture {
     db.withSession { implicit session =>
       whenReady(libraryStore.getBook(ISBN1, 2)) { item =>
         assert(item == Some(libItem3))
       }
     }
+  }
+
+  it should "throw LibraryItemConflict exception when user has the book with the lower ownership type" in new PopulatedDbFixture {
+    failingWith[LibraryItemConflict](libraryStore.addBook(ISBN1, 1, Sample))
   }
 
   it should "retrieve all books in a user's library" in new PopulatedDbFixture {
@@ -129,7 +157,7 @@ class DbLibraryStoreTests extends FlatSpec with MockitoSyrup with ScalaFutures w
     import tables.driver.simple._
 
     db.withSession { implicit session =>
-      val ddl = tables.libraryItems.ddl ++ tables.libraryMedia.ddl ++ tables.bookTypes.ddl ++ tables.mediaTypes.ddl ++ tables.readingStatuses.ddl
+      val ddl = tables.libraryItems.ddl ++ tables.libraryMedia.ddl ++ tables.ownershipTypes.ddl ++ tables.mediaTypes.ddl ++ tables.readingStatuses.ddl
       try { ddl.drop } catch { case _: JdbcSQLException => /* Do nothing */ }
       ddl.create
     }
@@ -148,10 +176,10 @@ class DbLibraryStoreTests extends FlatSpec with MockitoSyrup with ScalaFutures w
     val ISBN1 = "9780141909837"
     val ISBN2 = "9780141909838"
 
-    val libItem1 = LibraryItem(ISBN1, 1, Full, NotStarted, cfi, percentage, createdAt, updatedAt)
-    val libItem2 = LibraryItem(ISBN2, 1, Full, Reading, cfi, percentage, createdAt, updatedAt)
-    val libItem3 = LibraryItem(ISBN1, 2, Full, Finished, cfi, percentage, createdAt, updatedAt)
-    val libItem4 = LibraryItem(ISBN2, 2, Sample, Reading, cfi, percentage, createdAt, updatedAt)
+    val libItem1 = LibraryItem(ISBN1, 1, Owned, NotStarted, None, percentage, createdAt, updatedAt)
+    val libItem2 = LibraryItem(ISBN2, 1, Owned, Reading, Some(cfi), percentage, createdAt, updatedAt)
+    val libItem3 = LibraryItem(ISBN1, 2, Owned, Finished, Some(cfi), percentage, createdAt, updatedAt)
+    val libItem4 = LibraryItem(ISBN2, 2, Sample, Reading, Some(cfi), percentage, createdAt, updatedAt)
 
     val libItem1EpubLink = LibraryItemLink(ISBN1, FullEpub, new URI("http://media.blinkboxbooks.com/9780/141/909/837/8c9771c05e504f836e8118804e02f64c.epub"), DateTime.now, DateTime.now)
     val libItem2EpubLink = LibraryItemLink(ISBN2, FullEpub, new URI("http://media.blinkboxbooks.com/9780/141/909/838/6e8118804e02f64c8c9771c05e504f83.epub"), DateTime.now, DateTime.now)
@@ -160,7 +188,7 @@ class DbLibraryStoreTests extends FlatSpec with MockitoSyrup with ScalaFutures w
     val libItem2EpubKeyLink = LibraryItemLink(ISBN2, EpubKey, new URI("https://keys.mobcastdev.com/9780/141/909/838/5679fab718a893e6e237e27468c6b37a.epub.9780141909838.key"), DateTime.now, DateTime.now)
 
     db.withSession { implicit session =>
-      tables.bookTypes ++= List((Full, "Full"), (Sample, "Sample"))
+      tables.ownershipTypes ++= List((Owned, "Owned"), (Sample, "Sample"))
       tables.mediaTypes ++= List((EpubKey, "EpubKey"), (FullEpub, "FullEpub"))
       tables.readingStatuses ++= List((NotStarted, "NotStarted"), (Reading, "Reading"), (Finished, "Finished"))
       tables.libraryItems ++= List(libItem1, libItem2, libItem3, libItem4)

@@ -4,9 +4,8 @@ import java.net.URI
 
 import com.blinkbox.books.auth.User
 import com.blinkbox.books.clients.catalogue.{CatalogueInfo, CatalogueInfoMissingException, CatalogueService}
-import com.blinkbox.books.reading._
 import com.blinkbox.books.reading.persistence.{LibraryItem, LibraryMediaMissingException, LibraryStore}
-import com.blinkbox.books.spray.v2.Link
+import com.blinkbox.books.spray.v2.{Image, Link}
 import com.blinkbox.books.test.{FailHelper, MockitoSyrup}
 import com.blinkbox.books.time.{StoppedClock, TimeSupport}
 import org.junit.runner.RunWith
@@ -90,9 +89,9 @@ class LibraryServiceTests extends FlatSpec with MockitoSyrup with ScalaFutures w
     // The links have two sample items as one comes from the libraryStore and the other comes from the Catalogue service.
     // Doing that so that I don't have to mess with ordering of lists
     val expectedBookDetail1 =
-      BookDetails(isbn1, catalogueInfo1.title, catalogueInfo1.author, catalogueInfo1.sortableAuthor, clock.now(), libItem1.bookType, libItem1.readingStatus, ReadingPosition(libItem1.progressCfi, libItem1.progressPercentage), List(Image(CoverImage, catalogueInfo1.coverImageUrl)), List(Link(SampleEpub, catalogueInfo1.sampleEpubUrl), Link(SampleEpub, catalogueInfo1.sampleEpubUrl)))
+      BookDetails(isbn1, catalogueInfo1.title, catalogueInfo1.author, catalogueInfo1.sortableAuthor, clock.now(), libItem1.ownership, libItem1.readingStatus, ReadingPosition(libItem1.progressCfi, libItem1.progressPercentage), List(Image(CoverImage, catalogueInfo1.coverImageUrl)), List(Link(SampleEpub, catalogueInfo1.sampleEpubUrl), Link(SampleEpub, catalogueInfo1.sampleEpubUrl)))
     val expectedBookDetail2 =
-      BookDetails(isbn2, catalogueInfo2.title, catalogueInfo2.author, catalogueInfo2.sortableAuthor, clock.now(), libItem2.bookType, libItem2.readingStatus, ReadingPosition(libItem2.progressCfi, libItem2.progressPercentage), List(Image(CoverImage, catalogueInfo2.coverImageUrl)), List(Link(SampleEpub, catalogueInfo2.sampleEpubUrl), Link(SampleEpub, catalogueInfo2.sampleEpubUrl)))
+      BookDetails(isbn2, catalogueInfo2.title, catalogueInfo2.author, catalogueInfo2.sortableAuthor, clock.now(), libItem2.ownership, libItem2.readingStatus, ReadingPosition(libItem2.progressCfi, libItem2.progressPercentage), List(Image(CoverImage, catalogueInfo2.coverImageUrl)), List(Link(SampleEpub, catalogueInfo2.sampleEpubUrl), Link(SampleEpub, catalogueInfo2.sampleEpubUrl)))
     val expectedBookDetail3 =
       BookDetails(isbn3, catalogueInfo3.title, catalogueInfo3.author, catalogueInfo3.sortableAuthor, clock.now(), libItem3.bookType, libItem3.readingStatus, ReadingPosition(libItem3.progressCfi, libItem3.progressPercentage), List(Image(CoverImage, catalogueInfo3.coverImageUrl)), List(Link(SampleEpub, catalogueInfo3.sampleEpubUrl), Link(SampleEpub, catalogueInfo3.sampleEpubUrl)))
     val expectedBookDetail4 =
@@ -173,8 +172,8 @@ class LibraryServiceTests extends FlatSpec with MockitoSyrup with ScalaFutures w
     when(libraryStore.getLibrary(count, offset, userId)).thenReturn(Future.successful(List(libItem1, libItem2)))
     when(libraryStore.getBooksMedia(List(isbn1, isbn2), user.id)).
       thenReturn(Future.successful(Map(
-      (isbn1 -> List(Link(SampleEpub, catalogueInfo1.sampleEpubUrl))),
-      (isbn2 -> List(Link(SampleEpub, catalogueInfo2.sampleEpubUrl)))
+      isbn1 -> List(Link(SampleEpub, catalogueInfo1.sampleEpubUrl)),
+      isbn2 -> List(Link(SampleEpub, catalogueInfo2.sampleEpubUrl))
     )))
     when(catalogueService.getBulkInfoFor(List(isbn1, isbn2), user.id)).thenReturn(Future.failed(new CatalogueInfoMissingException("failed test")))
     failingWith[CatalogueInfoMissingException](service.getLibrary(count, offset))
@@ -187,7 +186,7 @@ class LibraryServiceTests extends FlatSpec with MockitoSyrup with ScalaFutures w
     implicit val user =  User("", Map("sub" -> s"urn:blinkbox:zuul:user:$UserId", "sso/at" -> "ssoToken"))
     val ISBN = "9780141909837"
     val ReadingStatus = Reading
-    val Progress = ReadingPosition(Cfi("someCfi"), 15)
+    val Progress = ReadingPosition(Some(Cfi("someCfi")), 15)
 
     val fullEpubLink = Link(FullEpub, new URI("http://media.blinkboxbooks.com/9780/141/909/837/8c9771c05e504f836e8118804e02f64c.epub"))
     val sampleEpubLink = Link(SampleEpub, new URI("http://media.blinkboxbooks.com/9780/141/909/837/8c9771c05e504f836e8118804e02f64c.sample.epub"))
@@ -197,10 +196,10 @@ class LibraryServiceTests extends FlatSpec with MockitoSyrup with ScalaFutures w
     val images = List(coverImageLink)
     val links = List(sampleEpubLink, fullEpubLink, epubKeyLink)
 
-    val TestLibraryItem = LibraryItem(ISBN, UserId, Full, ReadingStatus, Progress.cfi, Progress.percentage, clock.now(), clock.now())
+    val TestLibraryItem = LibraryItem(ISBN, UserId, Owned, ReadingStatus, Progress.cfi, Progress.percentage, clock.now(), clock.now())
     val TestLibrarySampleItem = LibraryItem(ISBN, UserId, Sample, ReadingStatus, Progress.cfi, Progress.percentage, clock.now(), clock.now())
     val TestCatalogueInfo = CatalogueInfo(ISBN, "Title", "Name Surname", "Surname, Name", coverImageLink.url, sampleEpubLink.url)
-    val TestBookDetails = BookDetails(ISBN, TestCatalogueInfo.title, TestCatalogueInfo.author, TestCatalogueInfo.sortableAuthor, clock.now(), Full, ReadingStatus, Progress, images, links)
+    val TestBookDetails = BookDetails(ISBN, TestCatalogueInfo.title, TestCatalogueInfo.author, TestCatalogueInfo.sortableAuthor, clock.now(), Owned, ReadingStatus, Progress, images, links)
 
     val catalogueService = mock[CatalogueService]
     val libraryStore = mock[LibraryStore]
@@ -211,10 +210,10 @@ class LibraryServiceTests extends FlatSpec with MockitoSyrup with ScalaFutures w
     val isbn2 = "9879876543210"
     val isbn3 = "9879876543000"
     val isbn4 = "9879876543999"
-    val libItem1 = LibraryItem(isbn1, userId, Full, Finished, Cfi("/6/4"), 100, clock.now(), clock.now)
-    val libItem2 = LibraryItem(isbn2, userId, Full, Reading, Cfi("/6/4"), 50, clock.now(), clock.now)
-    val libItem3 = LibraryItem(isbn3, userId, Sample, Reading, Cfi("/6/4"), 50, clock.now(), clock.now)
-    val libItem4 = LibraryItem(isbn4, userId, Sample, Reading, Cfi("/6/4"), 50, clock.now(), clock.now)
+    val libItem1 = LibraryItem(isbn1, userId, Owned, Finished, Some(Cfi("/6/4")), 100, clock.now(), clock.now())
+    val libItem2 = LibraryItem(isbn2, userId, Owned, Reading, Some(Cfi("/6/4")), 50, clock.now(), clock.now())
+    val libItem3 = LibraryItem(isbn3, userId, Sample, Reading, Some(Cfi("/6/4")), 50, clock.now(), clock.now)
+    val libItem4 = LibraryItem(isbn4, userId, Sample, Reading, Some(Cfi("/6/4")), 50, clock.now(), clock.now)
     val catalogueInfo1 = CatalogueInfo(isbn1, "Book Name", "Author Name", "Name, Author", new URI("http://cover/location"), new URI("http://sample/location"))
     val catalogueInfo2 = CatalogueInfo(isbn2, "Book Other", "Author Other", "Other, Author", new URI("http://cover/location2"), new URI("http://sample/location2"))
     val catalogueInfo3 = CatalogueInfo(isbn3, "Sample Name", "Author Name", "Name, Author", new URI("http://cover/location3"), new URI("http://sample/location3"))
