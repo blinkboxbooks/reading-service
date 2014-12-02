@@ -14,7 +14,7 @@ trait LibraryAdminService {
 class DefaultLibraryAdminService(libraryStore: LibraryStore, catalogueService: CatalogueService) extends LibraryAdminService {
 
   override def addBook(isbn: String, userId: Int, ownership: Ownership): Future[Unit] = for {
-    _ <- catalogueService.getInfoFor(isbn)
+    _ <- catalogueService.getInfoFor(isbn) // check the book is in catalogue before adding it to the library
     _ <- libraryStore.addBook(isbn, userId, ownership)
   } yield ()
 }
