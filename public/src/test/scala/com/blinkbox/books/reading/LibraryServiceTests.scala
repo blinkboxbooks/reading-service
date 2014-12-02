@@ -120,7 +120,7 @@ class LibraryServiceTests extends FlatSpec with MockitoSyrup with ScalaFutures w
     when(libraryStore.getBook(ISBN, userId)).thenReturn(Future.successful(None))
 
     whenReady(service.addSample(ISBN)) { res =>
-      assert(res == Created)
+      assert(res == SampleAdded)
     }
   }
 
@@ -130,7 +130,7 @@ class LibraryServiceTests extends FlatSpec with MockitoSyrup with ScalaFutures w
     when(libraryStore.getBook(ISBN, userId)).thenReturn(Future.successful(Some(TestLibrarySampleItem)))
 
     whenReady(service.addSample(ISBN)) { res =>
-      assert(res == Exists)
+      assert(res == SampleAlreadyExists)
     }
   }
 

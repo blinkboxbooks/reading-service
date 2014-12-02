@@ -4,7 +4,6 @@ import akka.actor.ActorRefFactory
 import com.blinkbox.books.auth.Elevation.Unelevated
 import com.blinkbox.books.auth.User
 import com.blinkbox.books.config.ApiConfig
-import com.blinkbox.books.reading.{ Created => LibraryItemCreated }
 import com.blinkbox.books.spray.Directives.{paged, rootPath}
 import com.blinkbox.books.spray.MonitoringDirectives.monitor
 import com.blinkbox.books.spray.v2.Implicits.throwableMarshaller
@@ -57,8 +56,8 @@ class ReadingApi(
             case Isbn(isbn) =>
               onSuccess(libraryService.addSample(isbn)) { res =>
                 res match {
-                  case Exists => complete(OK)
-                  case LibraryItemCreated => complete(StatusCodes.Created)
+                  case SampleAlreadyExists => complete(OK)
+                  case SampleAdded => complete(StatusCodes.Created)
                 }
               }
             case _ => complete(BadRequest, "Isbn must be 13 digits long and start with the number 9")

@@ -22,8 +22,8 @@ case class BookDetails(
   links: List[Link] = List.empty) {
 }
 
-trait PostRequestStatus
-case object Created extends PostRequestStatus
-case object Exists extends PostRequestStatus
+trait SampleResult
+case object SampleAdded extends SampleResult
+case object SampleAlreadyExists extends SampleResult
 
 case class LibraryConflictException(message: String) extends Exception(message)

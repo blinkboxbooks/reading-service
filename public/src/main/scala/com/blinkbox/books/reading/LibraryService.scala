@@ -14,7 +14,7 @@ trait LibraryService {
   def getBook(isbn: String)(implicit user: User): Future[Option[BookDetails]]
   def getLibrary(count: Int, offset: Int)(implicit user: User): Future[List[BookDetails]]
   def getSamples(count: Int, offset: Int)(implicit user: User): Future[List[BookDetails]]
-  def addSample(isbn: String)(implicit user: User): Future[PostRequestStatus]
+  def addSample(isbn: String)(implicit user: User): Future[SampleResult]
 }
 
 class DefaultLibraryService(
@@ -37,15 +37,14 @@ class DefaultLibraryService(
     list = library.map { b => buildBookDetails(b, itemMediaLinks.get(b.isbn).get, catalogueInfo.filter(c => c.id == b.isbn).head) }
   } yield list
 
-  override def addSample(isbn: String)(implicit user: User): Future[PostRequestStatus] =
-    catalogueService.getInfoFor(isbn).flatMap( _ => libraryStore.getBook(isbn, user.id).map { l => l match {
-     case Some(item) =>
-        if (item.bookType == Sample) Exists
+  override def addSample(isbn: String)(implicit user: User): Future[SampleResult] =
+    catalogueService.getInfoFor(isbn).flatMap( _ => libraryStore.getBook(isbn, user.id).flatMap {
+      case Some(item) =>
+        if (item.bookType == Sample) Future.successful(SampleAlreadyExists)
         else throw LibraryConflictException(s"Sample cannot be added as $isbn exists as a full book")
       case None =>
-        libraryStore.addSample(isbn, user.id)
-        Created
-    }}).recover {
+        libraryStore.addSample(isbn, user.id).map( _ => SampleAdded)
+    }).recover {
       case e: CatalogueInfoMissingException =>
         val message = s"$isbn was not found in the Catalogue Service when adding sample"
         logger.error(message, e)

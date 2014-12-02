@@ -6,7 +6,7 @@ import akka.actor.ActorRefFactory
 import com.blinkbox.books.auth.{Elevation, User}
 import com.blinkbox.books.clients.catalogue.{CatalogueService, CatalogueInfoMissingException}
 import com.blinkbox.books.config.ApiConfig
-import com.blinkbox.books.reading.{Created => LibraryItemCreated}
+import com.blinkbox.books.reading.{SampleAdded}
 import com.blinkbox.books.reading.ReadingApi.IsbnRequest
 import com.blinkbox.books.reading.persistence.{LibraryStore, LibraryMediaMissingException}
 import com.blinkbox.books.spray.BearerTokenAuthenticator.credentialsInvalidHeaders
@@ -75,7 +75,7 @@ class ReadingApiTests extends FlatSpec with ScalatestRouteTest with MockitoSyrup
   it should "return a 201 when adding a new sample book to the library" in new TestFixture {
     val isbn = "9810123456789"
     val request = IsbnRequest(isbn)
-    when(libraryService.addSample(isbn)).thenReturn(Future.successful(LibraryItemCreated))
+    when(libraryService.addSample(isbn)).thenReturn(Future.successful(SampleAdded))
     when(authenticator.apply(any[RequestContext])).thenReturn(Future.successful(Right(authenticatedUser)))
     Post(s"/my/library/samples", request) ~> Authorization(OAuth2BearerToken(accessToken)) ~> routes ~> check {
       assert(status == StatusCodes.Created)
@@ -85,7 +85,7 @@ class ReadingApiTests extends FlatSpec with ScalatestRouteTest with MockitoSyrup
   it should "return a 200 when adding an existing sample book to a user's library" in new TestFixture {
     val isbn = "9810123456789"
     val request = IsbnRequest(isbn)
-    when(libraryService.addSample(isbn)).thenReturn(Future.successful(Exists))
+    when(libraryService.addSample(isbn)).thenReturn(Future.successful(SampleAlreadyExists))
     when(authenticator.apply(any[RequestContext])).thenReturn(Future.successful(Right(authenticatedUser)))
     Post(s"/my/library/samples", request) ~> Authorization(OAuth2BearerToken(accessToken)) ~> routes ~> check {
       assert(status == OK)
