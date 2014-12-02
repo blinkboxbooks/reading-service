@@ -1,6 +1,7 @@
 package com.blinkbox.books.reading.persistence
 
 import com.blinkbox.books.config.DatabaseConfig
+import com.blinkbox.books.reading.Sample
 import com.blinkbox.books.slick.{DatabaseComponent, DatabaseSupport, MySQLDatabaseSupport, TablesContainer}
 import com.blinkbox.books.spray.v2.Link
 import com.typesafe.scalalogging.StrictLogging
@@ -14,6 +15,8 @@ trait LibraryStore {
   def getBookMedia(isbn: String): Future[List[Link]]
   def getBooksMedia(isbns: List[String], userId: Int): Future[Map[String, List[Link]]]
   def getLibrary(count: Int, offset: Int, userId: Int): Future[List[LibraryItem]]
+  def getSamples(count: Int, offset: Int, userId: Int): Future[List[LibraryItem]]
+  def addSample(isbn: String, userId: Int): Future[Unit]
 }
 
 class DbLibraryStore[DB <: DatabaseSupport](db: DB#Database, tables: LibraryTables[DB#Profile], exceptionFilter: DB#ExceptionFilter)(implicit val ec: ExecutionContext) extends LibraryStore with StrictLogging {
@@ -55,6 +58,18 @@ class DbLibraryStore[DB <: DatabaseSupport](db: DB#Database, tables: LibraryTabl
   override def getLibrary(count: Int, offset: Int, userId: Int): Future[List[LibraryItem]] = Future {
     db.withSession { implicit session =>
       tables.getUserLibraryById(count, offset, userId).list
+    }
+  }
+
+  override def getSamples(count: Int, offset: Int, userId: Int): Future[List[LibraryItem]] = Future {
+    db.withSession { implicit session =>
+      tables.getUserLibraryByBookTypeWithId(count, offset, userId, Sample).list
+    }
+  }
+
+  override def addSample(isbn: String, userId: Int): Future[Unit] = Future {
+    db.withSession { implicit session =>
+      tables.addSample(isbn, userId)
     }
   }
 }

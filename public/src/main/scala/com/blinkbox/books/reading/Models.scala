@@ -21,3 +21,9 @@ case class BookDetails(
   images: List[Image] = List.empty,
   links: List[Link] = List.empty) {
 }
+
+trait PostRequestStatus
+case object Created extends PostRequestStatus
+case object Exists extends PostRequestStatus
+
+case class LibraryConflictException(message: String) extends Exception(message)

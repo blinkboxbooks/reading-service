@@ -9,6 +9,7 @@ import com.blinkbox.books.spray.MonitoringDirectives.monitor
 import com.blinkbox.books.spray.v2.Implicits.throwableMarshaller
 import com.blinkbox.books.spray.{ElevatedContextAuthenticator, JsonFormats, url2uri, v2}
 import com.typesafe.scalalogging.StrictLogging
+import spray.http.IllegalRequestException
 import spray.http.StatusCodes._
 import spray.routing._
 
@@ -37,6 +38,36 @@ class ReadingApi(
     }
   }
 
+  val handleSamples = path("my" / "library" / "samples") {
+    get {
+      authenticate(authenticator.withElevation(Unelevated)) { implicit user =>
+        paged(defaultPageSize) { page =>
+          onSuccess(libraryService.getSamples(page.count, page.offset)) { res =>
+            val items = Map("items" -> res)
+            complete(OK, items)
+          }
+        }
+      }
+    } ~
+    post {
+      authenticate(authenticator.withElevation(Unelevated)) { implicit user =>
+        entity(as[IsbnRequest]) { req =>
+          val isbn = req.isbn
+          isbn match {
+            case Isbn(isbn) =>
+              onSuccess(libraryService.addSample(isbn)) { res =>
+                res match {
+                  case Exists => complete(OK)
+                  case Created => complete(Created)
+                }
+              }
+            case _ => complete(BadRequest, "Isbn must be 13 digits long and start with the number 9")
+          }
+        }
+      }
+    }
+  }
+
   val getBookDetails = get {
     path("my" / "library" / Isbn) { isbn =>
       authenticate(authenticator.withElevation(Unelevated)) { implicit user =>
@@ -48,9 +79,16 @@ class ReadingApi(
   }
 
   val routes = monitor(logger, throwableMarshaller) {
-    rootPath(apiConfig.localUrl.path) {
-      getBookDetails ~ getLibrary
+    handleExceptions(exceptionHandler) {
+      rootPath(apiConfig.localUrl.path) {
+        getBookDetails ~ getLibrary ~ handleSamples
+      }
     }
+
+  }
+
+  private lazy val exceptionHandler = ExceptionHandler {
+    case e: LibraryConflictException => failWith(new IllegalRequestException(Conflict, e.getMessage))
   }
 }
 
@@ -104,4 +142,7 @@ object ReadingApi {
     renameTo("createdAt", "addedDate"),
     renameFrom("addedDate", "createdAt")
   )
+
+  case class IsbnRequest(isbn: String)
+
 }

@@ -50,10 +50,46 @@ class ReadingApiTests extends FlatSpec with ScalatestRouteTest with MockitoSyrup
     }
   }
 
+  it should "return samples in a user's library" in new TestFixture {
+    when(libraryService.getSamples(25, 0)).thenReturn(Future.successful(List(testBook2)))
+    when(authenticator.apply(any[RequestContext])).thenReturn(Future.successful(Right(authenticatedUser)))
+    Get("/my/library/samples") ~> Authorization(OAuth2BearerToken(accessToken)) ~> routes ~> check {
+      assert(status == OK)
+      assert(mediaType == `application/vnd.blinkbox.books.v2+json`)
+      assert(body.asString == sampleJson)
+    }
+  }
+
   it should "return an empty library for a valid request of a user who does not have a library yet" in new TestFixture {
     when(libraryService.getLibrary(25, 0)).thenReturn(Future.successful(List.empty))
     when(authenticator.apply(any[RequestContext])).thenReturn(Future.successful(Right(authenticatedUser)))
     Get("/my/library") ~> Authorization(OAuth2BearerToken(accessToken)) ~> routes ~> check {
+      assert(status == OK)
+      assert(mediaType == `application/vnd.blinkbox.books.v2+json`)
+      assert(body.asString == """{"items":[]}""")
+    }
+  }
+
+  it should "return a 201 when adding a new sample book to the library" in new TestFixture {
+
+  }
+
+  it should "return a 200 when adding an existing sample book to a user's library" in new TestFixture {
+
+  }
+
+  it should "return a 409 when adding a sample book that is a full book in a user's library" in new TestFixture {
+
+  }
+
+  it should "return a 400 bad request if an invalid ISBN is given" in new TestFixture {
+
+  }
+
+  it should "return an empty library for a valid request of a user who does not have samples in his library" in new TestFixture {
+    when(libraryService.getSamples(25, 0)).thenReturn(Future.successful(List.empty))
+    when(authenticator.apply(any[RequestContext])).thenReturn(Future.successful(Right(authenticatedUser)))
+    Get("/my/library/samples") ~> Authorization(OAuth2BearerToken(accessToken)) ~> routes ~> check {
       assert(status == OK)
       assert(mediaType == `application/vnd.blinkbox.books.v2+json`)
       assert(body.asString == """{"items":[]}""")
@@ -123,11 +159,12 @@ class ReadingApiTests extends FlatSpec with ScalatestRouteTest with MockitoSyrup
     )
     val testBook = BookDetails("9780141909837", "Title", "Author", "Sortable Author", clock.now(), Full, Reading, ReadingPosition(Cfi("someCfi"), 15), images, links)
     // For brevity, I'm using the same sets of images and links
-    val testBook2 = BookDetails("9780234123501", "Other Title", "Other Author", "Author, Other", clock.now(), Full, Reading, ReadingPosition(Cfi("someCfi"), 30), images, links)
+    val testBook2 = BookDetails("9780234123501", "Other Title", "Other Author", "Author, Other", clock.now(), Sample, Reading, ReadingPosition(Cfi("someCfi"), 30), images, links)
 
     val testBookJson = s"""{"isbn":"9780141909837","title":"Title","author":"Author","sortableAuthor":"Sortable Author","addedDate":"${clock.now()}","bookType":"Full","readingStatus":"Reading","readingPosition":{"cfi":"someCfi","percentage":15},"images":[{"rel":"CoverImage","url":"http://media.blinkboxbooks.com/9780/141/909/837/cover.png"}],"links":[{"rel":"EpubFull","url":"http://media.blinkboxbooks.com/9780/141/909/837/8c9771c05e504f836e8118804e02f64c.epub"},{"rel":"EpubSample","url":"http://media.blinkboxbooks.com/9780/141/909/837/8c9771c05e504f836e8118804e02f64c.sample.epub"},{"rel":"EpubKey","url":"https://keys.mobcastdev.com/9780/141/909/837/e237e27468c6b37a5679fab718a893e6.epub.9780141909837.key"}]}"""
-    val testBook2Json = s"""{"isbn":"9780234123501","title":"Other Title","author":"Other Author","sortableAuthor":"Author, Other","addedDate":"${clock.now()}","bookType":"Full","readingStatus":"Reading","readingPosition":{"cfi":"someCfi","percentage":30},"images":[{"rel":"CoverImage","url":"http://media.blinkboxbooks.com/9780/141/909/837/cover.png"}],"links":[{"rel":"EpubFull","url":"http://media.blinkboxbooks.com/9780/141/909/837/8c9771c05e504f836e8118804e02f64c.epub"},{"rel":"EpubSample","url":"http://media.blinkboxbooks.com/9780/141/909/837/8c9771c05e504f836e8118804e02f64c.sample.epub"},{"rel":"EpubKey","url":"https://keys.mobcastdev.com/9780/141/909/837/e237e27468c6b37a5679fab718a893e6.epub.9780141909837.key"}]}"""
+    val testBook2Json = s"""{"isbn":"9780234123501","title":"Other Title","author":"Other Author","sortableAuthor":"Author, Other","addedDate":"${clock.now()}","bookType":"Sample","readingStatus":"Reading","readingPosition":{"cfi":"someCfi","percentage":30},"images":[{"rel":"CoverImage","url":"http://media.blinkboxbooks.com/9780/141/909/837/cover.png"}],"links":[{"rel":"EpubFull","url":"http://media.blinkboxbooks.com/9780/141/909/837/8c9771c05e504f836e8118804e02f64c.epub"},{"rel":"EpubSample","url":"http://media.blinkboxbooks.com/9780/141/909/837/8c9771c05e504f836e8118804e02f64c.sample.epub"},{"rel":"EpubKey","url":"https://keys.mobcastdev.com/9780/141/909/837/e237e27468c6b37a5679fab718a893e6.epub.9780141909837.key"}]}"""
     val libraryJson = s"""{"items":[${testBookJson},${testBook2Json}]}"""
+    val sampleJson = s"""{"items":[${testBook2Json}]}"""
     val apiConfig = mock[ApiConfig]
     when(apiConfig.localUrl).thenReturn(new URL("http://localhost"))
 

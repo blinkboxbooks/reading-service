@@ -85,6 +85,46 @@ class DbLibraryStoreTests extends FlatSpec with MockitoSyrup with ScalaFutures w
     failingWith[LibraryMediaMissingException](libraryStore.getBooksMedia(List("1", "2", "3"), 1))
   }
 
+  it should "not return any sample books if a user does not have any samples in his library" in new PopulatedDbFixture {
+    db.withSession { implicit session =>
+      whenReady(libraryStore.getSamples(count, offset, 1)) { items =>
+        assert(items == Nil)
+      }
+    }
+  }
+
+  it should "not return any sample books if a user has no library" in new PopulatedDbFixture {
+    db.withSession { implicit session =>
+      whenReady(libraryStore.getSamples(count, offset, 9001)) { items =>
+        assert(items == Nil)
+      }
+    }
+  }
+
+  it should "return only sample books in a user's libray" in new PopulatedDbFixture {
+    db.withSession { implicit session =>
+      whenReady(libraryStore.getSamples(count, offset, 2)) { items =>
+        assert(items == List(libItem4))
+      }
+    }
+  }
+
+  it should "add a sample to a library" in new PopulatedDbFixture {
+    import tables.driver.simple._
+
+    val newIsbn = "9801234567890"
+
+    // It was already 4 to begin with and we test that above
+    // We use a count here instead of creating an instance to match as to avoid comparing DateTime for createdAt and updatedAt
+    db.withSession { implicit session =>
+      whenReady(libraryStore.addSample(newIsbn, 3)) { items =>
+        assert(tables.libraryItems.list.size == 5)
+        assert(tables.libraryItems.list.count(l =>
+          l.isbn == newIsbn && l.userId == 3 && l.bookType == Sample && l.progressCfi == Cfi("/6/4/2/1:0") && l.progressPercentage == 0) == 1)
+      }
+    }
+  }
+
   class EmptyDbFixture extends TestDbComponent {
     import tables.driver.simple._
 

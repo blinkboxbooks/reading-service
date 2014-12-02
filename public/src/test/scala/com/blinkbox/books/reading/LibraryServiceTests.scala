@@ -108,6 +108,10 @@ class LibraryServiceTests extends FlatSpec with MockitoSyrup with ScalaFutures w
     }
   }
 
+  it should "return the samples within a user's library" in new TestFixture {
+
+  }
+
   it should "return successfully when a user has no items in his library" in new TestFixture {
     when(libraryStore.getLibrary(count, offset, UserId)).thenReturn(Future.successful(List.empty[LibraryItem]))
     when(catalogueService.getBulkInfoFor(List.empty[String], user.id)).thenReturn(Future.successful(List.empty[CatalogueInfo]))
