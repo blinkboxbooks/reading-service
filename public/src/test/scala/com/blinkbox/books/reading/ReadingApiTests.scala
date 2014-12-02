@@ -6,7 +6,6 @@ import akka.actor.ActorRefFactory
 import com.blinkbox.books.auth.{Elevation, User}
 import com.blinkbox.books.clients.catalogue.{CatalogueService, CatalogueInfoMissingException}
 import com.blinkbox.books.config.ApiConfig
-import com.blinkbox.books.reading.{SampleAdded}
 import com.blinkbox.books.reading.ReadingApi.IsbnRequest
 import com.blinkbox.books.reading.persistence.{LibraryStore, LibraryMediaMissingException}
 import com.blinkbox.books.spray.BearerTokenAuthenticator.credentialsInvalidHeaders
