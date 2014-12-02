@@ -1,5 +1,13 @@
 # Change log
 
+## 0.6.0 ([#23](https://git.mobcastdev.com/Agora/reading-service/pull/23) 2014-12-02 17:36:20)
+
+Admin add book
+
+### New feature
+
+- `Add full book` admin endpoint.
+
 ## 0.5.1 ([#22](https://git.mobcastdev.com/Agora/reading-service/pull/22) 2014-11-28 18:47:09)
 
 Fix catalogue url
