@@ -45,7 +45,12 @@ class DefaultLibraryService(
       case None =>
         libraryStore.addSample(isbn, user.id)
         Created
-    }})
+    }}).recover {
+      case e: CatalogueInfoMissingException =>
+        val message = s"$isbn was not found in the Catalogue Service when adding sample"
+        logger.error(message, e)
+        throw new BadRequestException(message, e)
+    }
 
   override def getBook(isbn: String)(implicit user: User): Future[Option[BookDetails]] = {
     val libItemFuture = libraryStore.getBook(isbn, user.id)

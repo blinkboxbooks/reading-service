@@ -6,6 +6,8 @@ import akka.actor.ActorRefFactory
 import com.blinkbox.books.auth.{Elevation, User}
 import com.blinkbox.books.clients.catalogue.{CatalogueService, CatalogueInfoMissingException}
 import com.blinkbox.books.config.ApiConfig
+import com.blinkbox.books.reading.{Created => LibraryItemCreated}
+import com.blinkbox.books.reading.ReadingApi.IsbnRequest
 import com.blinkbox.books.reading.persistence.{LibraryStore, LibraryMediaMissingException}
 import com.blinkbox.books.spray.BearerTokenAuthenticator.credentialsInvalidHeaders
 import com.blinkbox.books.spray.v2.{Link, `application/vnd.blinkbox.books.v2+json`}
@@ -19,7 +21,7 @@ import org.scalatest.FlatSpec
 import org.scalatest.junit.JUnitRunner
 import spray.http.HttpHeaders.{Authorization, `WWW-Authenticate`}
 import spray.http.StatusCodes._
-import spray.http.{GenericHttpCredentials, MediaTypes, OAuth2BearerToken}
+import spray.http.{StatusCodes, GenericHttpCredentials, MediaTypes, OAuth2BearerToken}
 import spray.routing.AuthenticationFailedRejection.CredentialsRejected
 import spray.routing.{AuthenticationFailedRejection, HttpService, RequestContext}
 import spray.testkit.ScalatestRouteTest
@@ -71,19 +73,42 @@ class ReadingApiTests extends FlatSpec with ScalatestRouteTest with MockitoSyrup
   }
 
   it should "return a 201 when adding a new sample book to the library" in new TestFixture {
-
+    val isbn = "9810123456789"
+    val request = IsbnRequest(isbn)
+    when(libraryService.addSample(isbn)).thenReturn(Future.successful(LibraryItemCreated))
+    when(authenticator.apply(any[RequestContext])).thenReturn(Future.successful(Right(authenticatedUser)))
+    Post(s"/my/library/samples", request) ~> Authorization(OAuth2BearerToken(accessToken)) ~> routes ~> check {
+      assert(status == StatusCodes.Created)
+    }
   }
 
   it should "return a 200 when adding an existing sample book to a user's library" in new TestFixture {
-
+    val isbn = "9810123456789"
+    val request = IsbnRequest(isbn)
+    when(libraryService.addSample(isbn)).thenReturn(Future.successful(Exists))
+    when(authenticator.apply(any[RequestContext])).thenReturn(Future.successful(Right(authenticatedUser)))
+    Post(s"/my/library/samples", request) ~> Authorization(OAuth2BearerToken(accessToken)) ~> routes ~> check {
+      assert(status == OK)
+    }
   }
 
   it should "return a 409 when adding a sample book that is a full book in a user's library" in new TestFixture {
-
+    val isbn = "9810123456789"
+    val request = IsbnRequest(isbn)
+    when(libraryService.addSample(isbn)).thenReturn(Future.failed(new LibraryConflictException("blah")))
+    when(authenticator.apply(any[RequestContext])).thenReturn(Future.successful(Right(authenticatedUser)))
+    Post(s"/my/library/samples", request) ~> Authorization(OAuth2BearerToken(accessToken)) ~> routes ~> check {
+      assert(status == Conflict)
+    }
   }
 
   it should "return a 400 bad request if an invalid ISBN is given" in new TestFixture {
-
+    val isbn = "invalid"
+    val request = IsbnRequest(isbn)
+    when(authenticator.apply(any[RequestContext])).thenReturn(Future.successful(Right(authenticatedUser)))
+    Post(s"/my/library/samples", request) ~> Authorization(OAuth2BearerToken(accessToken)) ~> routes ~> check {
+      assert(status == BadRequest)
+    }
   }
 
   it should "return an empty library for a valid request of a user who does not have samples in his library" in new TestFixture {

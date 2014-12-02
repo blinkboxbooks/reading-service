@@ -112,7 +112,7 @@ class CatalogueServiceClientTests extends FlatSpec with ScalaFutures with FailHe
 
 class TestFixture extends MockitoSyrup with CatalogueV1Responses {
 
-  val clientConfig = ClientConfig(new URL("https://myfavoritewebsite.com"), 1.second)
+  val clientConfig = ClientConfig(new URL("https://myfavoritewebsite.com/"), 1.second)
   val mockSendReceive = mock[SendReceive]
 
   lazy val client = new SprayClient {
