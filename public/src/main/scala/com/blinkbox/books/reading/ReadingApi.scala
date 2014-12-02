@@ -53,8 +53,7 @@ class ReadingApi(
     post {
       authenticate(authenticator.withElevation(Unelevated)) { implicit user =>
         entity(as[IsbnRequest]) { req =>
-          val isbn = req.isbn
-          isbn match {
+          req.isbn match {
             case Isbn(isbn) =>
               onSuccess(libraryService.addSample(isbn)) { res =>
                 res match {

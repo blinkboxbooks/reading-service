@@ -115,7 +115,6 @@ class LibraryServiceTests extends FlatSpec with MockitoSyrup with ScalaFutures w
   }
 
   it should "successfully add a sample book if a book exists in the catalogue service and not in the data store" in new TestFixture {
-    val isbn = "9801234567890"
     when(catalogueService.getInfoFor(ISBN)).thenReturn(Future.successful(TestCatalogueInfo))
     when(libraryStore.addSample(ISBN, userId)).thenReturn(Future.successful(()))
     when(libraryStore.getBook(ISBN, userId)).thenReturn(Future.successful(None))
@@ -126,7 +125,6 @@ class LibraryServiceTests extends FlatSpec with MockitoSyrup with ScalaFutures w
   }
 
   it should "successfully add a sample book if a book exists in the catalogue service and exists as a sample in the data store" in new TestFixture {
-    val isbn = "9801234567890"
     when(catalogueService.getInfoFor(ISBN)).thenReturn(Future.successful(TestCatalogueInfo))
     when(libraryStore.addSample(ISBN, userId)).thenReturn(Future.successful(()))
     when(libraryStore.getBook(ISBN, userId)).thenReturn(Future.successful(Some(TestLibrarySampleItem)))
@@ -137,7 +135,6 @@ class LibraryServiceTests extends FlatSpec with MockitoSyrup with ScalaFutures w
   }
 
   it should "should throw LibraryConflictException when adding a sample and the full version of the book exists" in new TestFixture {
-    val isbn = "9801234567890"
     when(catalogueService.getInfoFor(ISBN)).thenReturn(Future.successful(TestCatalogueInfo))
     when(libraryStore.addSample(ISBN, userId)).thenReturn(Future.successful(()))
     when(libraryStore.getBook(ISBN, userId)).thenReturn(Future.successful(Some(TestLibraryItem)))
