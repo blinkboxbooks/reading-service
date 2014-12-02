@@ -6,16 +6,14 @@ import com.blinkbox.books.auth.Elevation.Critical
 import com.blinkbox.books.auth.UserRole._
 import com.blinkbox.books.clients.catalogue.CatalogueInfoMissingException
 import com.blinkbox.books.config.ApiConfig
-import com.blinkbox.books.reading.admin.ReadingAdminApi.OwnershipSerializer
-import com.blinkbox.books.reading.{LibraryItemConflict, Owned, Ownership, Sample}
+import com.blinkbox.books.reading.OwnershipSerializer
+import com.blinkbox.books.reading.{LibraryItemConflict, Ownership}
 import com.blinkbox.books.spray.AuthDirectives.authenticateAndAuthorize
 import com.blinkbox.books.spray.Directives.rootPath
 import com.blinkbox.books.spray.MonitoringDirectives.monitor
 import com.blinkbox.books.spray.v2.Implicits.throwableMarshaller
 import com.blinkbox.books.spray.{BearerTokenAuthenticator, JsonFormats, url2uri, v2}
 import com.typesafe.scalalogging.StrictLogging
-import org.json4s.JsonAST.JString
-import org.json4s._
 import spray.http.{IllegalRequestException, StatusCodes}
 import spray.routing.{ExceptionHandler, HttpService, ValidationRejection}
 
@@ -53,16 +51,4 @@ class ReadingAdminApi(apiConfig: ApiConfig,
       }
     }
   }
-}
-
-object ReadingAdminApi {
-
-  object OwnershipSerializer extends CustomSerializer[Ownership](_ => ({
-    case JString("Owned") => Owned
-    case JString("Sample") => Sample
-    case JNull => null
-  }, {
-    case Owned => JString("Owned")
-    case Sample => JString("Sample")
-  }))
 }

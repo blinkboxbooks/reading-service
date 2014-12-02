@@ -22,7 +22,7 @@ class ReadingApi(
   import ReadingApi._
 
   val defaultPageSize = 25
-  implicit override val jsonFormats = JsonFormats.blinkboxFormat() + ReadingPositionSerializer + MediaTypeSerializer + BookTypeSerializer + ReadingStatusSerializer + BookDetailsSerializer
+  implicit override val jsonFormats = JsonFormats.blinkboxFormat() + ReadingPositionSerializer + MediaTypeSerializer + OwnershipSerializer + ReadingStatusSerializer + BookDetailsSerializer
 
   val getLibrary = get {
     path("my" / "library") {
@@ -80,14 +80,6 @@ object ReadingApi {
     case SampleEpub => JString("EpubSample")
     case FullEpub => JString("EpubFull")
     case EpubKey => JString("EpubKey")
-  }))
-
-  object BookTypeSerializer extends CustomSerializer[Ownership](_ => ({
-    case JString("Owned") => Owned
-    case JString("Sample") => Sample
-  }, {
-    case Owned => JString("Owned")
-    case Sample => JString("Sample")
   }))
 
   object ReadingStatusSerializer extends CustomSerializer[ReadingStatus](_ => ({
