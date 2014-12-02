@@ -58,6 +58,10 @@ class DbLibraryStoreTests extends FlatSpec with MockitoSyrup with ScalaFutures w
     }
   }
 
+  it should "throw LibraryItemConflict exception when user has the book with the lower ownership type" in new PopulatedDbFixture {
+    failingWith[LibraryItemConflict](libraryStore.addBook(ISBN1, 1, Sample))
+  }
+
   it should "retrieve all books in a user's library" in new PopulatedDbFixture {
     db.withSession { implicit session =>
       whenReady(libraryStore.getLibrary(count, offset, 1)) { items =>

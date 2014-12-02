@@ -13,9 +13,17 @@ case class ReadingPosition(cfi: Option[Cfi], percentage: Int) {
 
 case class Cfi(value: String)
 
-sealed trait Ownership
-object Owned extends Ownership
-object Sample extends Ownership
+sealed trait Ownership extends Ordered[Ownership] {
+  val order: Int
+}
+object Owned extends Ownership {
+  override val order: Int = 1
+  override def compare(that: Ownership): Int = this.order - that.order
+}
+object Sample extends Ownership {
+  override val order: Int = 0
+  override def compare(that: Ownership): Int = this.order - that.order
+}
 
 sealed trait LinkType extends Relation
 case object CoverImage extends LinkType
