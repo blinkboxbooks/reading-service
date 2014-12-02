@@ -2,9 +2,8 @@ package com.blinkbox.books.reading
 
 import com.blinkbox.books.auth.User
 import com.blinkbox.books.clients.catalogue._
-import com.blinkbox.books.reading._
-import com.blinkbox.books.reading.persistence.{LibraryMediaMissingException, LibraryItem, LibraryStore}
-import com.blinkbox.books.spray.v2.Link
+import com.blinkbox.books.reading.persistence.{LibraryItem, LibraryStore}
+import com.blinkbox.books.spray.v2.{Image, Link}
 import com.typesafe.scalalogging.StrictLogging
 
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -50,7 +49,7 @@ class DefaultLibraryService(
       catalogueInfo.author,
       catalogueInfo.sortableAuthor,
       libItem.createdAt,
-      libItem.bookType,
+      libItem.ownership,
       libItem.readingStatus,
       readingPosition,
       images,
