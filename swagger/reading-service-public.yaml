@@ -95,7 +95,7 @@ paths:
         401:
           description: Not authenticated
         404:
-          description: Sample not foundg
+          description: Sample not found
         409:
           description: Full book already in the library. User cannot delete full books.
 
