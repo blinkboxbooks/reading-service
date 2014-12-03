@@ -4,10 +4,10 @@ import java.net.{URI, URL}
 
 import akka.actor.ActorRefFactory
 import com.blinkbox.books.auth.{Elevation, User}
-import com.blinkbox.books.clients.catalogue.CatalogueInfoMissingException
+import com.blinkbox.books.clients.catalogue.{LibraryItemConflictException, CatalogueInfoMissingException}
 import com.blinkbox.books.config.ApiConfig
 import com.blinkbox.books.reading.persistence.LibraryMediaMissingException
-import com.blinkbox.books.reading.ReadingApi.IsbnRequest
+import com.blinkbox.books.reading.ReadingApi.LibraryItemIsbn
 import com.blinkbox.books.spray.BearerTokenAuthenticator.credentialsInvalidHeaders
 import com.blinkbox.books.spray.v2.{Image, Link, `application/vnd.blinkbox.books.v2+json`}
 import com.blinkbox.books.spray.{BearerTokenAuthenticator, v2}
@@ -64,7 +64,7 @@ class ReadingApiTests extends FlatSpec with ScalatestRouteTest with MockitoSyrup
   
   it should "return a 201 when adding a new sample book to the library" in new TestFixture {
     val isbn = "9810123456789"
-    val request = IsbnRequest(isbn)
+    val request = LibraryItemIsbn(isbn)
     when(libraryService.addSample(isbn)).thenReturn(Future.successful(SampleAdded))
     when(authenticator.apply(any[RequestContext])).thenReturn(Future.successful(Right(authenticatedUser)))
     Post(s"/my/library/samples", request) ~> Authorization(OAuth2BearerToken(accessToken)) ~> routes ~> check {
@@ -74,7 +74,7 @@ class ReadingApiTests extends FlatSpec with ScalatestRouteTest with MockitoSyrup
 
   it should "return a 200 when adding an existing sample book to a user's library" in new TestFixture {
     val isbn = "9810123456789"
-    val request = IsbnRequest(isbn)
+    val request = LibraryItemIsbn(isbn)
     when(libraryService.addSample(isbn)).thenReturn(Future.successful(SampleAlreadyExists))
     when(authenticator.apply(any[RequestContext])).thenReturn(Future.successful(Right(authenticatedUser)))
     Post(s"/my/library/samples", request) ~> Authorization(OAuth2BearerToken(accessToken)) ~> routes ~> check {
@@ -84,8 +84,8 @@ class ReadingApiTests extends FlatSpec with ScalatestRouteTest with MockitoSyrup
 
   it should "return a 409 when adding a sample book that is a full book in a user's library" in new TestFixture {
     val isbn = "9810123456789"
-    val request = IsbnRequest(isbn)
-    when(libraryService.addSample(isbn)).thenReturn(Future.failed(new LibraryConflictException("blah")))
+    val request = LibraryItemIsbn(isbn)
+    when(libraryService.addSample(isbn)).thenReturn(Future.failed(new LibraryItemConflictException("blah")))
     when(authenticator.apply(any[RequestContext])).thenReturn(Future.successful(Right(authenticatedUser)))
     Post(s"/my/library/samples", request) ~> Authorization(OAuth2BearerToken(accessToken)) ~> routes ~> check {
       assert(status == Conflict)
@@ -94,7 +94,7 @@ class ReadingApiTests extends FlatSpec with ScalatestRouteTest with MockitoSyrup
 
   it should "return a 400 bad request if an invalid ISBN is given" in new TestFixture {
     val isbn = "invalid"
-    val request = IsbnRequest(isbn)
+    val request = LibraryItemIsbn(isbn)
     when(authenticator.apply(any[RequestContext])).thenReturn(Future.successful(Right(authenticatedUser)))
     Post(s"/my/library/samples", request) ~> Authorization(OAuth2BearerToken(accessToken)) ~> routes ~> check {
       assert(status == BadRequest)

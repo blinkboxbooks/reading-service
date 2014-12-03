@@ -3,6 +3,7 @@ package com.blinkbox.books.reading
 import akka.actor.ActorRefFactory
 import com.blinkbox.books.auth.Elevation.Unelevated
 import com.blinkbox.books.auth.User
+import com.blinkbox.books.clients.catalogue.LibraryItemConflictException
 import com.blinkbox.books.config.ApiConfig
 import com.blinkbox.books.spray.Directives.{paged, rootPath}
 import com.blinkbox.books.spray.MonitoringDirectives.monitor
@@ -51,7 +52,7 @@ class ReadingApi(
     } ~
     post {
       authenticate(authenticator.withElevation(Unelevated)) { implicit user =>
-        entity(as[IsbnRequest]) { req =>
+        entity(as[LibraryItemIsbn]) { req =>
           req.isbn match {
             case Isbn(isbn) =>
               onSuccess(libraryService.addSample(isbn)) { res =>
@@ -87,7 +88,7 @@ class ReadingApi(
   }
 
   private lazy val exceptionHandler = ExceptionHandler {
-    case e: LibraryConflictException => failWith(new IllegalRequestException(Conflict, e.getMessage))
+    case e: LibraryItemConflictException => failWith(new IllegalRequestException(Conflict, e.getMessage))
   }
 }
 
@@ -135,6 +136,6 @@ object ReadingApi {
     renameFrom("addedDate", "createdAt")
   )
 
-  case class IsbnRequest(isbn: String)
+  case class LibraryItemIsbn(isbn: String)
 
 }

@@ -27,7 +27,7 @@ class DbLibraryStoreTests extends FlatSpec with MockitoSyrup with ScalaFutures w
   override implicit val clock = StoppedClock()
 
   "Library store" should "add a new book to user's library" in new PopulatedDbFixture {
-     whenReady(libraryStore.addLibraryItem("ISBN3", 1, Owned, defaultAllowUpdate)) { res =>
+     whenReady(libraryStore.addOrUpdateLibraryItem("ISBN3", 1, Owned, defaultAllowUpdate)) { res =>
        assert(res == ItemAdded)
        import tables.driver.simple._
        db.withSession { implicit session =>
@@ -38,7 +38,7 @@ class DbLibraryStoreTests extends FlatSpec with MockitoSyrup with ScalaFutures w
   }
 
   it should "update ownership status when user has a sample of a book being added" in new PopulatedDbFixture {
-    whenReady(libraryStore.addLibraryItem(ISBN2, 2, Owned, defaultAllowUpdate)) { res =>
+    whenReady(libraryStore.addOrUpdateLibraryItem(ISBN2, 2, Owned, defaultAllowUpdate)) { res =>
       assert(res == ItemUpdated)
       import tables.driver.simple._
       db.withSession { implicit session =>
@@ -49,7 +49,7 @@ class DbLibraryStoreTests extends FlatSpec with MockitoSyrup with ScalaFutures w
   }
 
   it should "throw LibraryItemConflict exception when user already has the book with the same ownership type" in new PopulatedDbFixture {
-    failingWith[DbStoreUpdateFailedException](libraryStore.addLibraryItem(ISBN1, 1, Owned, defaultAllowUpdate))
+    failingWith[DbStoreUpdateFailedException](libraryStore.addOrUpdateLibraryItem(ISBN1, 1, Owned, defaultAllowUpdate))
   }
 
   it should "retrieve a book in user's library" in new PopulatedDbFixture {
@@ -61,7 +61,7 @@ class DbLibraryStoreTests extends FlatSpec with MockitoSyrup with ScalaFutures w
   }
 
   it should "throw LibraryItemConflict exception when user has the book with the lower ownership type" in new PopulatedDbFixture {
-    failingWith[DbStoreUpdateFailedException](libraryStore.addLibraryItem(ISBN1, 1, Sample, defaultAllowUpdate))
+    failingWith[DbStoreUpdateFailedException](libraryStore.addOrUpdateLibraryItem(ISBN1, 1, Sample, defaultAllowUpdate))
   }
 
   it should "retrieve all books in a user's library" in new PopulatedDbFixture {
@@ -147,7 +147,7 @@ class DbLibraryStoreTests extends FlatSpec with MockitoSyrup with ScalaFutures w
     // It was already 4 to begin with and we test that above
     // We use a count here instead of creating an instance to match as to avoid comparing DateTime for createdAt and updatedAt
     db.withSession { implicit session =>
-      whenReady(libraryStore.addLibraryItem(newIsbn, 3, Sample, defaultAllowUpdate)) { items =>
+      whenReady(libraryStore.addOrUpdateLibraryItem(newIsbn, 3, Sample, defaultAllowUpdate)) { items =>
         assert(tables.libraryItems.list.size == 5)
         assert(tables.libraryItems.list.count(l =>
           l.isbn == newIsbn && l.userId == 3 && l.ownership == Sample && l.progressCfi == None && l.progressPercentage == 0) == 1)

@@ -24,12 +24,12 @@ class LibraryAdminServiceTests extends FlatSpec with MockitoSyrup with ScalaFutu
   "Library service" should "add a full book to the library when user does not have it" in new TestFixture {
 
     when(catalogueService.getInfoFor(Isbn)).thenReturn(Future.successful(TestBookCatalogueInfo))
-    when(libraryStore.addLibraryItem(Isbn, UserId, Owned, service.allowAdminUpdate)).thenReturn(Future.successful((ItemAdded)))
+    when(libraryStore.addOrUpdateLibraryItem(Isbn, UserId, Owned, service.allowAdminUpdate)).thenReturn(Future.successful((ItemAdded)))
 
     whenReady(service.addBook(Isbn, UserId, Owned)) { _ =>
 
       verify(catalogueService).getInfoFor(Isbn)
-      verify(libraryStore).addLibraryItem(Isbn, UserId, Owned, service.allowAdminUpdate)
+      verify(libraryStore).addOrUpdateLibraryItem(Isbn, UserId, Owned, service.allowAdminUpdate)
       verifyNoMoreInteractions(libraryStore)
       verifyNoMoreInteractions(catalogueService)
     }
@@ -48,7 +48,7 @@ class LibraryAdminServiceTests extends FlatSpec with MockitoSyrup with ScalaFutu
 
   it should "fail with LibraryItemConflictException when the book being added is already in the library with the same ownership type" in new TestFixture {
     when(catalogueService.getInfoFor(Isbn)).thenReturn(Future.successful(TestBookCatalogueInfo))
-    when(libraryStore.addLibraryItem(Isbn, UserId, Owned, service.allowAdminUpdate)).thenReturn(Future.failed(new DbStoreUpdateFailedException("test conflict")))
+    when(libraryStore.addOrUpdateLibraryItem(Isbn, UserId, Owned, service.allowAdminUpdate)).thenReturn(Future.failed(new DbStoreUpdateFailedException("test conflict")))
 
     failingWith[LibraryItemConflict](service.addBook(Isbn, UserId, Owned))
   }

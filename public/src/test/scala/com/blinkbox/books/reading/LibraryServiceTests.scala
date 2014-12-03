@@ -115,7 +115,7 @@ class LibraryServiceTests extends FlatSpec with MockitoSyrup with ScalaFutures w
 
   it should "successfully add a sample book if a book exists in the catalogue service and not in the data store" in new TestFixture {
     when(catalogueService.getInfoFor(ISBN)).thenReturn(Future.successful(TestCatalogueInfo))
-    when(libraryStore.addLibraryItem(ISBN, userId, Sample, service.allowUpdateSample)).thenReturn(Future.successful(ItemAdded))
+    when(libraryStore.addOrUpdateLibraryItem(ISBN, userId, Sample, service.allowUpdateSample)).thenReturn(Future.successful(ItemAdded))
 
     whenReady(service.addSample(ISBN)) { res =>
       assert(res == SampleAdded)
@@ -124,7 +124,7 @@ class LibraryServiceTests extends FlatSpec with MockitoSyrup with ScalaFutures w
 
   it should "successfully add a sample book if a book exists in the catalogue service and exists as a sample in the data store" in new TestFixture {
     when(catalogueService.getInfoFor(ISBN)).thenReturn(Future.successful(TestCatalogueInfo))
-    when(libraryStore.addLibraryItem(ISBN, userId, Sample, service.allowUpdateSample)).thenReturn(Future.successful(ItemUpdated))
+    when(libraryStore.addOrUpdateLibraryItem(ISBN, userId, Sample, service.allowUpdateSample)).thenReturn(Future.successful(ItemUpdated))
 
     whenReady(service.addSample(ISBN)) { res =>
       assert(res == SampleAlreadyExists)
@@ -133,7 +133,7 @@ class LibraryServiceTests extends FlatSpec with MockitoSyrup with ScalaFutures w
 
   it should "should throw LibraryConflictException when adding a sample and the full version of the book exists" in new TestFixture {
     when(catalogueService.getInfoFor(ISBN)).thenReturn(Future.successful(TestCatalogueInfo))
-    when(libraryStore.addLibraryItem(ISBN, userId, Sample, service.allowUpdateSample)).thenReturn(Future.failed(new DbStoreUpdateFailedException("bad request")))
+    when(libraryStore.addOrUpdateLibraryItem(ISBN, userId, Sample, service.allowUpdateSample)).thenReturn(Future.failed(new DbStoreUpdateFailedException("bad request")))
 
     failingWith[BadRequestException](service.addSample(ISBN))
   }
@@ -223,7 +223,6 @@ class LibraryServiceTests extends FlatSpec with MockitoSyrup with ScalaFutures w
     val catalogueInfo2 = CatalogueInfo(isbn2, "Book Other", "Author Other", "Other, Author", new URI("http://cover/location2"), new URI("http://sample/location2"))
     val catalogueInfo3 = CatalogueInfo(isbn3, "Sample Name", "Author Name", "Name, Author", new URI("http://cover/location3"), new URI("http://sample/location3"))
     val catalogueInfo4 = CatalogueInfo(isbn4, "Sample Other", "Author Other", "Other, Author", new URI("http://cover/location4"), new URI("http://sample/location4"))
-    /*******************************************************************/
 
     val count = 25
     val offset = 0

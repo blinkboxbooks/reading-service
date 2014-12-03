@@ -75,4 +75,4 @@ class DefaultClient(val config: ClientConfig)(implicit val ec: ExecutionContext,
 class BadRequestException(val error: String, cause: Throwable = null) extends RuntimeException(error, cause)
 class NotFoundException(val error: String, cause: Throwable = null) extends RuntimeException(error, cause)
 class UnauthorizedException(val error: String, val challenge: HttpChallenge, cause: Throwable = null) extends RuntimeException(error, cause)
-class ConflictException(val error: String, cause: Throwable = null) extends RuntimeException(error, cause)
+class LibraryItemConflictException(val error: String, cause: Throwable = null) extends RuntimeException(error, cause)

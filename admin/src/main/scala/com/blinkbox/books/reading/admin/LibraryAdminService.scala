@@ -15,12 +15,10 @@ class DefaultLibraryAdminService(libraryStore: LibraryStore, catalogueService: C
 
   val allowAdminUpdate: (LibraryItem, Ownership) => Boolean = (item, ownership) => (ownership > item.ownership)
 
-  override def addBook(isbn: String, userId: Int, ownership: Ownership): Future[Unit] = for {
-    _ <- catalogueService.getInfoFor(isbn) // check the book is in catalogue before adding it to the library
-    _ <- libraryStore.addLibraryItem(isbn, userId, ownership, allowAdminUpdate).transform(identity, {
+  override def addBook(isbn: String, userId: Int, ownership: Ownership): Future[Unit] =
+    catalogueService.getInfoFor(isbn).flatMap(_ => libraryStore.addOrUpdateLibraryItem(isbn, userId, ownership, allowAdminUpdate).transform(identity => Unit, {
       case e: DbStoreUpdateFailedException => new LibraryItemConflict(s"User ${userId} already has ${isbn} in library with the same or lower ownership type ($ownership)")
-    })
-  } yield ()
+    }))
 }
 
 class LibraryItemConflict(msg: String, cause: Throwable = null) extends Exception(msg, cause)

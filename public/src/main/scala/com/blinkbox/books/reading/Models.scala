@@ -19,5 +19,3 @@ case class BookDetails(
 trait SampleResult
 case object SampleAdded extends SampleResult
 case object SampleAlreadyExists extends SampleResult
-
-case class LibraryConflictException(message: String) extends Exception(message)

@@ -12,7 +12,7 @@ import scala.slick.driver.MySQLDriver
 import scala.slick.jdbc.JdbcBackend.Database
 
 trait LibraryStore {
-  def addLibraryItem(isbn: String, userId: Int, bookOwnership: Ownership, allowUpdate: (LibraryItem, Ownership) => Boolean): Future[DbAddStatus]
+  def addOrUpdateLibraryItem(isbn: String, userId: Int, bookOwnership: Ownership, allowUpdate: (LibraryItem, Ownership) => Boolean): Future[DbAddStatus]
   def getLibraryItem(isbn: String, userId: Int): Future[Option[LibraryItem]]
   def getBookMedia(isbn: String): Future[List[Link]]
   def getBooksMedia(isbns: List[String], userId: Int): Future[Map[String, List[Link]]]
@@ -25,22 +25,17 @@ class DbLibraryStore[DB <: DatabaseSupport](db: DB#Database, tables: LibraryTabl
   import tables._
   import driver.simple._
 
-  override def addLibraryItem(isbn: String, userId: Int, bookOwnership: Ownership, allowUpdate: (LibraryItem, Ownership) => Boolean): Future[DbAddStatus] = Future {
+  override def addOrUpdateLibraryItem(isbn: String, userId: Int, bookOwnership: Ownership, allowUpdate: (LibraryItem, Ownership) => Boolean): Future[DbAddStatus] = Future {
     val now = clock.now()
     db.withTransaction { implicit session =>
       tables.getLibraryItemBy(userId, isbn).firstOption match {
+        case Some(item) if (allowUpdate(item, bookOwnership)) =>
+          val updatedItem = item.copy(ownership = bookOwnership).copy(updatedAt = now)
+          tables.getLibraryItemBy(userId, isbn).update(updatedItem)
+          ItemUpdated
         case Some(item) =>
-          if (allowUpdate(item, bookOwnership)) {
-            val updatedItem = item.copy(ownership = bookOwnership).copy(updatedAt = now)
-            tables.getLibraryItemBy(userId, isbn).update(updatedItem)
-            ItemUpdated
-          }
-          else {
-            val errorMessage = s"Could not update book for user $userId with ownership $bookOwnership for isbn $isbn"
-            logger.error(errorMessage)
-            throw new DbStoreUpdateFailedException(errorMessage)
-          }
-
+          val errorMessage = s"Could not update book for user $userId from ownership with ${item.ownership} to ownership $bookOwnership for isbn $isbn"
+          throw new DbStoreUpdateFailedException(errorMessage)
         case None =>
           val newItem = LibraryItem(isbn, userId, bookOwnership, NotStarted, progressCfi = None, progressPercentage = 0, now, now)
           tables.libraryItems += newItem

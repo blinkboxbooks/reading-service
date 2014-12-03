@@ -43,7 +43,7 @@ class DefaultLibraryService(
 
   override def addSample(isbn: String)(implicit user: User): Future[SampleResult] =
     catalogueService.getInfoFor(isbn).flatMap( _ =>
-      libraryStore.addLibraryItem(isbn, user.id, Sample, allowUpdateSample).map {
+      libraryStore.addOrUpdateLibraryItem(isbn, user.id, Sample, allowUpdateSample).map {
         case ItemAdded => SampleAdded
         case ItemUpdated => SampleAlreadyExists
       }).transform(identity, {
