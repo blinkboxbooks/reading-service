@@ -6,11 +6,7 @@ import com.blinkbox.books.auth.{Elevation, User, UserRole}
 import com.blinkbox.books.clients.catalogue.CatalogueInfoMissingException
 import com.blinkbox.books.config.ApiConfig
 import com.blinkbox.books.reading.OwnershipSerializer
-<<<<<<< HEAD
 import com.blinkbox.books.reading.{Owned, Ownership}
-=======
-import com.blinkbox.books.reading.{LibraryItemConflict, Owned, Ownership}
->>>>>>> bcbdfe35c02ede5704ba303dc8f14fbe5d6ccde0
 import com.blinkbox.books.spray.BearerTokenAuthenticator._
 import com.blinkbox.books.spray.v2._
 import com.blinkbox.books.spray.{BearerTokenAuthenticator, JsonFormats, v2}

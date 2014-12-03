@@ -4,11 +4,7 @@ import java.net.URI
 
 import com.blinkbox.books.clients.catalogue.{CatalogueInfo, CatalogueInfoMissingException, CatalogueService}
 import com.blinkbox.books.reading._
-<<<<<<< HEAD
-import com.blinkbox.books.reading.persistence.{ItemCreated, LibraryItem, LibraryStore}
-=======
 import com.blinkbox.books.reading.persistence.{LibraryItem, LibraryStore}
->>>>>>> bcbdfe35c02ede5704ba303dc8f14fbe5d6ccde0
 import com.blinkbox.books.spray.v2.{Image, Link}
 import com.blinkbox.books.test.{FailHelper, MockitoSyrup}
 import com.blinkbox.books.time.StoppedClock
@@ -28,20 +24,12 @@ class LibraryAdminServiceTests extends FlatSpec with MockitoSyrup with ScalaFutu
   "Library service" should "add a full book to the library when user does not have it" in new TestFixture {
 
     when(catalogueService.getInfoFor(Isbn)).thenReturn(Future.successful(TestBookCatalogueInfo))
-<<<<<<< HEAD
-    when(libraryStore.addBook(Isbn, UserId, Owned, service.allowAdminUpdate)).thenReturn(Future.successful((ItemCreated)))
-=======
-    when(libraryStore.addBook(Isbn, UserId, Owned)).thenReturn(Future.successful(()))
->>>>>>> bcbdfe35c02ede5704ba303dc8f14fbe5d6ccde0
+    when(libraryStore.addBook(Isbn, UserId, Owned, service.allowAdminUpdate)).thenReturn(Future.successful(()))
 
     whenReady(service.addBook(Isbn, UserId, Owned)) { _ =>
 
       verify(catalogueService).getInfoFor(Isbn)
-<<<<<<< HEAD
       verify(libraryStore).addBook(Isbn, UserId, Owned, service.allowAdminUpdate)
-=======
-      verify(libraryStore).addBook(Isbn, UserId, Owned)
->>>>>>> bcbdfe35c02ede5704ba303dc8f14fbe5d6ccde0
       verifyNoMoreInteractions(libraryStore)
       verifyNoMoreInteractions(catalogueService)
     }
@@ -60,11 +48,7 @@ class LibraryAdminServiceTests extends FlatSpec with MockitoSyrup with ScalaFutu
 
   it should "fail with LibraryItemConflictException when the book being added is already in the library with the same ownership type" in new TestFixture {
     when(catalogueService.getInfoFor(Isbn)).thenReturn(Future.successful(TestBookCatalogueInfo))
-<<<<<<< HEAD
     when(libraryStore.addBook(Isbn, UserId, Owned, service.allowAdminUpdate)).thenReturn(Future.failed(new LibraryItemConflict("test conflict")))
-=======
-    when(libraryStore.addBook(Isbn, UserId, Owned)).thenReturn(Future.failed(new LibraryItemConflict("test conflict")))
->>>>>>> bcbdfe35c02ede5704ba303dc8f14fbe5d6ccde0
 
     failingWith[LibraryItemConflict](service.addBook(Isbn, UserId, Owned))
   }

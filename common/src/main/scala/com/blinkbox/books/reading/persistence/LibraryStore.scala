@@ -1,11 +1,7 @@
 package com.blinkbox.books.reading.persistence
 
 import com.blinkbox.books.config.DatabaseConfig
-<<<<<<< HEAD
 import com.blinkbox.books.reading._
-=======
-import com.blinkbox.books.reading.{LibraryItemConflict, NotStarted, Ownership}
->>>>>>> bcbdfe35c02ede5704ba303dc8f14fbe5d6ccde0
 import com.blinkbox.books.slick.{DatabaseComponent, DatabaseSupport, MySQLDatabaseSupport, TablesContainer}
 import com.blinkbox.books.spray.v2.Link
 import com.blinkbox.books.time.Clock
@@ -16,11 +12,7 @@ import scala.slick.driver.MySQLDriver
 import scala.slick.jdbc.JdbcBackend.Database
 
 trait LibraryStore {
-<<<<<<< HEAD
-  def addBook(isbn: String, userId: Int, bookOwnership: Ownership, allowUpdate: (LibraryItem, Ownership) => Boolean): Future[DbAddStatus]
-=======
-  def addBook(isbn: String, userId: Int, bookOwnership: Ownership): Future[Unit]
->>>>>>> bcbdfe35c02ede5704ba303dc8f14fbe5d6ccde0
+  def addBook(isbn: String, userId: Int, bookOwnership: Ownership, allowUpdate: (LibraryItem, Ownership) => Boolean): Future[Unit]
   def getBook(isbn: String, userId: Int): Future[Option[LibraryItem]]
   def getBookMedia(isbn: String): Future[List[Link]]
   def getBooksMedia(isbns: List[String], userId: Int): Future[Map[String, List[Link]]]
@@ -34,20 +26,14 @@ class DbLibraryStore[DB <: DatabaseSupport](db: DB#Database, tables: LibraryTabl
   import tables._
   import driver.simple._
 
-<<<<<<< HEAD
-  override def addBook(isbn: String, userId: Int, bookOwnership: Ownership, allowUpdate: (LibraryItem, Ownership) => Boolean): Future[DbAddStatus] = Future {
-=======
-  override def addBook(isbn: String, userId: Int, bookOwnership: Ownership): Future[Unit] = Future {
->>>>>>> bcbdfe35c02ede5704ba303dc8f14fbe5d6ccde0
+  override def addBook(isbn: String, userId: Int, bookOwnership: Ownership, allowUpdate: (LibraryItem, Ownership) => Boolean): Future[Unit] = Future {
     val now = clock.now()
     db.withTransaction { implicit session =>
       tables.getLibraryItemBy(userId, isbn).firstOption match {
         case Some(item) =>
-<<<<<<< HEAD
           if (allowUpdate(item, bookOwnership)) {
             val updatedItem = item.copy(ownership = bookOwnership).copy(updatedAt = now)
             tables.getLibraryItemBy(userId, isbn).update(updatedItem)
-            ItemUpdated
           }
           else {
             val errorMessage = s"Could not update book for user $userId with ownership $bookOwnership for isbn $isbn"
@@ -58,17 +44,6 @@ class DbLibraryStore[DB <: DatabaseSupport](db: DB#Database, tables: LibraryTabl
         case None =>
           val newItem = LibraryItem(isbn, userId, bookOwnership, NotStarted, progressCfi = None, progressPercentage = 0, now, now)
           tables.libraryItems += newItem
-          ItemCreated
-=======
-          if (bookOwnership <= item.ownership)
-            throw new LibraryItemConflict(s"User $userId already has $isbn in library with the same or lower ownership type ($bookOwnership)")
-
-          val updatedItem = item.copy(ownership = bookOwnership).copy(updatedAt = now)
-          tables.getLibraryItemBy(userId, isbn).update(updatedItem)
-        case None =>
-          val newItem = LibraryItem(isbn, userId, bookOwnership, NotStarted, progressCfi = None, progressPercentage = 0, now, now)
-          tables.libraryItems += newItem
->>>>>>> bcbdfe35c02ede5704ba303dc8f14fbe5d6ccde0
       }
     }
   }
@@ -124,13 +99,6 @@ class DbLibraryStore[DB <: DatabaseSupport](db: DB#Database, tables: LibraryTabl
 }
 
 class LibraryMediaMissingException(msg: String, cause: Throwable = null) extends Exception(msg, cause)
-<<<<<<< HEAD
-
-trait DbAddStatus
-case object ItemUpdated extends DbAddStatus
-case object ItemCreated extends DbAddStatus
-=======
->>>>>>> bcbdfe35c02ede5704ba303dc8f14fbe5d6ccde0
 
 class DefaultDatabaseComponent(config: DatabaseConfig) extends DatabaseComponent {
 
