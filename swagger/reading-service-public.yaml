@@ -88,11 +88,13 @@ paths:
       description: Delete book sample to the library
       responses:
         204:
-          description: Sample book already added to library
+          description: The book has been deleted successfully.
         400:
           description: Bad request for invalid ISBN or no ISBN
         401:
           description: Not authenticated
+        404:
+          description: Sample not foundg
         409:
           description: Full book already in the library. User cannot delete full books.
 
