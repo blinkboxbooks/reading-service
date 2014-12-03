@@ -26,7 +26,7 @@ class DbLibraryStore[DB <: DatabaseSupport](db: DB#Database, tables: LibraryTabl
   import driver.simple._
 
   override def addOrUpdateLibraryItem(isbn: String, userId: Int, bookOwnership: Ownership, allowUpdate: (LibraryItem, Ownership) => Boolean): Future[DbAddStatus] = Future {
-    val now = clock.now()
+    val now = clock.now
     db.withTransaction { implicit session =>
       tables.getLibraryItemBy(userId, isbn).firstOption match {
         case Some(item) if (allowUpdate(item, bookOwnership)) =>
