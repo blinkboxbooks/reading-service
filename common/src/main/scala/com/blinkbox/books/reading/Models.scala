@@ -33,3 +33,4 @@ sealed trait LibraryMediaLinkType extends LinkType
 case object EpubKey extends LibraryMediaLinkType
 case object FullEpub extends LibraryMediaLinkType
 
+case class DbStoreUpdateFailedException(message: String) extends Exception(message)

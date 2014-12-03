@@ -114,8 +114,8 @@ trait LibraryTables[Profile <: JdbcProfile] extends TablesContainer[Profile] {
   private def getUserLibrary(count: ConstColumn[Long], offset: ConstColumn[Long], userId: Column[Int]):  lifted.Query[LibraryItems, LibraryItem, Seq] =
     libraryItems.filter(_.userId === userId).drop(offset).take(count)
 
-  private def getUserLibraryByBookType(count: ConstColumn[Long], offset: ConstColumn[Long], userId: Column[Int], t: Column[BookType]):  lifted.Query[LibraryItems, LibraryItem, Seq] =
-    libraryItems.filter(b => b.userId === userId && b.bookType === t).drop(offset).take(count)
+  private def getUserLibraryByBookType(count: ConstColumn[Long], offset: ConstColumn[Long], userId: Column[Int], t: Column[Ownership]):  lifted.Query[LibraryItems, LibraryItem, Seq] =
+    libraryItems.filter(b => b.userId === userId && b.ownership === t).drop(offset).take(count)
 
   private def getLibraryItemMedia(isbn: Column[String]): lifted.Query[LibraryMedia, LibraryItemLink, Seq] =
     libraryMedia.filter(_.isbn === isbn)
@@ -125,7 +125,7 @@ trait LibraryTables[Profile <: JdbcProfile] extends TablesContainer[Profile] {
 
   def addSample(isbn: String, userId: Int)(implicit session: Session) = {
     val now = DateTime.now(DateTimeZone.UTC)
-    libraryItems += LibraryItem(isbn, userId, Sample, NotStarted, Cfi("/6/4/2/1:0"), 0, now, now)
+    libraryItems += LibraryItem(isbn, userId, Sample, NotStarted, None, 0, now, now)
   }
 
   lazy val getLibraryItemBy = Compiled(getLibraryItem _)

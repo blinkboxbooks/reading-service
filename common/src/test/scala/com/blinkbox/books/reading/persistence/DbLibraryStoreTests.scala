@@ -27,7 +27,7 @@ class DbLibraryStoreTests extends FlatSpec with MockitoSyrup with ScalaFutures w
   override implicit val clock = StoppedClock()
 
   "Library store" should "add a new book to user's library" in new PopulatedDbFixture {
-     whenReady(libraryStore.addBook("ISBN3", 1, Owned)) { _ =>
+     whenReady(libraryStore.addBook("ISBN3", 1, Owned, defaultAllowUpdate)) { _ =>
        import tables.driver.simple._
        db.withSession { implicit session =>
          val expectedItem = LibraryItem("ISBN3", 1, Owned, NotStarted, None, 0, clock.now(), clock.now())
@@ -37,7 +37,7 @@ class DbLibraryStoreTests extends FlatSpec with MockitoSyrup with ScalaFutures w
   }
 
   it should "update ownership status when user has a sample of a book being added" in new PopulatedDbFixture {
-    whenReady(libraryStore.addBook(ISBN2, 2, Owned)) { _ =>
+    whenReady(libraryStore.addBook(ISBN2, 2, Owned, defaultAllowUpdate)) { _ =>
       import tables.driver.simple._
       db.withSession { implicit session =>
         val expectedItem = libItem4.copy(ownership = Owned).copy(updatedAt = clock.now())
@@ -47,7 +47,7 @@ class DbLibraryStoreTests extends FlatSpec with MockitoSyrup with ScalaFutures w
   }
 
   it should "throw LibraryItemConflict exception when user already has the book with the same ownership type" in new PopulatedDbFixture {
-    failingWith[LibraryItemConflict](libraryStore.addBook(ISBN1, 1, Owned))
+    failingWith[DbStoreUpdateFailedException](libraryStore.addBook(ISBN1, 1, Owned, defaultAllowUpdate))
   }
 
   it should "retrieve a book in user's library" in new PopulatedDbFixture {
@@ -59,7 +59,7 @@ class DbLibraryStoreTests extends FlatSpec with MockitoSyrup with ScalaFutures w
   }
 
   it should "throw LibraryItemConflict exception when user has the book with the lower ownership type" in new PopulatedDbFixture {
-    failingWith[LibraryItemConflict](libraryStore.addBook(ISBN1, 1, Sample))
+    failingWith[DbStoreUpdateFailedException](libraryStore.addBook(ISBN1, 1, Sample, defaultAllowUpdate))
   }
 
   it should "retrieve all books in a user's library" in new PopulatedDbFixture {
@@ -148,7 +148,7 @@ class DbLibraryStoreTests extends FlatSpec with MockitoSyrup with ScalaFutures w
       whenReady(libraryStore.addSample(newIsbn, 3)) { items =>
         assert(tables.libraryItems.list.size == 5)
         assert(tables.libraryItems.list.count(l =>
-          l.isbn == newIsbn && l.userId == 3 && l.bookType == Sample && l.progressCfi == Cfi("/6/4/2/1:0") && l.progressPercentage == 0) == 1)
+          l.isbn == newIsbn && l.userId == 3 && l.ownership == Sample && l.progressCfi == None && l.progressPercentage == 0) == 1)
       }
     }
   }
@@ -186,6 +186,8 @@ class DbLibraryStoreTests extends FlatSpec with MockitoSyrup with ScalaFutures w
 
     val libItem1EpubKeyLink = LibraryItemLink(ISBN1, EpubKey, new URI("https://keys.mobcastdev.com/9780/141/909/837/e237e27468c6b37a5679fab718a893e6.epub.9780141909837.key"), DateTime.now, DateTime.now)
     val libItem2EpubKeyLink = LibraryItemLink(ISBN2, EpubKey, new URI("https://keys.mobcastdev.com/9780/141/909/838/5679fab718a893e6e237e27468c6b37a.epub.9780141909838.key"), DateTime.now, DateTime.now)
+
+    val defaultAllowUpdate: (LibraryItem, Ownership) => Boolean = (item, ownership) => ownership > item.ownership
 
     db.withSession { implicit session =>
       tables.ownershipTypes ++= List((Owned, "Owned"), (Sample, "Sample"))
