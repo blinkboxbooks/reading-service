@@ -7,7 +7,11 @@ import com.blinkbox.books.auth.UserRole._
 import com.blinkbox.books.clients.catalogue.CatalogueInfoMissingException
 import com.blinkbox.books.config.ApiConfig
 import com.blinkbox.books.reading.OwnershipSerializer
+<<<<<<< HEAD
 import com.blinkbox.books.reading.Ownership
+=======
+import com.blinkbox.books.reading.{LibraryItemConflict, Ownership}
+>>>>>>> bcbdfe35c02ede5704ba303dc8f14fbe5d6ccde0
 import com.blinkbox.books.spray.AuthDirectives.authenticateAndAuthorize
 import com.blinkbox.books.spray.Directives.rootPath
 import com.blinkbox.books.spray.MonitoringDirectives.monitor

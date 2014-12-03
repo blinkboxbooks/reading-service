@@ -27,8 +27,12 @@ class DbLibraryStoreTests extends FlatSpec with MockitoSyrup with ScalaFutures w
   override implicit val clock = StoppedClock()
 
   "Library store" should "add a new book to user's library" in new PopulatedDbFixture {
+<<<<<<< HEAD:common/src/test/scala/com/blinkbox/books/reading/persistence/DbLibraryStoreTests.scala
      whenReady(libraryStore.addBook("ISBN3", 1, Owned, defaultAllowUpdate)) { res =>
        assert(res == ItemCreated)
+=======
+     whenReady(libraryStore.addBook("ISBN3", 1, Owned)) { _ =>
+>>>>>>> bcbdfe35c02ede5704ba303dc8f14fbe5d6ccde0:common/src/test/scala/com/blinkbox/books/reading/persistence/DbLibraryStoreTests.scala
        import tables.driver.simple._
        db.withSession { implicit session =>
          val expectedItem = LibraryItem("ISBN3", 1, Owned, NotStarted, None, 0, clock.now(), clock.now())
@@ -38,8 +42,12 @@ class DbLibraryStoreTests extends FlatSpec with MockitoSyrup with ScalaFutures w
   }
 
   it should "update ownership status when user has a sample of a book being added" in new PopulatedDbFixture {
+<<<<<<< HEAD:common/src/test/scala/com/blinkbox/books/reading/persistence/DbLibraryStoreTests.scala
     whenReady(libraryStore.addBook(ISBN2, 2, Owned, defaultAllowUpdate)) { res =>
       assert(res == ItemUpdated)
+=======
+    whenReady(libraryStore.addBook(ISBN2, 2, Owned)) { _ =>
+>>>>>>> bcbdfe35c02ede5704ba303dc8f14fbe5d6ccde0:common/src/test/scala/com/blinkbox/books/reading/persistence/DbLibraryStoreTests.scala
       import tables.driver.simple._
       db.withSession { implicit session =>
         val expectedItem = libItem4.copy(ownership = Owned).copy(updatedAt = clock.now())
@@ -49,7 +57,11 @@ class DbLibraryStoreTests extends FlatSpec with MockitoSyrup with ScalaFutures w
   }
 
   it should "throw LibraryItemConflict exception when user already has the book with the same ownership type" in new PopulatedDbFixture {
+<<<<<<< HEAD:common/src/test/scala/com/blinkbox/books/reading/persistence/DbLibraryStoreTests.scala
     failingWith[DbStoreUpdateFailedException](libraryStore.addBook(ISBN1, 1, Owned, defaultAllowUpdate))
+=======
+    failingWith[LibraryItemConflict](libraryStore.addBook(ISBN1, 1, Owned))
+>>>>>>> bcbdfe35c02ede5704ba303dc8f14fbe5d6ccde0:common/src/test/scala/com/blinkbox/books/reading/persistence/DbLibraryStoreTests.scala
   }
 
   it should "retrieve a book in user's library" in new PopulatedDbFixture {
@@ -61,7 +73,11 @@ class DbLibraryStoreTests extends FlatSpec with MockitoSyrup with ScalaFutures w
   }
 
   it should "throw LibraryItemConflict exception when user has the book with the lower ownership type" in new PopulatedDbFixture {
+<<<<<<< HEAD:common/src/test/scala/com/blinkbox/books/reading/persistence/DbLibraryStoreTests.scala
     failingWith[DbStoreUpdateFailedException](libraryStore.addBook(ISBN1, 1, Sample, defaultAllowUpdate))
+=======
+    failingWith[LibraryItemConflict](libraryStore.addBook(ISBN1, 1, Sample))
+>>>>>>> bcbdfe35c02ede5704ba303dc8f14fbe5d6ccde0:common/src/test/scala/com/blinkbox/books/reading/persistence/DbLibraryStoreTests.scala
   }
 
   it should "retrieve all books in a user's library" in new PopulatedDbFixture {

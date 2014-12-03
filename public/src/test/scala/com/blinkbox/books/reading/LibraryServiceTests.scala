@@ -92,6 +92,7 @@ class LibraryServiceTests extends FlatSpec with MockitoSyrup with ScalaFutures w
       BookDetails(isbn1, catalogueInfo1.title, catalogueInfo1.author, catalogueInfo1.sortableAuthor, clock.now(), libItem1.ownership, libItem1.readingStatus, ReadingPosition(libItem1.progressCfi, libItem1.progressPercentage), List(Image(CoverImage, catalogueInfo1.coverImageUrl)), List(Link(SampleEpub, catalogueInfo1.sampleEpubUrl), Link(SampleEpub, catalogueInfo1.sampleEpubUrl)))
     val expectedBookDetail2 =
       BookDetails(isbn2, catalogueInfo2.title, catalogueInfo2.author, catalogueInfo2.sortableAuthor, clock.now(), libItem2.ownership, libItem2.readingStatus, ReadingPosition(libItem2.progressCfi, libItem2.progressPercentage), List(Image(CoverImage, catalogueInfo2.coverImageUrl)), List(Link(SampleEpub, catalogueInfo2.sampleEpubUrl), Link(SampleEpub, catalogueInfo2.sampleEpubUrl)))
+<<<<<<< HEAD
     val expectedBookDetail3 =
       BookDetails(isbn3, catalogueInfo3.title, catalogueInfo3.author, catalogueInfo3.sortableAuthor, clock.now(), libItem3.bookType, libItem3.readingStatus, ReadingPosition(libItem3.progressCfi, libItem3.progressPercentage), List(Image(CoverImage, catalogueInfo3.coverImageUrl)), List(Link(SampleEpub, catalogueInfo3.sampleEpubUrl), Link(SampleEpub, catalogueInfo3.sampleEpubUrl)))
     val expectedBookDetail4 =
@@ -103,6 +104,13 @@ class LibraryServiceTests extends FlatSpec with MockitoSyrup with ScalaFutures w
       thenReturn(Future.successful(Map(
       (isbn3 -> List(Link(SampleEpub, catalogueInfo3.sampleEpubUrl))),
       (isbn4 -> List(Link(SampleEpub, catalogueInfo4.sampleEpubUrl)))
+=======
+    when(libraryStore.getLibrary(count, offset, userId)).thenReturn(Future.successful(List(libItem1, libItem2)))
+    when(libraryStore.getBooksMedia(List(isbn1, isbn2), user.id)).
+      thenReturn(Future.successful(Map(
+      isbn1 -> List(Link(SampleEpub, catalogueInfo1.sampleEpubUrl)),
+      isbn2 -> List(Link(SampleEpub, catalogueInfo2.sampleEpubUrl))
+>>>>>>> bcbdfe35c02ede5704ba303dc8f14fbe5d6ccde0
     )))
     when(catalogueService.getBulkInfoFor(List(isbn3, isbn4), user.id)).thenReturn(Future.successful(List(catalogueInfo3, catalogueInfo4)))
 
@@ -197,7 +205,10 @@ class LibraryServiceTests extends FlatSpec with MockitoSyrup with ScalaFutures w
     val links = List(sampleEpubLink, fullEpubLink, epubKeyLink)
 
     val TestLibraryItem = LibraryItem(ISBN, UserId, Owned, ReadingStatus, Progress.cfi, Progress.percentage, clock.now(), clock.now())
+<<<<<<< HEAD
     val TestLibrarySampleItem = LibraryItem(ISBN, UserId, Sample, ReadingStatus, Progress.cfi, Progress.percentage, clock.now(), clock.now())
+=======
+>>>>>>> bcbdfe35c02ede5704ba303dc8f14fbe5d6ccde0
     val TestCatalogueInfo = CatalogueInfo(ISBN, "Title", "Name Surname", "Surname, Name", coverImageLink.url, sampleEpubLink.url)
     val TestBookDetails = BookDetails(ISBN, TestCatalogueInfo.title, TestCatalogueInfo.author, TestCatalogueInfo.sortableAuthor, clock.now(), Owned, ReadingStatus, Progress, images, links)
 
@@ -208,6 +219,7 @@ class LibraryServiceTests extends FlatSpec with MockitoSyrup with ScalaFutures w
     val userId = 1
     val isbn1 = "9870123456789"
     val isbn2 = "9879876543210"
+<<<<<<< HEAD
     val isbn3 = "9879876543000"
     val isbn4 = "9879876543999"
     val libItem1 = LibraryItem(isbn1, userId, Owned, Finished, Some(Cfi("/6/4")), 100, clock.now(), clock.now())
@@ -219,6 +231,12 @@ class LibraryServiceTests extends FlatSpec with MockitoSyrup with ScalaFutures w
     val catalogueInfo3 = CatalogueInfo(isbn3, "Sample Name", "Author Name", "Name, Author", new URI("http://cover/location3"), new URI("http://sample/location3"))
     val catalogueInfo4 = CatalogueInfo(isbn4, "Sample Other", "Author Other", "Other, Author", new URI("http://cover/location4"), new URI("http://sample/location4"))
     /*******************************************************************/
+=======
+    val libItem1 = LibraryItem(isbn1, userId, Owned, Finished, Some(Cfi("/6/4")), 100, clock.now(), clock.now())
+    val libItem2 = LibraryItem(isbn2, userId, Owned, Reading, Some(Cfi("/6/4")), 50, clock.now(), clock.now())
+    val catalogueInfo1 = CatalogueInfo(isbn1, "Book Name", "Author Name", "Name, Author", new URI("http://cover/location"), new URI("http://sample/location"))
+    val catalogueInfo2 = CatalogueInfo(isbn2, "Book Other", "Author Other", "Other, Author", new URI("http://cover/location2"), new URI("http://sample/location2"))
+>>>>>>> bcbdfe35c02ede5704ba303dc8f14fbe5d6ccde0
 
     val count = 25
     val offset = 0
