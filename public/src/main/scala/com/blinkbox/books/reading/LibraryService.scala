@@ -2,7 +2,7 @@ package com.blinkbox.books.reading
 
 import com.blinkbox.books.auth.User
 import com.blinkbox.books.clients.catalogue._
-import com.blinkbox.books.reading.persistence.{LibraryItem, LibraryStore}
+import com.blinkbox.books.reading.persistence._
 import com.blinkbox.books.spray.v2.{Image, Link}
 import com.typesafe.scalalogging.StrictLogging
 
@@ -19,6 +19,11 @@ trait LibraryService {
 class DefaultLibraryService(
   libraryStore: LibraryStore,
   catalogueService: CatalogueService) extends LibraryService with StrictLogging {
+
+  val allowUpdateSample: (LibraryItem, Ownership) => Boolean = (item, ownership) => {
+    assert(ownership == Sample)
+    item.ownership <= Sample
+  }
 
   override def getLibrary(count: Int, offset: Int)(implicit user: User): Future[List[BookDetails]] = for {
     library <- libraryStore.getLibrary(count, offset, user.id)
@@ -37,21 +42,16 @@ class DefaultLibraryService(
   } yield list
 
   override def addSample(isbn: String)(implicit user: User): Future[SampleResult] =
-    catalogueService.getInfoFor(isbn).flatMap( _ => libraryStore.getBook(isbn, user.id).flatMap {
-      case Some(item) =>
-        if (item.ownership == Sample) Future.successful(SampleAlreadyExists)
-        else throw LibraryConflictException(s"Sample cannot be added as $isbn exists as a full book")
-      case None =>
-        libraryStore.addSample(isbn, user.id).map( _ => SampleAdded)
-    }).recover {
-      case e: CatalogueInfoMissingException =>
-        val message = s"$isbn was not found in the Catalogue Service when adding sample"
-        logger.error(message, e)
-        throw new BadRequestException(message, e)
-    }
+    catalogueService.getInfoFor(isbn).flatMap( _ =>
+      libraryStore.addLibraryItem(isbn, user.id, Sample, allowUpdateSample).map {
+        case ItemAdded => SampleAdded
+        case ItemUpdated => SampleAlreadyExists
+      }).transform(identity, {
+      case e: DbStoreUpdateFailedException => new BadRequestException(s"$isbn was not found in the Catalogue Service when adding sample")
+    })
 
   override def getBook(isbn: String)(implicit user: User): Future[Option[BookDetails]] = {
-    val libItemFuture = libraryStore.getBook(isbn, user.id)
+    val libItemFuture = libraryStore.getLibraryItem(isbn, user.id)
     val itemMediaLinksFuture = libraryStore.getBookMedia(isbn)
     val catalogueInfoFuture = catalogueService.getInfoFor(isbn)
     for {

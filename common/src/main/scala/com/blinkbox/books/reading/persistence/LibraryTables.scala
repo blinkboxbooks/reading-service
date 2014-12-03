@@ -123,11 +123,6 @@ trait LibraryTables[Profile <: JdbcProfile] extends TablesContainer[Profile] {
   def getBulkLibraryItemMedia(isbns: List[String]): lifted.Query[LibraryMedia, LibraryItemLink, Seq] =
     libraryMedia.filter(_.isbn inSet isbns)
 
-  def addSample(isbn: String, userId: Int)(implicit session: Session) = {
-    val now = DateTime.now(DateTimeZone.UTC)
-    libraryItems += LibraryItem(isbn, userId, Sample, NotStarted, None, 0, now, now)
-  }
-
   lazy val getLibraryItemBy = Compiled(getLibraryItem _)
   lazy val getLibraryItemLinkFor = Compiled(getLibraryItemMedia _)
   lazy val getUserLibraryById = Compiled(getUserLibrary _)

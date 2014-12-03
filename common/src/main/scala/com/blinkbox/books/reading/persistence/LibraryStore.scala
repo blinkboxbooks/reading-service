@@ -12,13 +12,12 @@ import scala.slick.driver.MySQLDriver
 import scala.slick.jdbc.JdbcBackend.Database
 
 trait LibraryStore {
-  def addBook(isbn: String, userId: Int, bookOwnership: Ownership, allowUpdate: (LibraryItem, Ownership) => Boolean): Future[Unit]
-  def getBook(isbn: String, userId: Int): Future[Option[LibraryItem]]
+  def addLibraryItem(isbn: String, userId: Int, bookOwnership: Ownership, allowUpdate: (LibraryItem, Ownership) => Boolean): Future[DbAddStatus]
+  def getLibraryItem(isbn: String, userId: Int): Future[Option[LibraryItem]]
   def getBookMedia(isbn: String): Future[List[Link]]
   def getBooksMedia(isbns: List[String], userId: Int): Future[Map[String, List[Link]]]
   def getLibrary(count: Int, offset: Int, userId: Int): Future[List[LibraryItem]]
   def getSamples(count: Int, offset: Int, userId: Int): Future[List[LibraryItem]]
-  def addSample(isbn: String, userId: Int): Future[Unit]
 }
 
 class DbLibraryStore[DB <: DatabaseSupport](db: DB#Database, tables: LibraryTables[DB#Profile], exceptionFilter: DB#ExceptionFilter)(implicit val ec: ExecutionContext, clock: Clock) extends LibraryStore with StrictLogging {
@@ -26,7 +25,7 @@ class DbLibraryStore[DB <: DatabaseSupport](db: DB#Database, tables: LibraryTabl
   import tables._
   import driver.simple._
 
-  override def addBook(isbn: String, userId: Int, bookOwnership: Ownership, allowUpdate: (LibraryItem, Ownership) => Boolean): Future[Unit] = Future {
+  override def addLibraryItem(isbn: String, userId: Int, bookOwnership: Ownership, allowUpdate: (LibraryItem, Ownership) => Boolean): Future[DbAddStatus] = Future {
     val now = clock.now()
     db.withTransaction { implicit session =>
       tables.getLibraryItemBy(userId, isbn).firstOption match {
@@ -34,6 +33,7 @@ class DbLibraryStore[DB <: DatabaseSupport](db: DB#Database, tables: LibraryTabl
           if (allowUpdate(item, bookOwnership)) {
             val updatedItem = item.copy(ownership = bookOwnership).copy(updatedAt = now)
             tables.getLibraryItemBy(userId, isbn).update(updatedItem)
+            ItemUpdated
           }
           else {
             val errorMessage = s"Could not update book for user $userId with ownership $bookOwnership for isbn $isbn"
@@ -44,11 +44,12 @@ class DbLibraryStore[DB <: DatabaseSupport](db: DB#Database, tables: LibraryTabl
         case None =>
           val newItem = LibraryItem(isbn, userId, bookOwnership, NotStarted, progressCfi = None, progressPercentage = 0, now, now)
           tables.libraryItems += newItem
+          ItemAdded
       }
     }
   }
 
-  override def getBook(isbn: String, userId: Int): Future[Option[LibraryItem]] = Future {
+  override def getLibraryItem(isbn: String, userId: Int): Future[Option[LibraryItem]] = Future {
     db.withSession { implicit session =>
       tables.getLibraryItemBy(userId, isbn).firstOption
     }
@@ -91,14 +92,15 @@ class DbLibraryStore[DB <: DatabaseSupport](db: DB#Database, tables: LibraryTabl
     }
   }
 
-  override def addSample(isbn: String, userId: Int): Future[Unit] = Future {
-    db.withSession { implicit session =>
-      tables.addSample(isbn, userId)
-    }
-  }
 }
 
+trait DbAddStatus
+case object ItemAdded extends DbAddStatus
+case object ItemUpdated extends DbAddStatus
+
 class LibraryMediaMissingException(msg: String, cause: Throwable = null) extends Exception(msg, cause)
+
+case class DbStoreUpdateFailedException(message: String) extends Exception(message)
 
 class DefaultDatabaseComponent(config: DatabaseConfig) extends DatabaseComponent {
 

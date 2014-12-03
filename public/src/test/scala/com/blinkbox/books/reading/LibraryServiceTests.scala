@@ -3,8 +3,8 @@ package com.blinkbox.books.reading
 import java.net.URI
 
 import com.blinkbox.books.auth.User
-import com.blinkbox.books.clients.catalogue.{CatalogueInfo, CatalogueInfoMissingException, CatalogueService}
-import com.blinkbox.books.reading.persistence.{LibraryItem, LibraryMediaMissingException, LibraryStore}
+import com.blinkbox.books.clients.catalogue.{BadRequestException, CatalogueInfo, CatalogueInfoMissingException, CatalogueService}
+import com.blinkbox.books.reading.persistence._
 import com.blinkbox.books.spray.v2.{Image, Link}
 import com.blinkbox.books.test.{FailHelper, MockitoSyrup}
 import com.blinkbox.books.time.{StoppedClock, TimeSupport}
@@ -23,7 +23,7 @@ class LibraryServiceTests extends FlatSpec with MockitoSyrup with ScalaFutures w
 
   "Library service" should "return book details" in new TestFixture {
     when(catalogueService.getInfoFor(ISBN)).thenReturn(Future.successful(TestCatalogueInfo))
-    when(libraryStore.getBook(any[String], any[Int])).thenReturn(Future.successful(Some(TestLibraryItem)))
+    when(libraryStore.getLibraryItem(any[String], any[Int])).thenReturn(Future.successful(Some(TestLibraryItem)))
     when(libraryStore.getBookMedia(ISBN)).thenReturn(Future.successful(List(fullEpubLink, epubKeyLink)))
 
     whenReady(service.getBook(ISBN)) { res =>
@@ -31,7 +31,7 @@ class LibraryServiceTests extends FlatSpec with MockitoSyrup with ScalaFutures w
     }
 
     verify(catalogueService).getInfoFor(ISBN)
-    verify(libraryStore).getBook(ISBN, UserId)
+    verify(libraryStore).getLibraryItem(ISBN, UserId)
     verify(libraryStore).getBookMedia(ISBN)
 
     verifyNoMoreInteractions(catalogueService)
@@ -40,7 +40,7 @@ class LibraryServiceTests extends FlatSpec with MockitoSyrup with ScalaFutures w
 
   it should "return None if user does not have it in his library" in new TestFixture {
     when(catalogueService.getInfoFor(ISBN)).thenReturn(Future.successful(TestCatalogueInfo))
-    when(libraryStore.getBook(any[String], any[Int])).thenReturn(Future.successful(None))
+    when(libraryStore.getLibraryItem(any[String], any[Int])).thenReturn(Future.successful(None))
     when(libraryStore.getBookMedia(ISBN)).thenReturn(Future.successful(List(fullEpubLink, epubKeyLink)))
 
     whenReady(service.getBook(ISBN)) { res =>
@@ -48,7 +48,7 @@ class LibraryServiceTests extends FlatSpec with MockitoSyrup with ScalaFutures w
     }
 
     verify(catalogueService).getInfoFor(ISBN)
-    verify(libraryStore).getBook(ISBN, UserId)
+    verify(libraryStore).getLibraryItem(ISBN, UserId)
     verify(libraryStore).getBookMedia(ISBN)
 
     verifyNoMoreInteractions(catalogueService)
@@ -57,13 +57,13 @@ class LibraryServiceTests extends FlatSpec with MockitoSyrup with ScalaFutures w
 
   it should "return LibraryMediaMissing exception if library does not have media for a book in the library" in new TestFixture {
     when(catalogueService.getInfoFor(ISBN)).thenReturn(Future.successful(TestCatalogueInfo))
-    when(libraryStore.getBook(any[String], any[Int])).thenReturn(Future.successful(Some(TestLibraryItem)))
+    when(libraryStore.getLibraryItem(any[String], any[Int])).thenReturn(Future.successful(Some(TestLibraryItem)))
     when(libraryStore.getBookMedia(ISBN)).thenReturn(Future.failed(new LibraryMediaMissingException("expected exception")))
 
     failingWith[LibraryMediaMissingException](service.getBook(ISBN))
 
     verify(catalogueService).getInfoFor(ISBN)
-    verify(libraryStore).getBook(ISBN, UserId)
+    verify(libraryStore).getLibraryItem(ISBN, UserId)
     verify(libraryStore).getBookMedia(ISBN)
 
     verifyNoMoreInteractions(catalogueService)
@@ -72,13 +72,13 @@ class LibraryServiceTests extends FlatSpec with MockitoSyrup with ScalaFutures w
 
   it should "return CatalogueInfoMissing exception if catalogue does not have book info for a book in the library" in new TestFixture {
     when(catalogueService.getInfoFor(ISBN)).thenReturn(Future.failed(new CatalogueInfoMissingException("expected exception")))
-    when(libraryStore.getBook(any[String], any[Int])).thenReturn(Future.successful(Some(TestLibraryItem)))
+    when(libraryStore.getLibraryItem(any[String], any[Int])).thenReturn(Future.successful(Some(TestLibraryItem)))
     when(libraryStore.getBookMedia(ISBN)).thenReturn(Future.successful(List(fullEpubLink, epubKeyLink)))
 
     failingWith[CatalogueInfoMissingException](service.getBook(ISBN))
 
     verify(catalogueService).getInfoFor(ISBN)
-    verify(libraryStore).getBook(ISBN, UserId)
+    verify(libraryStore).getLibraryItem(ISBN, UserId)
     verify(libraryStore).getBookMedia(ISBN)
 
     verifyNoMoreInteractions(catalogueService)
@@ -115,8 +115,7 @@ class LibraryServiceTests extends FlatSpec with MockitoSyrup with ScalaFutures w
 
   it should "successfully add a sample book if a book exists in the catalogue service and not in the data store" in new TestFixture {
     when(catalogueService.getInfoFor(ISBN)).thenReturn(Future.successful(TestCatalogueInfo))
-    when(libraryStore.addSample(ISBN, userId)).thenReturn(Future.successful(()))
-    when(libraryStore.getBook(ISBN, userId)).thenReturn(Future.successful(None))
+    when(libraryStore.addLibraryItem(ISBN, userId, Sample, service.allowUpdateSample)).thenReturn(Future.successful(ItemAdded))
 
     whenReady(service.addSample(ISBN)) { res =>
       assert(res == SampleAdded)
@@ -125,8 +124,7 @@ class LibraryServiceTests extends FlatSpec with MockitoSyrup with ScalaFutures w
 
   it should "successfully add a sample book if a book exists in the catalogue service and exists as a sample in the data store" in new TestFixture {
     when(catalogueService.getInfoFor(ISBN)).thenReturn(Future.successful(TestCatalogueInfo))
-    when(libraryStore.addSample(ISBN, userId)).thenReturn(Future.successful(()))
-    when(libraryStore.getBook(ISBN, userId)).thenReturn(Future.successful(Some(TestLibrarySampleItem)))
+    when(libraryStore.addLibraryItem(ISBN, userId, Sample, service.allowUpdateSample)).thenReturn(Future.successful(ItemUpdated))
 
     whenReady(service.addSample(ISBN)) { res =>
       assert(res == SampleAlreadyExists)
@@ -135,10 +133,17 @@ class LibraryServiceTests extends FlatSpec with MockitoSyrup with ScalaFutures w
 
   it should "should throw LibraryConflictException when adding a sample and the full version of the book exists" in new TestFixture {
     when(catalogueService.getInfoFor(ISBN)).thenReturn(Future.successful(TestCatalogueInfo))
-    when(libraryStore.addSample(ISBN, userId)).thenReturn(Future.successful(()))
-    when(libraryStore.getBook(ISBN, userId)).thenReturn(Future.successful(Some(TestLibraryItem)))
+    when(libraryStore.addLibraryItem(ISBN, userId, Sample, service.allowUpdateSample)).thenReturn(Future.failed(new DbStoreUpdateFailedException("bad request")))
 
-    failingWith[LibraryConflictException](service.addSample(ISBN))
+    failingWith[BadRequestException](service.addSample(ISBN))
+  }
+
+  it should "allow update for sample when it already exists" in new TestFixture {
+    assert(service.allowUpdateSample(TestLibrarySampleItem, Sample))
+  }
+
+  it should "not allow update of an owned book to a sample" in new TestFixture {
+    assert(!service.allowUpdateSample(TestLibraryItem, Sample))
   }
 
   it should "return the samples within a user's library" in new TestFixture {

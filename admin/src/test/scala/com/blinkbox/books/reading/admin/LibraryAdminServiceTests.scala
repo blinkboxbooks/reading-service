@@ -4,7 +4,7 @@ import java.net.URI
 
 import com.blinkbox.books.clients.catalogue.{CatalogueInfo, CatalogueInfoMissingException, CatalogueService}
 import com.blinkbox.books.reading._
-import com.blinkbox.books.reading.persistence.{LibraryItem, LibraryStore}
+import com.blinkbox.books.reading.persistence.{DbStoreUpdateFailedException, ItemAdded, LibraryItem, LibraryStore}
 import com.blinkbox.books.spray.v2.{Image, Link}
 import com.blinkbox.books.test.{FailHelper, MockitoSyrup}
 import com.blinkbox.books.time.StoppedClock
@@ -24,12 +24,12 @@ class LibraryAdminServiceTests extends FlatSpec with MockitoSyrup with ScalaFutu
   "Library service" should "add a full book to the library when user does not have it" in new TestFixture {
 
     when(catalogueService.getInfoFor(Isbn)).thenReturn(Future.successful(TestBookCatalogueInfo))
-    when(libraryStore.addBook(Isbn, UserId, Owned, service.allowAdminUpdate)).thenReturn(Future.successful(()))
+    when(libraryStore.addLibraryItem(Isbn, UserId, Owned, service.allowAdminUpdate)).thenReturn(Future.successful((ItemAdded)))
 
     whenReady(service.addBook(Isbn, UserId, Owned)) { _ =>
 
       verify(catalogueService).getInfoFor(Isbn)
-      verify(libraryStore).addBook(Isbn, UserId, Owned, service.allowAdminUpdate)
+      verify(libraryStore).addLibraryItem(Isbn, UserId, Owned, service.allowAdminUpdate)
       verifyNoMoreInteractions(libraryStore)
       verifyNoMoreInteractions(catalogueService)
     }
@@ -48,9 +48,22 @@ class LibraryAdminServiceTests extends FlatSpec with MockitoSyrup with ScalaFutu
 
   it should "fail with LibraryItemConflictException when the book being added is already in the library with the same ownership type" in new TestFixture {
     when(catalogueService.getInfoFor(Isbn)).thenReturn(Future.successful(TestBookCatalogueInfo))
-    when(libraryStore.addBook(Isbn, UserId, Owned, service.allowAdminUpdate)).thenReturn(Future.failed(new LibraryItemConflict("test conflict")))
+    when(libraryStore.addLibraryItem(Isbn, UserId, Owned, service.allowAdminUpdate)).thenReturn(Future.failed(new DbStoreUpdateFailedException("test conflict")))
 
     failingWith[LibraryItemConflict](service.addBook(Isbn, UserId, Owned))
+  }
+
+  it should "all upgrade from Sample to Full" in new TestFixture {
+    assert(service.allowAdminUpdate(TestLibraryItem, Owned))
+  }
+
+  it should "not allow updating of same ownerships" in new TestFixture {
+    assert(!service.allowAdminUpdate(TestLibraryItem, Sample))
+    assert(!service.allowAdminUpdate(TestLibraryOwnedItem, Owned))
+  }
+
+  it should "not allow downgrading of ownership" in new TestFixture {
+    assert(!service.allowAdminUpdate(TestLibraryOwnedItem, Sample))
   }
 
   class TestFixture extends {
@@ -65,6 +78,7 @@ class LibraryAdminServiceTests extends FlatSpec with MockitoSyrup with ScalaFutu
     val TestBookCatalogueInfo = CatalogueInfo(Isbn, "Title", "Name Surname", "Surname, Name", coverImageLink.url, sampleEpubLink.url)
 
     val TestLibraryItem = LibraryItem(Isbn, UserId, Sample, Reading, Some(Cfi("cfi")), 10, DateTime.now, DateTime.now)
+    val TestLibraryOwnedItem = LibraryItem(Isbn, UserId, Owned, Reading, Some(Cfi("cfi")), 10, DateTime.now, DateTime.now)
 
     val libraryStore = mock[LibraryStore]
     val catalogueService = mock[CatalogueService]
