@@ -69,6 +69,33 @@ paths:
           description: Not authenticated
         409:
           description: Full book already in the library.
+    delete:
+      parameters:
+        - name: Authorization
+          in: header
+          description: The bearer token from the Auth server describing the user. A user does not need to be in an elevated state.
+          type: string
+          required: true
+          format: "/^Bearer .+/"
+          x-elevation: none
+        - name: isbn
+          in: body
+          description: ISBN
+          required: true
+          schema:
+            type: integer
+            description: 13 digit isbn number
+      description: Add book sample to the library
+      responses:
+        204:
+          description: Sample book already added to library
+        400:
+          description: Bad request for invalid ISBN or no ISBN
+        401:
+          description: Not authenticated
+        409:
+          description: Full book already in the library. User cannot delete full books.
+
   /my/library/full:
     get:
       parameters:
