@@ -87,7 +87,7 @@ class DbLibraryStore[DB <: DatabaseSupport](db: DB#Database, tables: LibraryTabl
 
   override def getSamples(count: Int, offset: Int, userId: Int): Future[List[LibraryItem]] = Future {
     db.withSession { implicit session =>
-      tables.getUserLibraryByBookTypeWithId(count, offset, userId, Sample).list
+      tables.getUserLibraryByOwnershipWithId(count, offset, userId, Sample).list
     }
   }
 

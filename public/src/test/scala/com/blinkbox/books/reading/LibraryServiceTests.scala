@@ -93,9 +93,9 @@ class LibraryServiceTests extends FlatSpec with MockitoSyrup with ScalaFutures w
     val expectedBookDetail2 =
       BookDetails(isbn2, catalogueInfo2.title, catalogueInfo2.author, catalogueInfo2.sortableAuthor, clock.now(), libItem2.ownership, libItem2.readingStatus, ReadingPosition(libItem2.progressCfi, libItem2.progressPercentage), List(Image(CoverImage, catalogueInfo2.coverImageUrl)), List(Link(SampleEpub, catalogueInfo2.sampleEpubUrl), Link(SampleEpub, catalogueInfo2.sampleEpubUrl)))
     val expectedBookDetail3 =
-      BookDetails(isbn3, catalogueInfo3.title, catalogueInfo3.author, catalogueInfo3.sortableAuthor, clock.now(), libItem3.bookType, libItem3.readingStatus, ReadingPosition(libItem3.progressCfi, libItem3.progressPercentage), List(Image(CoverImage, catalogueInfo3.coverImageUrl)), List(Link(SampleEpub, catalogueInfo3.sampleEpubUrl), Link(SampleEpub, catalogueInfo3.sampleEpubUrl)))
+      BookDetails(isbn3, catalogueInfo3.title, catalogueInfo3.author, catalogueInfo3.sortableAuthor, clock.now(), libItem3.ownership, libItem3.readingStatus, ReadingPosition(libItem3.progressCfi, libItem3.progressPercentage), List(Image(CoverImage, catalogueInfo3.coverImageUrl)), List(Link(SampleEpub, catalogueInfo3.sampleEpubUrl), Link(SampleEpub, catalogueInfo3.sampleEpubUrl)))
     val expectedBookDetail4 =
-      BookDetails(isbn4, catalogueInfo4.title, catalogueInfo4.author, catalogueInfo4.sortableAuthor, clock.now(), libItem4.bookType, libItem4.readingStatus, ReadingPosition(libItem4.progressCfi, libItem4.progressPercentage), List(Image(CoverImage, catalogueInfo4.coverImageUrl)), List(Link(SampleEpub, catalogueInfo4.sampleEpubUrl), Link(SampleEpub, catalogueInfo4.sampleEpubUrl)))
+      BookDetails(isbn4, catalogueInfo4.title, catalogueInfo4.author, catalogueInfo4.sortableAuthor, clock.now(), libItem4.ownership, libItem4.readingStatus, ReadingPosition(libItem4.progressCfi, libItem4.progressPercentage), List(Image(CoverImage, catalogueInfo4.coverImageUrl)), List(Link(SampleEpub, catalogueInfo4.sampleEpubUrl), Link(SampleEpub, catalogueInfo4.sampleEpubUrl)))
 
     when(libraryStore.getLibrary(count, offset, userId)).thenReturn(Future.successful(List(libItem1, libItem2, libItem3, libItem4)))
     when(libraryStore.getSamples(count, offset, userId)).thenReturn(Future.successful(List(libItem3, libItem4)))
@@ -143,9 +143,9 @@ class LibraryServiceTests extends FlatSpec with MockitoSyrup with ScalaFutures w
 
   it should "return the samples within a user's library" in new TestFixture {
     val expectedBookDetail1 =
-      BookDetails(isbn1, catalogueInfo1.title, catalogueInfo1.author, catalogueInfo1.sortableAuthor, clock.now(), libItem1.bookType, libItem1.readingStatus, ReadingPosition(libItem1.progressCfi, libItem1.progressPercentage), List(Image(CoverImage, catalogueInfo1.coverImageUrl)), List(Link(SampleEpub, catalogueInfo1.sampleEpubUrl), Link(SampleEpub, catalogueInfo1.sampleEpubUrl)))
+      BookDetails(isbn1, catalogueInfo1.title, catalogueInfo1.author, catalogueInfo1.sortableAuthor, clock.now(), libItem1.ownership, libItem1.readingStatus, ReadingPosition(libItem1.progressCfi, libItem1.progressPercentage), List(Image(CoverImage, catalogueInfo1.coverImageUrl)), List(Link(SampleEpub, catalogueInfo1.sampleEpubUrl), Link(SampleEpub, catalogueInfo1.sampleEpubUrl)))
     val expectedBookDetail2 =
-      BookDetails(isbn2, catalogueInfo2.title, catalogueInfo2.author, catalogueInfo2.sortableAuthor, clock.now(), libItem2.bookType, libItem2.readingStatus, ReadingPosition(libItem2.progressCfi, libItem2.progressPercentage), List(Image(CoverImage, catalogueInfo2.coverImageUrl)), List(Link(SampleEpub, catalogueInfo2.sampleEpubUrl), Link(SampleEpub, catalogueInfo2.sampleEpubUrl)))
+      BookDetails(isbn2, catalogueInfo2.title, catalogueInfo2.author, catalogueInfo2.sortableAuthor, clock.now(), libItem2.ownership, libItem2.readingStatus, ReadingPosition(libItem2.progressCfi, libItem2.progressPercentage), List(Image(CoverImage, catalogueInfo2.coverImageUrl)), List(Link(SampleEpub, catalogueInfo2.sampleEpubUrl), Link(SampleEpub, catalogueInfo2.sampleEpubUrl)))
   }
 
   it should "return successfully when a user has no items in his library" in new TestFixture {

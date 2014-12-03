@@ -114,7 +114,7 @@ trait LibraryTables[Profile <: JdbcProfile] extends TablesContainer[Profile] {
   private def getUserLibrary(count: ConstColumn[Long], offset: ConstColumn[Long], userId: Column[Int]):  lifted.Query[LibraryItems, LibraryItem, Seq] =
     libraryItems.filter(_.userId === userId).drop(offset).take(count)
 
-  private def getUserLibraryByBookType(count: ConstColumn[Long], offset: ConstColumn[Long], userId: Column[Int], t: Column[Ownership]):  lifted.Query[LibraryItems, LibraryItem, Seq] =
+  private def getUserLibraryByOwnership(count: ConstColumn[Long], offset: ConstColumn[Long], userId: Column[Int], t: Column[Ownership]):  lifted.Query[LibraryItems, LibraryItem, Seq] =
     libraryItems.filter(b => b.userId === userId && b.ownership === t).drop(offset).take(count)
 
   private def getLibraryItemMedia(isbn: Column[String]): lifted.Query[LibraryMedia, LibraryItemLink, Seq] =
@@ -131,7 +131,7 @@ trait LibraryTables[Profile <: JdbcProfile] extends TablesContainer[Profile] {
   lazy val getLibraryItemBy = Compiled(getLibraryItem _)
   lazy val getLibraryItemLinkFor = Compiled(getLibraryItemMedia _)
   lazy val getUserLibraryById = Compiled(getUserLibrary _)
-  lazy val getUserLibraryByBookTypeWithId = Compiled(getUserLibraryByBookType _)
+  lazy val getUserLibraryByOwnershipWithId = Compiled(getUserLibraryByOwnership _)
 }
 
 object LibraryTables {
