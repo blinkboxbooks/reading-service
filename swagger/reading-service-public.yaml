@@ -85,7 +85,7 @@ paths:
           schema:
             type: integer
             description: 13 digit isbn number
-      description: Add book sample to the library
+      description: Delete book sample to the library
       responses:
         204:
           description: Sample book already added to library
