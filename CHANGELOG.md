@@ -1,5 +1,11 @@
 # Change log
 
+## 0.7.0 ([#24](https://git.mobcastdev.com/Agora/reading-service/pull/24) 2014-12-03 15:25:23)
+
+Add sample
+
+New Feature: Adding and retrieving samples!
+
 ## 0.6.0 ([#23](https://git.mobcastdev.com/Agora/reading-service/pull/23) 2014-12-02 17:36:20)
 
 Admin add book
