@@ -53,15 +53,13 @@ class ReadingApi(
     post {
       authenticate(authenticator.withElevation(Unelevated)) { implicit user =>
         entity(as[LibraryItemIsbn]) { req =>
-          req.isbn match {
-            case Isbn(isbn) =>
-              onSuccess(libraryService.addSample(isbn)) { res =>
-                res match {
-                  case SampleAlreadyExists => complete(OK)
-                  case SampleAdded => complete(StatusCodes.Created)
-                }
+          validate(Isbn.pattern.matcher(req.isbn).matches, "Isbn must be 13 digits long and start with the number 9") {
+            onSuccess(libraryService.addSample(req.isbn)) { res =>
+              res match {
+                case SampleAlreadyExists => complete(OK)
+                case SampleAdded => complete(StatusCodes.Created)
               }
-            case _ => complete(BadRequest, "Isbn must be 13 digits long and start with the number 9")
+            }
           }
         }
       }
