@@ -37,7 +37,8 @@ class DefaultLibraryService(
   } yield list
 
   override def addSample(isbn: String)(implicit user: User): Future[SampleResult] =
-    catalogueService.getInfoFor(isbn).flatMap( _ => libraryStore.getBook(isbn, user.id).flatMap {
+    catalogueService.getInfoFor(isbn).flatMap( _ =>
+      libraryStore.getBook(isbn, user.id).flatMap {
       case Some(item) =>
         if (item.ownership == Sample) Future.successful(SampleAlreadyExists)
         else throw LibraryConflictException(s"Sample cannot be added as $isbn exists as a full book")

@@ -27,7 +27,8 @@ class DbLibraryStoreTests extends FlatSpec with MockitoSyrup with ScalaFutures w
   override implicit val clock = StoppedClock()
 
   "Library store" should "add a new book to user's library" in new PopulatedDbFixture {
-     whenReady(libraryStore.addBook("ISBN3", 1, Owned, defaultAllowUpdate)) { _ =>
+     whenReady(libraryStore.addBook("ISBN3", 1, Owned, defaultAllowUpdate)) { res =>
+       assert(res == ItemCreated)
        import tables.driver.simple._
        db.withSession { implicit session =>
          val expectedItem = LibraryItem("ISBN3", 1, Owned, NotStarted, None, 0, clock.now(), clock.now())
@@ -37,7 +38,8 @@ class DbLibraryStoreTests extends FlatSpec with MockitoSyrup with ScalaFutures w
   }
 
   it should "update ownership status when user has a sample of a book being added" in new PopulatedDbFixture {
-    whenReady(libraryStore.addBook(ISBN2, 2, Owned, defaultAllowUpdate)) { _ =>
+    whenReady(libraryStore.addBook(ISBN2, 2, Owned, defaultAllowUpdate)) { res =>
+      assert(res == ItemUpdated)
       import tables.driver.simple._
       db.withSession { implicit session =>
         val expectedItem = libItem4.copy(ownership = Owned).copy(updatedAt = clock.now())

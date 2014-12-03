@@ -4,7 +4,7 @@ import java.net.URI
 
 import com.blinkbox.books.clients.catalogue.{CatalogueInfo, CatalogueInfoMissingException, CatalogueService}
 import com.blinkbox.books.reading._
-import com.blinkbox.books.reading.persistence.{LibraryItem, LibraryStore}
+import com.blinkbox.books.reading.persistence.{ItemCreated, LibraryItem, LibraryStore}
 import com.blinkbox.books.spray.v2.{Image, Link}
 import com.blinkbox.books.test.{FailHelper, MockitoSyrup}
 import com.blinkbox.books.time.StoppedClock
@@ -24,7 +24,7 @@ class LibraryAdminServiceTests extends FlatSpec with MockitoSyrup with ScalaFutu
   "Library service" should "add a full book to the library when user does not have it" in new TestFixture {
 
     when(catalogueService.getInfoFor(Isbn)).thenReturn(Future.successful(TestBookCatalogueInfo))
-    when(libraryStore.addBook(Isbn, UserId, Owned, service.allowAdminUpdate)).thenReturn(Future.successful(()))
+    when(libraryStore.addBook(Isbn, UserId, Owned, service.allowAdminUpdate)).thenReturn(Future.successful((ItemCreated)))
 
     whenReady(service.addBook(Isbn, UserId, Owned)) { _ =>
 
