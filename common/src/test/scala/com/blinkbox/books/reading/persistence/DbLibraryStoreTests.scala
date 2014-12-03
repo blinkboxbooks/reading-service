@@ -31,7 +31,7 @@ class DbLibraryStoreTests extends FlatSpec with MockitoSyrup with ScalaFutures w
        assert(res == ItemAdded)
        import tables.driver.simple._
        db.withSession { implicit session =>
-         val expectedItem = LibraryItem("ISBN3", 1, Owned, NotStarted, None, 0, clock.now, clock.now)
+         val expectedItem = LibraryItem("ISBN3", 1, Owned, NotStarted, None, 0, clock.now(), clock.now())
          assert(tables.getLibraryItemBy(1, "ISBN3").list == List(expectedItem))
        }
      }
@@ -42,7 +42,7 @@ class DbLibraryStoreTests extends FlatSpec with MockitoSyrup with ScalaFutures w
       assert(res == ItemUpdated)
       import tables.driver.simple._
       db.withSession { implicit session =>
-        val expectedItem = libItem4.copy(ownership = Owned).copy(updatedAt = clock.now)
+        val expectedItem = libItem4.copy(ownership = Owned).copy(updatedAt = clock.now())
         assert(tables.getLibraryItemBy(2, ISBN2).list == List(expectedItem))
       }
     }
@@ -170,8 +170,8 @@ class DbLibraryStoreTests extends FlatSpec with MockitoSyrup with ScalaFutures w
   class PopulatedDbFixture extends EmptyDbFixture {
     import tables.driver.simple._
 
-    val createdAt = clock.now
-    val updatedAt = clock.now
+    val createdAt = clock.now()
+    val updatedAt = clock.now()
     val cfi = Cfi("some cfi")
     val percentage = 0
 
