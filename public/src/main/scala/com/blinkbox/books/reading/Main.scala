@@ -2,12 +2,13 @@ package com.blinkbox.books.reading
 
 import akka.actor.{ActorSystem, Props}
 import com.blinkbox.books.auth.{ZuulElevationChecker, ZuulTokenDecoder, ZuulTokenDeserializer}
-import com.blinkbox.books.clients.catalogue.{DefaultClient, DefaultCatalogueV1Service}
+import com.blinkbox.books.clients.catalogue.{DefaultCatalogueV1Service, DefaultClient}
 import com.blinkbox.books.config.{ApiConfig, Configuration}
 import com.blinkbox.books.logging.Loggers
 import com.blinkbox.books.reading.persistence.{DbLibraryStore, DefaultDatabaseComponent}
 import com.blinkbox.books.slick.MySQLDatabaseSupport
 import com.blinkbox.books.spray.{BearerTokenAuthenticator, HttpServer, url2uri}
+import com.blinkbox.books.time.SystemTimeSupport
 import com.typesafe.scalalogging.StrictLogging
 import spray.can.Http
 import spray.routing.HttpServiceActor
@@ -26,7 +27,7 @@ class WebService(
   override def receive: Receive = runRoute(readingApi.routes)
 }
 
-object Main extends App with Configuration with Loggers with StrictLogging {
+object Main extends App with Configuration with Loggers with StrictLogging with SystemTimeSupport {
   try {
     logger.info("Starting Reading service")
     val appConfig = AppConfig(config)

@@ -2,15 +2,15 @@ package com.blinkbox.books.reading.persistence
 
 import java.net.URI
 
-import com.blinkbox.books.reading.{ReadingStatus, BookType, LibraryMediaLinkType, Cfi}
+import com.blinkbox.books.reading._
 import org.joda.time.DateTime
 
 case class LibraryItem(
   isbn: String,
   userId: Int,
-  bookType: BookType,
+  ownership: Ownership,
   readingStatus: ReadingStatus,
-  progressCfi: Cfi,
+  progressCfi: Option[Cfi],
   progressPercentage: Int,
   createdAt: DateTime,
   updatedAt: DateTime
