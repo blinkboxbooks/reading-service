@@ -69,6 +69,7 @@ paths:
           description: Not authenticated
         409:
           description: Full book already in the library.
+  /my/library/samples/{isbn}:
     delete:
       parameters:
         - name: Authorization
@@ -79,7 +80,7 @@ paths:
           format: "/^Bearer .+/"
           x-elevation: none
         - name: isbn
-          in: body
+          in: path
           description: ISBN
           required: true
           schema:
