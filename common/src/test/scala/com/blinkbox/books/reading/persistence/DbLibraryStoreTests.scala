@@ -27,7 +27,8 @@ class DbLibraryStoreTests extends FlatSpec with MockitoSyrup with ScalaFutures w
   override implicit val clock = StoppedClock()
 
   "Library store" should "add a new book to user's library" in new PopulatedDbFixture {
-     whenReady(libraryStore.addBook("ISBN3", 1, Owned)) { _ =>
+     whenReady(libraryStore.addOrUpdateLibraryItem("ISBN3", 1, Owned, defaultAllowUpdate)) { res =>
+       assert(res == ItemAdded)
        import tables.driver.simple._
        db.withSession { implicit session =>
          val expectedItem = LibraryItem("ISBN3", 1, Owned, NotStarted, None, 0, clock.now(), clock.now())
@@ -37,7 +38,8 @@ class DbLibraryStoreTests extends FlatSpec with MockitoSyrup with ScalaFutures w
   }
 
   it should "update ownership status when user has a sample of a book being added" in new PopulatedDbFixture {
-    whenReady(libraryStore.addBook(ISBN2, 2, Owned)) { _ =>
+    whenReady(libraryStore.addOrUpdateLibraryItem(ISBN2, 2, Owned, defaultAllowUpdate)) { res =>
+      assert(res == ItemUpdated)
       import tables.driver.simple._
       db.withSession { implicit session =>
         val expectedItem = libItem4.copy(ownership = Owned).copy(updatedAt = clock.now())
@@ -47,19 +49,19 @@ class DbLibraryStoreTests extends FlatSpec with MockitoSyrup with ScalaFutures w
   }
 
   it should "throw LibraryItemConflict exception when user already has the book with the same ownership type" in new PopulatedDbFixture {
-    failingWith[LibraryItemConflict](libraryStore.addBook(ISBN1, 1, Owned))
+    failingWith[DbStoreUpdateFailedException](libraryStore.addOrUpdateLibraryItem(ISBN1, 1, Owned, defaultAllowUpdate))
   }
 
   it should "retrieve a book in user's library" in new PopulatedDbFixture {
     db.withSession { implicit session =>
-      whenReady(libraryStore.getBook(ISBN1, 2)) { item =>
+      whenReady(libraryStore.getLibraryItem(ISBN1, 2)) { item =>
         assert(item == Some(libItem3))
       }
     }
   }
 
   it should "throw LibraryItemConflict exception when user has the book with the lower ownership type" in new PopulatedDbFixture {
-    failingWith[LibraryItemConflict](libraryStore.addBook(ISBN1, 1, Sample))
+    failingWith[DbStoreUpdateFailedException](libraryStore.addOrUpdateLibraryItem(ISBN1, 1, Sample, defaultAllowUpdate))
   }
 
   it should "retrieve all books in a user's library" in new PopulatedDbFixture {
@@ -80,7 +82,7 @@ class DbLibraryStoreTests extends FlatSpec with MockitoSyrup with ScalaFutures w
 
   it should "return None for a book that is not in user's library" in new PopulatedDbFixture {
     db.withSession { implicit session =>
-      whenReady(libraryStore.getBook("nonexistent-isbn", 2)) { item =>
+      whenReady(libraryStore.getLibraryItem("nonexistent-isbn", 2)) { item =>
        assert(item == None)
       }
     }
@@ -111,6 +113,46 @@ class DbLibraryStoreTests extends FlatSpec with MockitoSyrup with ScalaFutures w
 
   it should "throw LibraryMediaMissingException when there are no media links for one of many books" in new PopulatedDbFixture {
     failingWith[LibraryMediaMissingException](libraryStore.getBooksMedia(List("1", "2", "3"), 1))
+  }
+
+  it should "not return any sample books if a user does not have any samples in his library" in new PopulatedDbFixture {
+    db.withSession { implicit session =>
+      whenReady(libraryStore.getSamples(count, offset, 1)) { items =>
+        assert(items == Nil)
+      }
+    }
+  }
+
+  it should "not return any sample books if a user has no library" in new PopulatedDbFixture {
+    db.withSession { implicit session =>
+      whenReady(libraryStore.getSamples(count, offset, 9001)) { items =>
+        assert(items == Nil)
+      }
+    }
+  }
+
+  it should "return only sample books in a user's libray" in new PopulatedDbFixture {
+    db.withSession { implicit session =>
+      whenReady(libraryStore.getSamples(count, offset, 2)) { items =>
+        assert(items == List(libItem4))
+      }
+    }
+  }
+
+  it should "add a sample to a library" in new PopulatedDbFixture {
+    import tables.driver.simple._
+
+    val newIsbn = "9801234567890"
+
+    // It was already 4 to begin with and we test that above
+    // We use a count here instead of creating an instance to match as to avoid comparing DateTime for createdAt and updatedAt
+    db.withSession { implicit session =>
+      whenReady(libraryStore.addOrUpdateLibraryItem(newIsbn, 3, Sample, defaultAllowUpdate)) { items =>
+        assert(tables.libraryItems.list.size == 5)
+        assert(tables.libraryItems.list.count(l =>
+          l.isbn == newIsbn && l.userId == 3 && l.ownership == Sample && l.progressCfi == None && l.progressPercentage == 0) == 1)
+      }
+    }
   }
 
   class EmptyDbFixture extends TestDbComponent {
@@ -146,6 +188,8 @@ class DbLibraryStoreTests extends FlatSpec with MockitoSyrup with ScalaFutures w
 
     val libItem1EpubKeyLink = LibraryItemLink(ISBN1, EpubKey, new URI("https://keys.mobcastdev.com/9780/141/909/837/e237e27468c6b37a5679fab718a893e6.epub.9780141909837.key"), DateTime.now, DateTime.now)
     val libItem2EpubKeyLink = LibraryItemLink(ISBN2, EpubKey, new URI("https://keys.mobcastdev.com/9780/141/909/838/5679fab718a893e6e237e27468c6b37a.epub.9780141909838.key"), DateTime.now, DateTime.now)
+
+    val defaultAllowUpdate: (LibraryItem, Ownership) => Boolean = (item, ownership) => ownership > item.ownership
 
     db.withSession { implicit session =>
       tables.ownershipTypes ++= List((Owned, "Owned"), (Sample, "Sample"))

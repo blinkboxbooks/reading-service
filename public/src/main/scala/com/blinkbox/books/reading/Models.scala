@@ -15,3 +15,7 @@ case class BookDetails(
   images: List[Image] = List.empty,
   links: List[Link] = List.empty) {
 }
+
+trait SampleResult
+case object SampleAdded extends SampleResult
+case object SampleAlreadyExists extends SampleResult

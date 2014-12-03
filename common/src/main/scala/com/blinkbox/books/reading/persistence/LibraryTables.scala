@@ -4,7 +4,7 @@ import java.net.URI
 
 import com.blinkbox.books.reading._
 import com.blinkbox.books.slick.TablesContainer
-import org.joda.time.DateTime
+import org.joda.time.{DateTimeZone, DateTime}
 
 import scala.slick.ast.ColumnOption.DBType
 import scala.slick.driver.JdbcProfile
@@ -114,6 +114,9 @@ trait LibraryTables[Profile <: JdbcProfile] extends TablesContainer[Profile] {
   private def getUserLibrary(count: ConstColumn[Long], offset: ConstColumn[Long], userId: Column[Int]):  lifted.Query[LibraryItems, LibraryItem, Seq] =
     libraryItems.filter(_.userId === userId).drop(offset).take(count)
 
+  private def getUserLibraryByOwnership(count: ConstColumn[Long], offset: ConstColumn[Long], userId: Column[Int], t: Column[Ownership]):  lifted.Query[LibraryItems, LibraryItem, Seq] =
+    libraryItems.filter(b => b.userId === userId && b.ownership === t).drop(offset).take(count)
+
   private def getLibraryItemMedia(isbn: Column[String]): lifted.Query[LibraryMedia, LibraryItemLink, Seq] =
     libraryMedia.filter(_.isbn === isbn)
 
@@ -123,6 +126,7 @@ trait LibraryTables[Profile <: JdbcProfile] extends TablesContainer[Profile] {
   lazy val getLibraryItemBy = Compiled(getLibraryItem _)
   lazy val getLibraryItemLinkFor = Compiled(getLibraryItemMedia _)
   lazy val getUserLibraryById = Compiled(getUserLibrary _)
+  lazy val getUserLibraryByOwnershipWithId = Compiled(getUserLibraryByOwnership _)
 }
 
 object LibraryTables {
