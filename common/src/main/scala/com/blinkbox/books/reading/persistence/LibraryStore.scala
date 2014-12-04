@@ -1,5 +1,7 @@
 package com.blinkbox.books.reading.persistence
 
+import java.net.URI
+
 import com.blinkbox.books.config.DatabaseConfig
 import com.blinkbox.books.reading._
 import com.blinkbox.books.slick.{DatabaseComponent, DatabaseSupport, MySQLDatabaseSupport, TablesContainer}
@@ -50,12 +52,18 @@ class DbLibraryStore[DB <: DatabaseSupport](db: DB#Database, tables: LibraryTabl
     }
   }
 
-  override def getBookMedia(isbn: String): Future[List[Link]] = Future {
-    db.withSession { implicit session =>
-      val links = tables.getLibraryItemLinkFor(isbn).list
-      if (links.isEmpty) throw new LibraryMediaMissingException(s"media (full ePub & key URLs) for $isbn does not exist")
-      else links.map(l => Link(l.mediaType, l.uri))
-    }
+  override def getBookMedia(isbn: String): Future[List[Link]] = Future.successful {
+//    db.withSession { implicit session =>
+//      val links = tables.getLibraryItemLinkFor(isbn).list
+//      if (links.isEmpty) throw new LibraryMediaMissingException(s"media (full ePub & key URLs) for $isbn does not exist")
+//      else links.map(l => Link(l.mediaType, l.uri))
+//    }
+
+    // TODO: This is a temporary stub that must be changed later down the line
+      List[Link](
+        Link(SampleEpub, new URI("http://example.com/sample")),
+        Link(FullEpub, new URI("http://example.com/full"))
+      )
   }
 
   override def getBooksMedia(isbns: List[String], userId: Int): Future[Map[String, List[Link]]] = Future {
