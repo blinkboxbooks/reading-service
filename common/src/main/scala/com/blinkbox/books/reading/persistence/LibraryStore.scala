@@ -60,7 +60,7 @@ class DbLibraryStore[DB <: DatabaseSupport](db: DB#Database, tables: LibraryTabl
 //    }
 
     // TODO: This is a temporary stub that must be changed later down the line
-      List[Link](
+      List(
         Link(SampleEpub, new URI("http://example.com/sample")),
         Link(FullEpub, new URI("http://example.com/full"))
       )
