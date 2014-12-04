@@ -69,35 +69,6 @@ paths:
           description: Not authenticated
         409:
           description: Full book already in the library.
-  /my/library/samples/{isbn}:
-    delete:
-      parameters:
-        - name: Authorization
-          in: header
-          description: The bearer token from the Auth server describing the user. A user does not need to be in an elevated state.
-          type: string
-          required: true
-          format: "/^Bearer .+/"
-          x-elevation: none
-        - name: isbn
-          in: path
-          description: ISBN
-          required: true
-          schema:
-            type: integer
-            description: 13 digit isbn number
-      description: Delete book sample to the library
-      responses:
-        204:
-          description: The book has been deleted successfully.
-        400:
-          description: Bad request for invalid ISBN or no ISBN
-        401:
-          description: Not authenticated
-        404:
-          description: Sample not found
-        409:
-          description: Full book already in the library. User cannot delete full books.
 
   /my/library/full:
     get:
@@ -208,6 +179,32 @@ paths:
           description: Not authenticated
         404:
          description: The book is not in the library
+    delete:
+      parameters:
+        - name: Authorization
+          in: header
+          description: The bearer token from the Auth server describing the user. A user does not need to be in an elevated state.
+          type: string
+          required: true
+          format: "/^Bearer .+/"
+          x-elevation: none
+        - name: isbn
+          in: path
+          description: ISBN
+          required: true
+          schema:
+            type: integer
+            description: 13 digit isbn number
+      description: Delete book sample from the library
+      responses:
+        204:
+          description: The book has been deleted successfully.
+        401:
+          description: Not authenticated.
+        404:
+          descriptino: The book is not in the library.
+        409:
+          description: Full book already in the library. User cannot delete full books.
 definitions:
   LibraryItems:
     type: object
