@@ -1,7 +1,9 @@
 package com.blinkbox.books.reading.persistence
 
+import java.net.URI
+
 import com.blinkbox.books.config.DatabaseConfig
-import com.blinkbox.books.reading.{LibraryItemConflict, NotStarted, Ownership}
+import com.blinkbox.books.reading._
 import com.blinkbox.books.slick.{DatabaseComponent, DatabaseSupport, MySQLDatabaseSupport, TablesContainer}
 import com.blinkbox.books.spray.v2.Link
 import com.blinkbox.books.time.Clock
@@ -12,11 +14,12 @@ import scala.slick.driver.MySQLDriver
 import scala.slick.jdbc.JdbcBackend.Database
 
 trait LibraryStore {
-  def addBook(isbn: String, userId: Int, bookOwnership: Ownership): Future[Unit]
-  def getBook(isbn: String, userId: Int): Future[Option[LibraryItem]]
+  def addOrUpdateLibraryItem(isbn: String, userId: Int, bookOwnership: Ownership, allowUpdate: (LibraryItem, Ownership) => Boolean): Future[DbAddStatus]
+  def getLibraryItem(isbn: String, userId: Int): Future[Option[LibraryItem]]
   def getBookMedia(isbn: String): Future[List[Link]]
   def getBooksMedia(isbns: List[String], userId: Int): Future[Map[String, List[Link]]]
   def getLibrary(count: Int, offset: Int, userId: Int): Future[List[LibraryItem]]
+  def getSamples(count: Int, offset: Int, userId: Int): Future[List[LibraryItem]]
 }
 
 class DbLibraryStore[DB <: DatabaseSupport](db: DB#Database, tables: LibraryTables[DB#Profile], exceptionFilter: DB#ExceptionFilter)(implicit val ec: ExecutionContext, clock: Clock) extends LibraryStore with StrictLogging {
@@ -24,35 +27,43 @@ class DbLibraryStore[DB <: DatabaseSupport](db: DB#Database, tables: LibraryTabl
   import tables._
   import driver.simple._
 
-  override def addBook(isbn: String, userId: Int, bookOwnership: Ownership): Future[Unit] = Future {
-    val now = clock.now()
+  override def addOrUpdateLibraryItem(isbn: String, userId: Int, bookOwnership: Ownership, allowUpdate: (LibraryItem, Ownership) => Boolean): Future[DbAddStatus] = Future {
+    val now = clock.now
     db.withTransaction { implicit session =>
       tables.getLibraryItemBy(userId, isbn).firstOption match {
-        case Some(item) =>
-          if (bookOwnership <= item.ownership)
-            throw new LibraryItemConflict(s"User $userId already has $isbn in library with the same or lower ownership type ($bookOwnership)")
-
+        case Some(item) if (allowUpdate(item, bookOwnership)) =>
           val updatedItem = item.copy(ownership = bookOwnership).copy(updatedAt = now)
           tables.getLibraryItemBy(userId, isbn).update(updatedItem)
+          ItemUpdated
+        case Some(item) =>
+          val errorMessage = s"Could not update book for user $userId from ownership with ${item.ownership} to ownership $bookOwnership for isbn $isbn"
+          throw new DbStoreUpdateFailedException(errorMessage)
         case None =>
           val newItem = LibraryItem(isbn, userId, bookOwnership, NotStarted, progressCfi = None, progressPercentage = 0, now, now)
           tables.libraryItems += newItem
+          ItemAdded
       }
     }
   }
 
-  override def getBook(isbn: String, userId: Int): Future[Option[LibraryItem]] = Future {
+  override def getLibraryItem(isbn: String, userId: Int): Future[Option[LibraryItem]] = Future {
     db.withSession { implicit session =>
       tables.getLibraryItemBy(userId, isbn).firstOption
     }
   }
 
-  override def getBookMedia(isbn: String): Future[List[Link]] = Future {
-    db.withSession { implicit session =>
-      val links = tables.getLibraryItemLinkFor(isbn).list
-      if (links.isEmpty) throw new LibraryMediaMissingException(s"media (full ePub & key URLs) for $isbn does not exist")
-      else links.map(l => Link(l.mediaType, l.uri))
-    }
+  override def getBookMedia(isbn: String): Future[List[Link]] = Future.successful {
+//    db.withSession { implicit session =>
+//      val links = tables.getLibraryItemLinkFor(isbn).list
+//      if (links.isEmpty) throw new LibraryMediaMissingException(s"media (full ePub & key URLs) for $isbn does not exist")
+//      else links.map(l => Link(l.mediaType, l.uri))
+//    }
+
+    // TODO: This is a temporary stub that must be changed later down the line
+      List(
+        Link(SampleEpub, new URI("http://example.com/sample")),
+        Link(FullEpub, new URI("http://example.com/full"))
+      )
   }
 
   override def getBooksMedia(isbns: List[String], userId: Int): Future[Map[String, List[Link]]] = Future {
@@ -77,9 +88,22 @@ class DbLibraryStore[DB <: DatabaseSupport](db: DB#Database, tables: LibraryTabl
       tables.getUserLibraryById(count, offset, userId).list
     }
   }
+
+  override def getSamples(count: Int, offset: Int, userId: Int): Future[List[LibraryItem]] = Future {
+    db.withSession { implicit session =>
+      tables.getUserLibraryByOwnershipWithId(count, offset, userId, Sample).list
+    }
+  }
+
 }
 
+trait DbAddStatus
+case object ItemAdded extends DbAddStatus
+case object ItemUpdated extends DbAddStatus
+
 class LibraryMediaMissingException(msg: String, cause: Throwable = null) extends Exception(msg, cause)
+
+case class DbStoreUpdateFailedException(message: String) extends Exception(message)
 
 class DefaultDatabaseComponent(config: DatabaseConfig) extends DatabaseComponent {
 

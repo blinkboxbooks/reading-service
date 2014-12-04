@@ -3,12 +3,14 @@ package com.blinkbox.books.reading
 import akka.actor.ActorRefFactory
 import com.blinkbox.books.auth.Elevation.Unelevated
 import com.blinkbox.books.auth.User
+import com.blinkbox.books.clients.catalogue.LibraryItemConflictException
 import com.blinkbox.books.config.ApiConfig
 import com.blinkbox.books.spray.Directives.{paged, rootPath}
 import com.blinkbox.books.spray.MonitoringDirectives.monitor
 import com.blinkbox.books.spray.v2.Implicits.throwableMarshaller
 import com.blinkbox.books.spray.{ElevatedContextAuthenticator, JsonFormats, url2uri, v2}
 import com.typesafe.scalalogging.StrictLogging
+import spray.http.{StatusCodes, IllegalRequestException}
 import spray.http.StatusCodes._
 import spray.routing._
 
@@ -37,6 +39,33 @@ class ReadingApi(
     }
   }
 
+  val handleSamples = path("my" / "library" / "samples") {
+    get {
+      authenticate(authenticator.withElevation(Unelevated)) { implicit user =>
+        paged(defaultPageSize) { page =>
+          onSuccess(libraryService.getSamples(page.count, page.offset)) { res =>
+            val items = Map("items" -> res)
+            complete(OK, items)
+          }
+        }
+      }
+    } ~
+    post {
+      authenticate(authenticator.withElevation(Unelevated)) { implicit user =>
+        entity(as[LibraryItemIsbn]) { req =>
+          validate(Isbn.pattern.matcher(req.isbn).matches, "Isbn must be 13 digits long and start with the number 9") {
+            onSuccess(libraryService.addSample(req.isbn)) { res =>
+              res match {
+                case SampleAlreadyExists => complete(OK)
+                case SampleAdded => complete(StatusCodes.Created)
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+
   val getBookDetails = get {
     path("my" / "library" / Isbn) { isbn =>
       authenticate(authenticator.withElevation(Unelevated)) { implicit user =>
@@ -48,9 +77,16 @@ class ReadingApi(
   }
 
   val routes = monitor(logger, throwableMarshaller) {
-    rootPath(apiConfig.localUrl.path) {
-      getBookDetails ~ getLibrary
+    handleExceptions(exceptionHandler) {
+      rootPath(apiConfig.localUrl.path) {
+        getBookDetails ~ getLibrary ~ handleSamples
+      }
     }
+
+  }
+
+  private lazy val exceptionHandler = ExceptionHandler {
+    case e: LibraryItemConflictException => failWith(new IllegalRequestException(Conflict, e.getMessage))
   }
 }
 
@@ -97,4 +133,7 @@ object ReadingApi {
     renameTo("createdAt", "addedDate"),
     renameFrom("addedDate", "createdAt")
   )
+
+  case class LibraryItemIsbn(isbn: String)
+
 }
