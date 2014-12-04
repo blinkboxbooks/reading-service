@@ -1,5 +1,12 @@
 # Change log
 
+## 0.7.2 ([#27](https://git.mobcastdev.com/Agora/reading-service/pull/27) 2014-12-04 13:53:47)
+
+Added stubbing for returning fake links
+
+A patch to adding stubbing for media links.
+- The reason for this is to make testing easier for the time being
+
 ## 0.7.1 ([#26](https://git.mobcastdev.com/Agora/reading-service/pull/26) 2014-12-04 13:30:16)
 
 Delete sample yaml
