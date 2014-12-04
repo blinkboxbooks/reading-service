@@ -1,5 +1,11 @@
 # Change log
 
+## 0.7.1 ([#26](https://git.mobcastdev.com/Agora/reading-service/pull/26) 2014-12-04 13:30:16)
+
+Delete sample yaml
+
+A patch to update the yaml file to include the delete sample endpoint.
+
 ## 0.7.0 ([#24](https://git.mobcastdev.com/Agora/reading-service/pull/24) 2014-12-03 15:25:23)
 
 Add sample
