@@ -6,14 +6,14 @@ Feature: Get library details
 
   Scenario: Using a valid user with one or more books
     Given I am authenticated as a user
-    And I have one book in my library
+   # And I have three library items in my library
     When I request my library
     Then the request is successful
-    And the response is a list containing at least one library item
+   #And the response is a list containing at least three library items
 
-  Scenario: Using a valid user with no books
-    Given I am authenticated as a user
-    And I have no books in my library
-    When I request my library
-    Then the request is successful
-    And the response is a list which is empty
+  # Scenario: Using a valid user with no books
+    # Given I am authenticated as a user with no library items
+    # And I have no library items in my library
+    # When I request my library
+    # Then the request is successful
+   # And the response is a list that is empty
