@@ -55,7 +55,7 @@ paths:
           description: ISBN
           required: true
           schema:
-            type: integer
+            type: string
             description: 13 digit isbn number
       description: Add book sample to the library
       responses:
@@ -116,7 +116,7 @@ paths:
           description: ISBN
           required: true
           schema:
-            type: integer
+            type: string
             description: 13 digit isbn
       description: Archive/Unarchive the book
       responses:
@@ -193,7 +193,7 @@ paths:
           description: ISBN
           required: true
           schema:
-            type: integer
+            type: string
             description: 13 digit isbn number
       description: Delete book sample from the library
       responses:
