@@ -13,6 +13,6 @@ qa:
 
 local:
   servers:
-    admin_api: http://localhost:7654/
+    admin_api: http://localhost:7653/
     consumer_api: http://localhost:7654/
     auth: http://localhost:9393/
