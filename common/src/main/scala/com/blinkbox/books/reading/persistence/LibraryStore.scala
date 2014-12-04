@@ -81,11 +81,9 @@ class DbLibraryStore[DB <: DatabaseSupport](db: DB#Database, tables: LibraryTabl
 //          }
 //          map
 //        }
-
       isbns.map(isbn => isbn -> List(Link(SampleEpub, new URI("http://example.com/sample")), Link(FullEpub, new URI("http://example.com/full")))).toMap
     }
   }
-
 
   override def getLibrary(count: Int, offset: Int, userId: Int): Future[List[LibraryItem]] = Future {
     db.withSession { implicit session =>
@@ -98,7 +96,6 @@ class DbLibraryStore[DB <: DatabaseSupport](db: DB#Database, tables: LibraryTabl
       tables.getUserLibraryByOwnershipWithId(count, offset, userId, Sample).list
     }
   }
-
 }
 
 trait DbAddStatus
