@@ -18,19 +18,3 @@ require "cucumber/blinkbox/subjects"
 require "cucumber/blinkbox/requests"
 require "cucumber/blinkbox/responses"
 require "cucumber/blinkbox/response_validation"
-
-class Object
-  def url_encode
-    URI.encode_www_form_component("#{self}")
-  end
-end
-
-module Boolean
-  ;
-end
-class TrueClass;
-  include Boolean;
-end
-class FalseClass;
-  include Boolean;
-end

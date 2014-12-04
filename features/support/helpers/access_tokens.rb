@@ -5,7 +5,6 @@ module KnowsAboutAccessTokens
     if @@access_tokens[username].nil?
       u = Blinkbox::User.new(username: username, password: password, server_uri: server_uri)
       u.authenticate
-
       fail if u.access_token.nil?
       @@access_tokens[username] = u.access_token
     end
