@@ -3,7 +3,7 @@ dev_int:
   servers:
     admin_api: https://api.dev.bbbtest2.com/service/
     consumer_api: https://api.dev.bbbtest2.com/service/
-    auth:  https://auth.dev.bbbtest2.com
+    auth: https://auth.dev.bbbtest2.com
 
 qa:
   servers:

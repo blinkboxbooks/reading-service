@@ -40,6 +40,24 @@ module KnowsAboutOAuthRequests
     @access_token = user_props["access_token"]
   end
 
+  def register_a_new_user!(options = {})
+    uri = qualified_uri(:auth, "/oauth2/token")
+    params = {
+        grant_type: "urn:blinkbox:oauth:grant-type:registration",
+        first_name: "Testy",
+        last_name: "McTest",
+        username: random_email,
+        password: random_password,
+        accepted_terms_and_conditions: true,
+        allow_marketing_communications: false
+    }
+    headers = { "Content-Type" => "application/x-www-form-urlencoded", "Accept" => "application/json" }
+    response = http_client.post(uri, body: params, header: headers)
+    raise "Test Error: Failed to register new user" unless response.status == 200
+    user_props = MultiJson.load(response.body)
+    @user_id = user_props["user_id"].split(":").last
+  end
+
   private
 
   def random_email
