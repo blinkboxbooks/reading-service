@@ -1,5 +1,11 @@
 # Change log
 
+## 0.7.3 ([#28](https://git.mobcastdev.com/Agora/reading-service/pull/28) 2014-12-05 15:38:40)
+
+Bulk media stubbing
+
+### Patch
+
 ## 0.7.2 ([#27](https://git.mobcastdev.com/Agora/reading-service/pull/27) 2014-12-04 13:53:47)
 
 Added stubbing for returning fake links
