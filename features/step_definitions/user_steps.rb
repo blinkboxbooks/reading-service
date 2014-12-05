@@ -19,3 +19,4 @@ end
 Given(/^I am not authenticated$/) do
   @access_token = "something_totally_fake"
 end
+

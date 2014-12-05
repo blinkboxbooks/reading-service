@@ -17,3 +17,9 @@ Feature: Get library details
     When I request my library
     Then the request is successful
     And the response is a list that is empty
+
+  @negative
+  Scenario: Not authenticated
+    Given I am not authenticated
+    When I request my library
+    Then the request fails because I am unauthorised
