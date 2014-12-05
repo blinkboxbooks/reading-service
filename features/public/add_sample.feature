@@ -10,4 +10,4 @@ Feature: Add sample to library
 
   Scenario: Adding a sample when library item is already owned
 
-  Scenario: A dding a sample that does not exist
+  Scenario: Adding a sample that does not exist

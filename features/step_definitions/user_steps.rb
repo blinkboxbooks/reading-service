@@ -14,6 +14,7 @@ Given(/^I am authenticated as a user(?: with (no|#{CAPTURE_INTEGER}) library ite
       end
     }
   end
+  Cucumber::Rest::Status.ensure_status_class(:success)
 end
 
 Given(/^I am not authenticated$/) do

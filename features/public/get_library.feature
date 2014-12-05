@@ -5,15 +5,26 @@ Feature: Get library details
   So that I can have access to my library and books
 
   Scenario: Using a valid user with one or more books
-    Given I am authenticated as a user with three library items
-    And I have three library items in my library
+    Given I am authenticated as a user with one library items
     When I request my library
     Then the request is successful
-    And the response is a list containing at least three library items
+    And the response is a list containing at least one library items
+    And each item has the following attributes:
+      | attribute       | type       |
+      | isbn            | Integer    |
+      | title           | String     |
+      | author          | String     |
+      | sortableAuthor  | String     |
+      | ownership       | String     |
+      | readingStatus   | String     |
+      | readingPosition | String     |
+      | images          | Collection |
+      | links           | Collection |
+      | addedDate       | DateTime   |
+
 
   Scenario: Using a valid user with no books
     Given I am authenticated as a user with no library items
-    And I have no library items in my library
     When I request my library
     Then the request is successful
     And the response is a list that is empty
