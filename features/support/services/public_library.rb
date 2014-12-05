@@ -13,7 +13,7 @@ module KnowsAboutLibraryAPI
   end
 
   def add_sample(isbn)
-    http_post :consumper_api, "/my/library/samples/", {"isbn" => isbn}, "Accept" => @request_type
+    http_post :consumer_api, "/my/library/samples/", {"isbn" => isbn}, "Accept" => @request_type
     @response_data = parse_last_api_response
   end
 end
