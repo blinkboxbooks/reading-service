@@ -5,7 +5,7 @@ Feature: Get library details
   So that I can have access to my library and books
 
   Scenario: Using a valid user with one or more books
-    Given I am authenticated as a user
+    Given I am authenticated as a user with three library items
     And I have three library items in my library
     When I request my library
     Then the request is successful

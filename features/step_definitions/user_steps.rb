@@ -3,9 +3,17 @@ Given(/^I am authenticated as a user with the (\w+) role$/) do |role|
   @access_token = get_access_token_for(username: @user['username'], password: @user['password'])
 end
 
-Given(/^I am authenticated as a user( with no library items)?$/) do |empty_library_user|
-  @user = empty_library_user ? data_for_a(:user, which: "is an api user without library items") : data_for_a(:user, which: "is an api user")
-  @access_token = get_access_token_for(username: @user['username'], password: @user['password'])
+Given(/^I am authenticated as a user(?: with (no|#{CAPTURE_INTEGER}) library items?)?$/) do |count|
+  authenticate_as_new_user!
+  unless count.nil? || count == "no"
+    (0..count).each {
+      # adding samples for now until we have add book
+      books = [*data_for_a(:book, which: "is currently available as sample", instances: count)]
+      books.each do |book|
+        add_sample(book)
+      end
+    }
+  end
 end
 
 Given(/^I am not authenticated$/) do
