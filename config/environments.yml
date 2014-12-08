@@ -5,12 +5,6 @@ dev_int:
     consumer_api: https://api.dev.bbbtest2.com/service/
     auth: https://auth.dev.bbbtest2.com
 
-qa:
-  servers:
-    admin_api: 
-    consumer_api: 
-    auth:
-
 local:
   servers:
     admin_api: http://localhost:7653/
