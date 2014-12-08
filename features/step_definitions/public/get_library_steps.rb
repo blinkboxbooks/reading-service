@@ -1,9 +1,6 @@
-
 When(/^I request my library$/) do
   get_library
 end
-
-# A book that works: 9780297859406
 
 When(/I request a library item( which does not exist in my library)?$/) do |missing|
   isbn = missing ? 9780297859406 : 9780007197545
