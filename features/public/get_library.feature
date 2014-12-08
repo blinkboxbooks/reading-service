@@ -8,7 +8,7 @@ Feature: Get library details
     Given I am authenticated as a user with two library items
     When I request my library
     Then the request is successful
-    And the response is a list containing at least two library items
+    And the response is a list containing two library items
     And each item has the following attributes:
       | attribute       | type     |
       | isbn            | String   |

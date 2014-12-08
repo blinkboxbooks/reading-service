@@ -7,7 +7,7 @@ When(/I request a library item( which does not exist in my library)?$/) do |miss
   get_library_item(isbn)
 end
 
-Then(/^the response is a list (?:that is empty|containing at least (#{CAPTURE_INTEGER}) library items)$/) do |count|
+Then(/^the response is a list (?:that is empty|containing (#{CAPTURE_INTEGER}) library items)$/) do |count|
   count ||= 0
   expect(@response_data['items'].size).to eq(count)
 end
