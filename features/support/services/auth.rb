@@ -1,17 +1,6 @@
 # encoding: utf-8
 module KnowsAboutOAuthRequests
 
-  def authenticate!(username, password, client_id = nil, client_secret = nil)
-    uri = qualified_uri(:auth, "/oauth2/token")
-    params = { grant_type: "password", username: username, password: password }
-    params.merge!({ client_id: client_id, client_secret: client_secret }) if client_id
-    headers = { "Content-Type" => "application/x-www-form-urlencoded", "Accept" => "application/json" }
-    response = http_client.post(uri, body: params, header: headers)
-    raise "Test Error: Failed to authenticate user" unless response.status == 200
-    auth_props = MultiJson.load(response.body)
-    @access_token = auth_props["access_token"]
-  end
-
   def authenticate_as_new_user!(options = {})
     with_client = options[:with_client] || false
 
