@@ -8,7 +8,7 @@ Given(/^I am authenticated as a user(?: with (no|#{CAPTURE_INTEGER}) library ite
   username = random_email
   password = random_password
 
-  u = Blinkbox::User.new(username: username, password: password,server_uri: test_env.servers['auth'])
+  u = Blinkbox::User.new(username: username, password: password, server_uri: test_env.servers['auth'])
   u.register
   u.authenticate
   @access_token = get_access_token_for(username: username, password: password)
@@ -27,6 +27,16 @@ end
 
 Given(/^I am not authenticated$/) do
   @access_token = "something_totally_fake"
+end
+
+
+Given(/^I have a customer id who I want to give a book to$/) do
+  username = random_email
+  password = random_password
+
+  u = Blinkbox::User.new(username: username, password: password, server_uri: test_env.servers['auth'])
+  u.register
+  u.authenticate
 end
 
 private
