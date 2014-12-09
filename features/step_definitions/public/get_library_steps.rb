@@ -6,4 +6,3 @@ Then(/^the response is a list (?:that is empty|containing (#{CAPTURE_INTEGER}) l
   count ||= 0
   expect(@response_data['items'].size).to eq(count)
 end
-
