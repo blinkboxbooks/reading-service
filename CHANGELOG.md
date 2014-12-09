@@ -1,5 +1,13 @@
 # Change log
 
+## 0.7.4 ([#29](https://git.mobcastdev.com/Agora/reading-service/pull/29) 2014-12-09 15:56:47)
+
+Core automation
+
+Test framework improvement
+
+Adding base of automation part of project along with first feature file.
+
 ## 0.7.3 ([#28](https://git.mobcastdev.com/Agora/reading-service/pull/28) 2014-12-05 15:38:40)
 
 Bulk media stubbing
