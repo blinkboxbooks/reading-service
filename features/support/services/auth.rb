@@ -1,4 +1,3 @@
-# encoding: utf-8
 module KnowsAboutOAuthRequests
 
   def authenticate_as_new_user!(options = {})
