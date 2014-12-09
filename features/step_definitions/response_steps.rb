@@ -1,7 +1,3 @@
-Then(/^a valid reason for the failure is returned$/) do
-  expect(@response_data.keys).to eq(%w{code description})
-end
-
 Then(/^the error reason is "(.*?)"$/) do |state|
   expect(@response_data['code']).to match(/#{state.gsub(" ", "_")}$/)
 end
