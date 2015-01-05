@@ -89,6 +89,8 @@ class ReadingApiTests extends FlatSpec with ScalatestRouteTest with MockitoSyrup
     val request = LibraryItemIsbn(testBook.isbn)
     Post(s"/my/library/samples", request) ~> Authorization(OAuth2BearerToken(accessToken)) ~> routes ~> check {
       assert(status == Conflict)
+      assert(mediaType == `application/vnd.blinkbox.books.v2+json`)
+      assert(responseAs[Error] == Error("Conflict", Some("The request could not be processed because of conflict in the request, such as an edit conflict.")))
     }
   }
 
@@ -98,6 +100,8 @@ class ReadingApiTests extends FlatSpec with ScalatestRouteTest with MockitoSyrup
     when(authenticator.apply(any[RequestContext])).thenReturn(Future.successful(Right(authenticatedUser)))
     Post(s"/my/library/samples", request) ~> Authorization(OAuth2BearerToken(accessToken)) ~> routes ~> check {
       assert(status == BadRequest)
+      assert(mediaType == `application/vnd.blinkbox.books.v2+json`)
+      assert(responseAs[Error] == Error("BadRequest", Some("Isbn must be 13 digits long and start with the number 9")))
     }
   }
 
@@ -116,9 +120,10 @@ class ReadingApiTests extends FlatSpec with ScalatestRouteTest with MockitoSyrup
       .thenReturn(Future.successful(Left(AuthenticationFailedRejection(CredentialsRejected, credentialsInvalidHeaders))))
 
     Get(s"/my/library/${testBook.isbn}") ~> Authorization(GenericHttpCredentials("user", "Argy")) ~> routes ~> check {
-      assert(status == Unauthorized &&
-        header[`WWW-Authenticate`] == credentialsInvalidHeaders.headOption &&
-        mediaType == MediaTypes.`text/plain`)
+      assert(status == Unauthorized)
+      assert(header[`WWW-Authenticate`] == credentialsInvalidHeaders.headOption)
+      assert(mediaType == `application/vnd.blinkbox.books.v2+json`)
+      assert(responseAs[Error] == Error("Unauthorized", Some("The supplied authentication is invalid")))
     }
   }
 
@@ -128,9 +133,8 @@ class ReadingApiTests extends FlatSpec with ScalatestRouteTest with MockitoSyrup
 
     Get(s"/my/library/${testBook.isbn}") ~> Authorization(OAuth2BearerToken(accessToken)) ~> routes ~> check {
       assert(status == NotFound)
-      // TODO: check that the body contains correct instance of Error object once the RejectionHandler in common-spray supports it
-      //assert(mediaType == `application/vnd.blinkbox.books.v2+json`)
-
+      assert(mediaType == `application/vnd.blinkbox.books.v2+json`)
+      assert(responseAs[Error] == Error("NotFound", Some("The requested resource could not be found but may be available again in the future.")))
     }
   }
 
@@ -142,7 +146,7 @@ class ReadingApiTests extends FlatSpec with ScalatestRouteTest with MockitoSyrup
     Get(s"/my/library/${testBook.isbn}") ~> Authorization(OAuth2BearerToken(accessToken)) ~> routes ~> check {
       assert(status == InternalServerError)
       assert(mediaType == `application/vnd.blinkbox.books.v2+json`)
-      assert(body.asString == """{"code":"InternalServerError","developerMessage":"There was an internal server error."}""")
+      assert(responseAs[Error] == Error("InternalServerError", Some("There was an internal server error.")))
     }
   }
 
@@ -153,7 +157,7 @@ class ReadingApiTests extends FlatSpec with ScalatestRouteTest with MockitoSyrup
     Get(s"/my/library/${testBook.isbn}") ~> Authorization(OAuth2BearerToken(accessToken)) ~> routes ~> check {
       assert(status == InternalServerError)
       assert(mediaType == `application/vnd.blinkbox.books.v2+json`)
-      assert(body.asString == """{"code":"InternalServerError","developerMessage":"There was an internal server error."}""")
+      assert(responseAs[Error] == Error("InternalServerError", Some("There was an internal server error.")))
     }
   }
 

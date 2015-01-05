@@ -8,6 +8,7 @@ import com.blinkbox.books.config.ApiConfig
 import com.blinkbox.books.spray.Directives.{paged, rootPath}
 import com.blinkbox.books.spray.MonitoringDirectives.monitor
 import com.blinkbox.books.spray.v2.Implicits.throwableMarshaller
+import com.blinkbox.books.spray.v2.RejectionHandler.ErrorRejectionHandler
 import com.blinkbox.books.spray.{ElevatedContextAuthenticator, JsonFormats, url2uri, v2}
 import com.typesafe.scalalogging.StrictLogging
 import spray.http.StatusCodes._
@@ -64,11 +65,13 @@ class ReadingApi(
     }
   }
 
-  val getBookDetails = get {
-    path("my" / "library" / Isbn) { isbn =>
-      authenticate(authenticator.withElevation(Unelevated)) { implicit user =>
-        onSuccess(libraryService.getBook(isbn)) { res =>
-          complete(res)
+  val getBookDetails = rejectEmptyResponse {
+    get {
+      path("my" / "library" / Isbn) { isbn =>
+        authenticate(authenticator.withElevation(Unelevated)) { implicit user =>
+          onSuccess(libraryService.getBook(isbn)) { res =>
+            complete(res)
+          }
         }
       }
     }
@@ -76,8 +79,10 @@ class ReadingApi(
 
   val routes = monitor(logger, throwableMarshaller) {
     handleExceptions(exceptionHandler) {
-      rootPath(apiConfig.localUrl.path) {
-        getBookDetails ~ getLibrary ~ handleSamples
+      handleRejections(ErrorRejectionHandler) {
+        rootPath(apiConfig.localUrl.path) {
+          getBookDetails ~ getLibrary ~ handleSamples
+        }
       }
     }
   }
