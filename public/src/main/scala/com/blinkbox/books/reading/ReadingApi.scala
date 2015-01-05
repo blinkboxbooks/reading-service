@@ -10,8 +10,8 @@ import com.blinkbox.books.spray.MonitoringDirectives.monitor
 import com.blinkbox.books.spray.v2.Implicits.throwableMarshaller
 import com.blinkbox.books.spray.{ElevatedContextAuthenticator, JsonFormats, url2uri, v2}
 import com.typesafe.scalalogging.StrictLogging
-import spray.http.{StatusCodes, IllegalRequestException}
 import spray.http.StatusCodes._
+import spray.http.{IllegalRequestException, StatusCodes}
 import spray.routing._
 
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -54,11 +54,9 @@ class ReadingApi(
       authenticate(authenticator.withElevation(Unelevated)) { implicit user =>
         entity(as[LibraryItemIsbn]) { req =>
           validate(Isbn.pattern.matcher(req.isbn).matches, "Isbn must be 13 digits long and start with the number 9") {
-            onSuccess(libraryService.addSample(req.isbn)) { res =>
-              res match {
-                case SampleAlreadyExists => complete(OK)
-                case SampleAdded => complete(StatusCodes.Created)
-              }
+            onSuccess(libraryService.addSample(req.isbn)) {
+              case SampleAlreadyExists => complete(OK)
+              case SampleAdded => complete(StatusCodes.Created)
             }
           }
         }
@@ -82,7 +80,6 @@ class ReadingApi(
         getBookDetails ~ getLibrary ~ handleSamples
       }
     }
-
   }
 
   private lazy val exceptionHandler = ExceptionHandler {
@@ -135,5 +132,4 @@ object ReadingApi {
   )
 
   case class LibraryItemIsbn(isbn: String)
-
 }
