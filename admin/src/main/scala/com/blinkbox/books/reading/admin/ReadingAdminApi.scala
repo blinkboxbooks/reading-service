@@ -11,6 +11,7 @@ import com.blinkbox.books.spray.AuthDirectives.authenticateAndAuthorize
 import com.blinkbox.books.spray.Directives.rootPath
 import com.blinkbox.books.spray.MonitoringDirectives.monitor
 import com.blinkbox.books.spray.v2.Implicits.throwableMarshaller
+import com.blinkbox.books.spray.v2.RejectionHandler.ErrorRejectionHandler
 import com.blinkbox.books.spray.{BearerTokenAuthenticator, JsonFormats, url2uri, v2}
 import com.typesafe.scalalogging.StrictLogging
 import spray.http.{IllegalRequestException, StatusCodes}
@@ -44,9 +45,11 @@ class ReadingAdminApi(apiConfig: ApiConfig,
   }
 
   val routes = monitor(logger, throwableMarshaller) {
-    handleExceptions(exceptionHandler) {
-      rootPath(apiConfig.localUrl.path) {
-        addFullBook
+    handleRejections(ErrorRejectionHandler) {
+      handleExceptions(exceptionHandler) {
+        rootPath(apiConfig.localUrl.path) {
+          addFullBook
+        }
       }
     }
   }
