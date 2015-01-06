@@ -1,5 +1,13 @@
 # Change log
 
+## 0.8.0 ([#30](https://git.mobcastdev.com/Agora/reading-service/pull/30) 2015-01-06 09:24:37)
+
+V2 errors
+
+### New Feature
+
+- Support for v2 API Error responses.
+
 ## 0.7.4 ([#29](https://git.mobcastdev.com/Agora/reading-service/pull/29) 2014-12-09 15:56:47)
 
 Core automation
