@@ -8,10 +8,11 @@ import com.blinkbox.books.config.ApiConfig
 import com.blinkbox.books.spray.Directives.{paged, rootPath}
 import com.blinkbox.books.spray.MonitoringDirectives.monitor
 import com.blinkbox.books.spray.v2.Implicits.throwableMarshaller
+import com.blinkbox.books.spray.v2.RejectionHandler.ErrorRejectionHandler
 import com.blinkbox.books.spray.{ElevatedContextAuthenticator, JsonFormats, url2uri, v2}
 import com.typesafe.scalalogging.StrictLogging
-import spray.http.{StatusCodes, IllegalRequestException}
 import spray.http.StatusCodes._
+import spray.http.{IllegalRequestException, StatusCodes}
 import spray.routing._
 
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -54,11 +55,9 @@ class ReadingApi(
       authenticate(authenticator.withElevation(Unelevated)) { implicit user =>
         entity(as[LibraryItemIsbn]) { req =>
           validate(Isbn.pattern.matcher(req.isbn).matches, "Isbn must be 13 digits long and start with the number 9") {
-            onSuccess(libraryService.addSample(req.isbn)) { res =>
-              res match {
-                case SampleAlreadyExists => complete(OK)
-                case SampleAdded => complete(StatusCodes.Created)
-              }
+            onSuccess(libraryService.addSample(req.isbn)) {
+              case SampleAlreadyExists => complete(OK)
+              case SampleAdded => complete(StatusCodes.Created)
             }
           }
         }
@@ -66,11 +65,13 @@ class ReadingApi(
     }
   }
 
-  val getBookDetails = get {
-    path("my" / "library" / Isbn) { isbn =>
-      authenticate(authenticator.withElevation(Unelevated)) { implicit user =>
-        onSuccess(libraryService.getBook(isbn)) { res =>
-          complete(res)
+  val getBookDetails = rejectEmptyResponse {
+    get {
+      path("my" / "library" / Isbn) { isbn =>
+        authenticate(authenticator.withElevation(Unelevated)) { implicit user =>
+          onSuccess(libraryService.getBook(isbn)) { res =>
+            complete(res)
+          }
         }
       }
     }
@@ -78,11 +79,12 @@ class ReadingApi(
 
   val routes = monitor(logger, throwableMarshaller) {
     handleExceptions(exceptionHandler) {
-      rootPath(apiConfig.localUrl.path) {
-        getBookDetails ~ getLibrary ~ handleSamples
+      handleRejections(ErrorRejectionHandler) {
+        rootPath(apiConfig.localUrl.path) {
+          getBookDetails ~ getLibrary ~ handleSamples
+        }
       }
     }
-
   }
 
   private lazy val exceptionHandler = ExceptionHandler {
@@ -135,5 +137,4 @@ object ReadingApi {
   )
 
   case class LibraryItemIsbn(isbn: String)
-
 }

@@ -4,12 +4,12 @@ import java.net.{URI, URL}
 
 import akka.actor.ActorRefFactory
 import com.blinkbox.books.auth.{Elevation, User}
-import com.blinkbox.books.clients.catalogue.{LibraryItemConflictException, CatalogueInfoMissingException}
+import com.blinkbox.books.clients.catalogue.{CatalogueInfoMissingException, LibraryItemConflictException}
 import com.blinkbox.books.config.ApiConfig
-import com.blinkbox.books.reading.persistence.LibraryMediaMissingException
 import com.blinkbox.books.reading.ReadingApi.LibraryItemIsbn
+import com.blinkbox.books.reading.persistence.LibraryMediaMissingException
 import com.blinkbox.books.spray.BearerTokenAuthenticator.credentialsInvalidHeaders
-import com.blinkbox.books.spray.v2.{Image, Link, `application/vnd.blinkbox.books.v2+json`}
+import com.blinkbox.books.spray.v2.{Error, Image, Link, `application/vnd.blinkbox.books.v2+json`}
 import com.blinkbox.books.spray.{BearerTokenAuthenticator, v2}
 import com.blinkbox.books.test.MockitoSyrup
 import com.blinkbox.books.time.{StoppedClock, TimeSupport}
@@ -20,7 +20,7 @@ import org.scalatest.FlatSpec
 import org.scalatest.junit.JUnitRunner
 import spray.http.HttpHeaders.{Authorization, `WWW-Authenticate`}
 import spray.http.StatusCodes._
-import spray.http.{StatusCodes, GenericHttpCredentials, MediaTypes, OAuth2BearerToken}
+import spray.http.{GenericHttpCredentials, OAuth2BearerToken, StatusCodes}
 import spray.routing.AuthenticationFailedRejection.CredentialsRejected
 import spray.routing.{AuthenticationFailedRejection, HttpService, RequestContext}
 import spray.testkit.ScalatestRouteTest
@@ -63,32 +63,34 @@ class ReadingApiTests extends FlatSpec with ScalatestRouteTest with MockitoSyrup
   }
   
   it should "return a 201 when adding a new sample book to the library" in new TestFixture {
-    val isbn = "9810123456789"
-    val request = LibraryItemIsbn(isbn)
-    when(libraryService.addSample(isbn)).thenReturn(Future.successful(SampleAdded))
+    when(libraryService.addSample(testBook.isbn)).thenReturn(Future.successful(SampleAdded))
     when(authenticator.apply(any[RequestContext])).thenReturn(Future.successful(Right(authenticatedUser)))
+
+    val request = LibraryItemIsbn(testBook.isbn)
     Post(s"/my/library/samples", request) ~> Authorization(OAuth2BearerToken(accessToken)) ~> routes ~> check {
       assert(status == StatusCodes.Created)
     }
   }
 
   it should "return a 200 when adding an existing sample book to a user's library" in new TestFixture {
-    val isbn = "9810123456789"
-    val request = LibraryItemIsbn(isbn)
-    when(libraryService.addSample(isbn)).thenReturn(Future.successful(SampleAlreadyExists))
+    when(libraryService.addSample(testBook.isbn)).thenReturn(Future.successful(SampleAlreadyExists))
     when(authenticator.apply(any[RequestContext])).thenReturn(Future.successful(Right(authenticatedUser)))
+
+    val request = LibraryItemIsbn(testBook.isbn)
     Post(s"/my/library/samples", request) ~> Authorization(OAuth2BearerToken(accessToken)) ~> routes ~> check {
       assert(status == OK)
     }
   }
 
   it should "return a 409 when adding a sample book that is a full book in a user's library" in new TestFixture {
-    val isbn = "9810123456789"
-    val request = LibraryItemIsbn(isbn)
-    when(libraryService.addSample(isbn)).thenReturn(Future.failed(new LibraryItemConflictException("blah")))
+    when(libraryService.addSample(testBook.isbn)).thenReturn(Future.failed(new LibraryItemConflictException("blah")))
     when(authenticator.apply(any[RequestContext])).thenReturn(Future.successful(Right(authenticatedUser)))
+
+    val request = LibraryItemIsbn(testBook.isbn)
     Post(s"/my/library/samples", request) ~> Authorization(OAuth2BearerToken(accessToken)) ~> routes ~> check {
       assert(status == Conflict)
+      assert(mediaType == `application/vnd.blinkbox.books.v2+json`)
+      assert(responseAs[Error] == Error("Conflict", Some("The request could not be processed because of conflict in the request, such as an edit conflict.")))
     }
   }
 
@@ -98,6 +100,8 @@ class ReadingApiTests extends FlatSpec with ScalatestRouteTest with MockitoSyrup
     when(authenticator.apply(any[RequestContext])).thenReturn(Future.successful(Right(authenticatedUser)))
     Post(s"/my/library/samples", request) ~> Authorization(OAuth2BearerToken(accessToken)) ~> routes ~> check {
       assert(status == BadRequest)
+      assert(mediaType == `application/vnd.blinkbox.books.v2+json`)
+      assert(responseAs[Error] == Error("BadRequest", Some("Isbn must be 13 digits long and start with the number 9")))
     }
   }
 
@@ -116,9 +120,10 @@ class ReadingApiTests extends FlatSpec with ScalatestRouteTest with MockitoSyrup
       .thenReturn(Future.successful(Left(AuthenticationFailedRejection(CredentialsRejected, credentialsInvalidHeaders))))
 
     Get(s"/my/library/${testBook.isbn}") ~> Authorization(GenericHttpCredentials("user", "Argy")) ~> routes ~> check {
-      assert(status == Unauthorized &&
-        header[`WWW-Authenticate`] == credentialsInvalidHeaders.headOption &&
-        mediaType == MediaTypes.`text/plain`)
+      assert(status == Unauthorized)
+      assert(header[`WWW-Authenticate`] == credentialsInvalidHeaders.headOption)
+      assert(mediaType == `application/vnd.blinkbox.books.v2+json`)
+      assert(responseAs[Error] == Error("Unauthorized", Some("The supplied authentication is invalid")))
     }
   }
 
@@ -128,9 +133,8 @@ class ReadingApiTests extends FlatSpec with ScalatestRouteTest with MockitoSyrup
 
     Get(s"/my/library/${testBook.isbn}") ~> Authorization(OAuth2BearerToken(accessToken)) ~> routes ~> check {
       assert(status == NotFound)
-      // TODO: check that the body contains correct instance of Error object once the RejectionHandler in common-spray supports it
-      //assert(mediaType == `application/vnd.blinkbox.books.v2+json`)
-
+      assert(mediaType == `application/vnd.blinkbox.books.v2+json`)
+      assert(responseAs[Error] == Error("NotFound", Some("The requested resource could not be found but may be available again in the future.")))
     }
   }
 
@@ -142,7 +146,7 @@ class ReadingApiTests extends FlatSpec with ScalatestRouteTest with MockitoSyrup
     Get(s"/my/library/${testBook.isbn}") ~> Authorization(OAuth2BearerToken(accessToken)) ~> routes ~> check {
       assert(status == InternalServerError)
       assert(mediaType == `application/vnd.blinkbox.books.v2+json`)
-      assert(body.asString == """{"code":"InternalServerError","developerMessage":"There was an internal server error."}""")
+      assert(responseAs[Error] == Error("InternalServerError", Some("There was an internal server error.")))
     }
   }
 
@@ -153,7 +157,7 @@ class ReadingApiTests extends FlatSpec with ScalatestRouteTest with MockitoSyrup
     Get(s"/my/library/${testBook.isbn}") ~> Authorization(OAuth2BearerToken(accessToken)) ~> routes ~> check {
       assert(status == InternalServerError)
       assert(mediaType == `application/vnd.blinkbox.books.v2+json`)
-      assert(body.asString == """{"code":"InternalServerError","developerMessage":"There was an internal server error."}""")
+      assert(responseAs[Error] == Error("InternalServerError", Some("There was an internal server error.")))
     }
   }
 
@@ -201,7 +205,7 @@ class ReadingApiTests extends FlatSpec with ScalatestRouteTest with MockitoSyrup
     val testBookJson = s"""{"isbn":"9780141909837","title":"Title","author":"Author","sortableAuthor":"Sortable Author","addedDate":"${clock.now()}","ownership":"Owned","readingStatus":"Reading","readingPosition":{"cfi":"someCfi","percentage":15},"images":[{"rel":"CoverImage","url":"http://media.blinkboxbooks.com/9780/141/909/837/cover.png"}],"links":[{"rel":"EpubFull","url":"http://media.blinkboxbooks.com/9780/141/909/837/8c9771c05e504f836e8118804e02f64c.epub"},{"rel":"EpubSample","url":"http://media.blinkboxbooks.com/9780/141/909/837/8c9771c05e504f836e8118804e02f64c.sample.epub"},{"rel":"EpubKey","url":"https://keys.mobcastdev.com/9780/141/909/837/e237e27468c6b37a5679fab718a893e6.epub.9780141909837.key"}]}"""
     val testBook2Json = s"""{"isbn":"9780234123501","title":"Other Title","author":"Other Author","sortableAuthor":"Author, Other","addedDate":"${clock.now()}","ownership":"Owned","readingStatus":"Reading","readingPosition":{"cfi":"someCfi","percentage":30},"images":[{"rel":"CoverImage","url":"http://media.blinkboxbooks.com/9780/141/909/837/cover.png"}],"links":[{"rel":"EpubFull","url":"http://media.blinkboxbooks.com/9780/141/909/837/8c9771c05e504f836e8118804e02f64c.epub"},{"rel":"EpubSample","url":"http://media.blinkboxbooks.com/9780/141/909/837/8c9771c05e504f836e8118804e02f64c.sample.epub"},{"rel":"EpubKey","url":"https://keys.mobcastdev.com/9780/141/909/837/e237e27468c6b37a5679fab718a893e6.epub.9780141909837.key"}]}"""
     val libraryJson = s"""{"items":[$testBookJson,$testBook2Json]}"""
-    val sampleJson = s"""{"items":[${testBook2Json}]}"""
+    val sampleJson = s"""{"items":[$testBook2Json]}"""
     val apiConfig = mock[ApiConfig]
     when(apiConfig.localUrl).thenReturn(new URL("http://localhost"))
 

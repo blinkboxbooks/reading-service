@@ -23,7 +23,7 @@ import spray.testkit.ScalatestRouteTest
 
 import scala.concurrent.Future
 
-class LibraryAdminApiTests extends FlatSpec with ScalatestRouteTest with MockitoSyrup {
+class LibraryAdminApiTests extends FlatSpec with ScalatestRouteTest with MockitoSyrup with v2.JsonSupport {
 
   "Add book endpoint" should "return 204 No Content for a valid request" in new TestFixture {
     when(libraryAdminService.addBook(any[String], any[Int], any[Ownership])).thenReturn(Future.successful(()))
@@ -43,7 +43,8 @@ class LibraryAdminApiTests extends FlatSpec with ScalatestRouteTest with Mockito
 
     Post("/admin/users/123/library", LibraryItemReq(Isbn, Owned)) ~> Authorization(OAuth2BearerToken(AccessToken)) ~> routes ~> check {
       assert(status == BadRequest)
-      //TODO: check the returned Error object when common-spray adds support for Rejection -> Error conversion.
+      assert(mediaType == `application/vnd.blinkbox.books.v2+json`)
+      assert(responseAs[Error] == Error("BadRequest", Some("test exception")))
 
       verify(libraryAdminService).addBook(Isbn, 123, Owned)
     }
@@ -55,6 +56,8 @@ class LibraryAdminApiTests extends FlatSpec with ScalatestRouteTest with Mockito
     Post("/admin/users/123/library", LibraryItemReq(Isbn, Owned)) ~> Authorization(OAuth2BearerToken(AccessToken)) ~> routes ~> check {
       assert(status == Unauthorized)
       assert(header[`WWW-Authenticate`] == unverifiedIdentityHeaders.headOption)
+      assert(mediaType == `application/vnd.blinkbox.books.v2+json`)
+      assert(responseAs[Error] == Error("Unauthorized", Some("The supplied authentication is invalid")))
 
       verifyNoMoreInteractions(libraryAdminService)
     }
@@ -65,6 +68,8 @@ class LibraryAdminApiTests extends FlatSpec with ScalatestRouteTest with Mockito
 
     Post("/admin/users/123/library", LibraryItemReq(Isbn, Owned)) ~> Authorization(OAuth2BearerToken(AccessToken)) ~> routes ~> check {
       assert(status == Forbidden)
+      assert(mediaType == `application/vnd.blinkbox.books.v2+json`)
+      assert(responseAs[Error] == Error("Forbidden", Some("The supplied authentication is not authorized to access this resource")))
 
       verifyNoMoreInteractions(libraryAdminService)
     }
@@ -77,8 +82,8 @@ class LibraryAdminApiTests extends FlatSpec with ScalatestRouteTest with Mockito
     Post("/admin/users/123/library", LibraryItemReq(Isbn, Owned)) ~> Authorization(OAuth2BearerToken(AccessToken)) ~> routes ~> check {
       assert(status == Conflict)
       assert(mediaType == `application/vnd.blinkbox.books.v2+json`)
-      val expectedError = v2.Error("Conflict", Some("The request could not be processed because of conflict in the request, such as an edit conflict."))
-      assert(responseAs[v2.Error] == expectedError)
+      val expectedError = Error("Conflict", Some("The request could not be processed because of conflict in the request, such as an edit conflict."))
+      assert(responseAs[Error] == expectedError)
 
       verify(libraryAdminService).addBook(Isbn, 123, Owned)
     }
