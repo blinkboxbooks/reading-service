@@ -6,13 +6,14 @@ import akka.actor.ActorRefFactory
 import com.blinkbox.books.auth.{Elevation, User}
 import com.blinkbox.books.clients.catalogue.{CatalogueInfoMissingException, LibraryItemConflictException}
 import com.blinkbox.books.config.ApiConfig
-import com.blinkbox.books.reading.ReadingApi.LibraryItemIsbn
+import com.blinkbox.books.json.Serializers.ISODateTimeSerializer
+import com.blinkbox.books.reading.ReadingApi.{LibraryItemIsbn, MediaTypeSerializer, ReadingPositionSerializer, ReadingStatusSerializer}
 import com.blinkbox.books.reading.persistence.LibraryMediaMissingException
 import com.blinkbox.books.spray.BearerTokenAuthenticator.credentialsInvalidHeaders
 import com.blinkbox.books.spray.v2.{Error, Image, Link, `application/vnd.blinkbox.books.v2+json`}
-import com.blinkbox.books.spray.{BearerTokenAuthenticator, v2}
+import com.blinkbox.books.spray.{BearerTokenAuthenticator, JsonFormats, v2}
 import com.blinkbox.books.test.MockitoSyrup
-import com.blinkbox.books.time.{StoppedClock, TimeSupport}
+import com.blinkbox.books.time.StoppedClock
 import org.junit.runner.RunWith
 import org.mockito.Matchers.any
 import org.mockito.Mockito._
@@ -181,31 +182,11 @@ class ReadingApiTests extends FlatSpec with ScalatestRouteTest with MockitoSyrup
     }
   }
 
-  class TestFixture extends HttpService with TimeSupport {
-
-    val clock = StoppedClock()
+  class TestFixture extends HttpService with TestData {
 
     val accessToken = "accessToken"
-
     implicit val authenticatedUser = User(accessToken, claims = Map("sub" -> "urn:blinkbox:zuul:user:1", "sso/at" -> "ssoToken"))
 
-    val images = List(Image(CoverImage, new URI("http://media.blinkboxbooks.com/9780/141/909/837/cover.png")))
-
-    val links = List(
-      Link(FullEpub, new URI("http://media.blinkboxbooks.com/9780/141/909/837/8c9771c05e504f836e8118804e02f64c.epub")),
-      Link(SampleEpub, new URI("http://media.blinkboxbooks.com/9780/141/909/837/8c9771c05e504f836e8118804e02f64c.sample.epub")),
-      Link(EpubKey, new URI("https://keys.mobcastdev.com/9780/141/909/837/e237e27468c6b37a5679fab718a893e6.epub.9780141909837.key"))
-    )
-    val unreadBook = BookDetails("9780141909836", "Title", "Author", "Sortable Author", clock.now(), Owned, NotStarted, ReadingPosition(None, 0), images, links)
-    val testBook = BookDetails("9780141909837", "Title", "Author", "Sortable Author", clock.now(), Owned, Reading, ReadingPosition(Some(Cfi("someCfi")), 15), images, links)
-    // For brevity, I'm using the same sets of images and links
-    val testBook2 = BookDetails("9780234123501", "Other Title", "Other Author", "Author, Other", clock.now(), Owned, Reading, ReadingPosition(Some(Cfi("someCfi")), 30), images, links)
-
-    val unreadBookJson = s"""{"isbn":"9780141909836","title":"Title","author":"Author","sortableAuthor":"Sortable Author","addedDate":"${clock.now()}","ownership":"Owned","readingStatus":"NotStarted","readingPosition":{"percentage":0},"images":[{"rel":"CoverImage","url":"http://media.blinkboxbooks.com/9780/141/909/837/cover.png"}],"links":[{"rel":"EpubFull","url":"http://media.blinkboxbooks.com/9780/141/909/837/8c9771c05e504f836e8118804e02f64c.epub"},{"rel":"EpubSample","url":"http://media.blinkboxbooks.com/9780/141/909/837/8c9771c05e504f836e8118804e02f64c.sample.epub"},{"rel":"EpubKey","url":"https://keys.mobcastdev.com/9780/141/909/837/e237e27468c6b37a5679fab718a893e6.epub.9780141909837.key"}]}"""
-    val testBookJson = s"""{"isbn":"9780141909837","title":"Title","author":"Author","sortableAuthor":"Sortable Author","addedDate":"${clock.now()}","ownership":"Owned","readingStatus":"Reading","readingPosition":{"cfi":"someCfi","percentage":15},"images":[{"rel":"CoverImage","url":"http://media.blinkboxbooks.com/9780/141/909/837/cover.png"}],"links":[{"rel":"EpubFull","url":"http://media.blinkboxbooks.com/9780/141/909/837/8c9771c05e504f836e8118804e02f64c.epub"},{"rel":"EpubSample","url":"http://media.blinkboxbooks.com/9780/141/909/837/8c9771c05e504f836e8118804e02f64c.sample.epub"},{"rel":"EpubKey","url":"https://keys.mobcastdev.com/9780/141/909/837/e237e27468c6b37a5679fab718a893e6.epub.9780141909837.key"}]}"""
-    val testBook2Json = s"""{"isbn":"9780234123501","title":"Other Title","author":"Other Author","sortableAuthor":"Author, Other","addedDate":"${clock.now()}","ownership":"Owned","readingStatus":"Reading","readingPosition":{"cfi":"someCfi","percentage":30},"images":[{"rel":"CoverImage","url":"http://media.blinkboxbooks.com/9780/141/909/837/cover.png"}],"links":[{"rel":"EpubFull","url":"http://media.blinkboxbooks.com/9780/141/909/837/8c9771c05e504f836e8118804e02f64c.epub"},{"rel":"EpubSample","url":"http://media.blinkboxbooks.com/9780/141/909/837/8c9771c05e504f836e8118804e02f64c.sample.epub"},{"rel":"EpubKey","url":"https://keys.mobcastdev.com/9780/141/909/837/e237e27468c6b37a5679fab718a893e6.epub.9780141909837.key"}]}"""
-    val libraryJson = s"""{"items":[$testBookJson,$testBook2Json]}"""
-    val sampleJson = s"""{"items":[$testBook2Json]}"""
     val apiConfig = mock[ApiConfig]
     when(apiConfig.localUrl).thenReturn(new URL("http://localhost"))
 
@@ -218,5 +199,53 @@ class ReadingApiTests extends FlatSpec with ScalatestRouteTest with MockitoSyrup
     def routes = testService.routes
 
     override implicit def actorRefFactory: ActorRefFactory = system
+  }
+}
+
+trait TestData {
+  import org.json4s.JsonDSL._
+  import org.json4s.jackson.JsonMethods._
+
+  val clock = StoppedClock()
+  val formats = JsonFormats.blinkboxFormat()
+
+  val images = List(Image(CoverImage, new URI("http://media.blinkboxbooks.com/cover.png")))
+  val links = List(
+    Link(FullEpub, new URI("http://media.blinkboxbooks.com/full.epub")),
+    Link(SampleEpub, new URI("http://media.blinkboxbooks.com/sample.epub")),
+    Link(EpubKey, new URI("https://keys.mobcastdev.com/epub.key"))
+  )
+
+  val unreadBook = BookDetails("9780141909836", "Title", "Author", "Sortable Author", clock.now(), Owned, NotStarted, ReadingPosition(None, 0), images, links)
+  val testBook = BookDetails("9780141909837", "Title", "Author", "Sortable Author", clock.now(), Owned, Reading, ReadingPosition(Some(Cfi("someCfi")), 15), images, links)
+  val testBook2 = BookDetails("9780234123501", "Other Title", "Other Author", "Author, Other", clock.now(), Owned, Reading, ReadingPosition(Some(Cfi("someCfi")), 30), images, links)
+
+  val unreadBookJson = bookDetailsToJson(unreadBook)
+  val testBookJson = bookDetailsToJson(testBook)
+  val testBook2Json = bookDetailsToJson(testBook2)
+
+  val libraryJson = s"""{"items":[$testBookJson,$testBook2Json]}"""
+
+  def bookDetailsToJson(details: BookDetails): String = {
+    val formats = JsonFormats.blinkboxFormat()
+    val json =
+      ("isbn" -> details.isbn) ~
+        ("title" -> details.title) ~
+        ("author" -> details.author) ~
+        ("sortableAuthor" -> details.sortableAuthor) ~
+        ("addedDate" -> ISODateTimeSerializer.serialize(formats)(details.addedDate)) ~
+        ("ownership" -> OwnershipSerializer.serialize(formats)(details.ownership)) ~
+        ("readingStatus" -> ReadingStatusSerializer.serialize(formats)(details.readingStatus)) ~
+        ("readingPosition" -> ReadingPositionSerializer.serialize(formats)(details.readingPosition)) ~
+        ("images" -> details.images.map { img =>
+          ("rel" -> MediaTypeSerializer.serialize(formats)(img.rel)) ~
+          ("url" -> img.url.toString)
+        }) ~
+        ("links" -> details.links.map { link =>
+          ("rel" -> MediaTypeSerializer.serialize(formats)(link.rel)) ~
+          ("url" -> link.url.toString)
+        })
+
+    compact(render(json))
   }
 }
