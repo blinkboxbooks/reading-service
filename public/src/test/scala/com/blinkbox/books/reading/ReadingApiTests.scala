@@ -220,13 +220,13 @@ trait TestData {
   val testBook = BookDetails("9780141909837", "Title", "Author", "Sortable Author", clock.now(), Owned, Reading, ReadingPosition(Some(Cfi("someCfi")), 15), images, links)
   val testBook2 = BookDetails("9780234123501", "Other Title", "Other Author", "Author, Other", clock.now(), Owned, Reading, ReadingPosition(Some(Cfi("someCfi")), 30), images, links)
 
-  val unreadBookJson = bookDetailsToJson(unreadBook)
-  val testBookJson = bookDetailsToJson(testBook)
-  val testBook2Json = bookDetailsToJson(testBook2)
+  val unreadBookJson = convertToJson(unreadBook)
+  val testBookJson = convertToJson(testBook)
+  val testBook2Json = convertToJson(testBook2)
 
   val libraryJson = s"""{"items":[$testBookJson,$testBook2Json]}"""
 
-  def bookDetailsToJson(details: BookDetails): String = {
+  def convertToJson(details: BookDetails): String = {
     val formats = JsonFormats.blinkboxFormat()
     val json =
       ("isbn" -> details.isbn) ~
