@@ -12,8 +12,8 @@ case class BookDetails(
   ownership: Ownership,
   readingStatus: ReadingStatus,
   readingPosition: ReadingPosition,
-  images: List[Image] = List.empty,
-  links: List[Link] = List.empty) {
+  images: List[Image],
+  links: List[Link]) {
 }
 
 trait SampleResult

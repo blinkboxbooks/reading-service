@@ -9,6 +9,7 @@ import com.blinkbox.books.spray.Directives.{paged, rootPath}
 import com.blinkbox.books.spray.MonitoringDirectives.monitor
 import com.blinkbox.books.spray.v2.Implicits.throwableMarshaller
 import com.blinkbox.books.spray.v2.RejectionHandler.ErrorRejectionHandler
+import com.blinkbox.books.spray.v2.Relation
 import com.blinkbox.books.spray.{ElevatedContextAuthenticator, JsonFormats, url2uri, v2}
 import com.typesafe.scalalogging.StrictLogging
 import spray.http.StatusCodes._
@@ -25,7 +26,7 @@ class ReadingApi(
   import ReadingApi._
 
   val defaultPageSize = 25
-  implicit override val jsonFormats = JsonFormats.blinkboxFormat() + ReadingPositionSerializer + MediaTypeSerializer + OwnershipSerializer + ReadingStatusSerializer + BookDetailsSerializer
+  implicit override val jsonFormats = JsonFormats.blinkboxFormat() ++ bookDetailsSerializers
 
   val getLibrary = get {
     path("my" / "library") {
@@ -93,7 +94,6 @@ class ReadingApi(
 }
 
 object ReadingApi {
-  import org.json4s.FieldSerializer._
   import org.json4s.JsonDSL._
   import org.json4s._
 
@@ -101,13 +101,18 @@ object ReadingApi {
   val Isbn = """^([0-9]{13})$""".r
 
   object ReadingPositionSerializer extends CustomSerializer[ReadingPosition](format =>
-    (PartialFunction.empty, {
+    ({
+      case JObject(List((cfi, JString(cfiPos)), (percentage, JInt(percentagePos)))) =>
+        ReadingPosition(Some(Cfi(cfiPos)), percentagePos.intValue())
+      case JObject(List((percentage, JInt(percentagePos)))) =>
+        ReadingPosition(None, percentagePos.intValue())
+    }, {
       case ReadingPosition(Some(Cfi(cfi)), position) => ("cfi" -> cfi) ~ ("percentage" -> position)
       case ReadingPosition(None, position) => "percentage" -> position
     })
   )
 
-  object MediaTypeSerializer extends CustomSerializer[LinkType](_ => ({
+  object MediaTypeSerializer extends CustomSerializer[Relation](_ => ({
     case JString("CoverImage") => CoverImage
     case JString("EpubSample") => SampleEpub
     case JString("EpubFull") => FullEpub
@@ -131,10 +136,7 @@ object ReadingApi {
       case Finished => JString("Finished")
     }))
 
-  val BookDetailsSerializer = FieldSerializer[BookDetails](
-    renameTo("createdAt", "addedDate"),
-    renameFrom("addedDate", "createdAt")
-  )
+  val bookDetailsSerializers = List(ReadingPositionSerializer, MediaTypeSerializer, OwnershipSerializer, ReadingStatusSerializer)
 
   case class LibraryItemIsbn(isbn: String)
 }
