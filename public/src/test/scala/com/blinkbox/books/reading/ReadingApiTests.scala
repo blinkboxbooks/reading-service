@@ -6,8 +6,7 @@ import akka.actor.ActorRefFactory
 import com.blinkbox.books.auth.{Elevation, User}
 import com.blinkbox.books.clients.catalogue.{CatalogueInfoMissingException, LibraryItemConflictException}
 import com.blinkbox.books.config.ApiConfig
-import com.blinkbox.books.json.Serializers.ISODateTimeSerializer
-import com.blinkbox.books.reading.ReadingApi.{LibraryItemIsbn, MediaTypeSerializer, ReadingPositionSerializer, ReadingStatusSerializer}
+import com.blinkbox.books.reading.ReadingApi.LibraryItemIsbn
 import com.blinkbox.books.reading.persistence.LibraryMediaMissingException
 import com.blinkbox.books.spray.BearerTokenAuthenticator.credentialsInvalidHeaders
 import com.blinkbox.books.spray.v2.{Error, Image, Link, `application/vnd.blinkbox.books.v2+json`}
@@ -31,6 +30,8 @@ import scala.concurrent.Future
 @RunWith(classOf[JUnitRunner])
 class ReadingApiTests extends FlatSpec with ScalatestRouteTest with MockitoSyrup with v2.JsonSupport {
 
+  implicit override val jsonFormats = JsonFormats.blinkboxFormat() ++ ReadingApi.bookDetailsSerializers
+
   "Book details endpoint" should "return book details for a valid request" in new TestFixture {
     when(libraryService.getBook(testBook.isbn)).thenReturn(Future.successful(Some(testBook)))
     when(authenticator.apply(any[RequestContext])).thenReturn(Future.successful(Right(authenticatedUser)))
@@ -38,7 +39,7 @@ class ReadingApiTests extends FlatSpec with ScalatestRouteTest with MockitoSyrup
     Get(s"/my/library/${testBook.isbn}") ~> Authorization(OAuth2BearerToken(accessToken)) ~> routes ~> check {
       assert(status == OK)
       assert(mediaType == `application/vnd.blinkbox.books.v2+json`)
-      assert(body.asString == testBookJson)
+      assert(responseAs[BookDetails] == testBook)
     }
   }
 
@@ -48,7 +49,7 @@ class ReadingApiTests extends FlatSpec with ScalatestRouteTest with MockitoSyrup
     Get("/my/library") ~> Authorization(OAuth2BearerToken(accessToken)) ~> routes ~> check {
       assert(status == OK)
       assert(mediaType == `application/vnd.blinkbox.books.v2+json`)
-      assert(body.asString == libraryJson)
+      assert(responseAs[Map[String, List[BookDetails]]] == Map("items" -> List(testBook, testBook2)))
     }
   }
 
@@ -59,7 +60,7 @@ class ReadingApiTests extends FlatSpec with ScalatestRouteTest with MockitoSyrup
     Get(s"/my/library/${unreadBook.isbn}") ~> Authorization(OAuth2BearerToken(accessToken)) ~> routes ~> check {
       assert(status == OK)
       assert(mediaType == `application/vnd.blinkbox.books.v2+json`)
-      assert(body.asString == unreadBookJson)
+      assert(responseAs[BookDetails] == unreadBook)
     }
   }
   
@@ -168,7 +169,7 @@ class ReadingApiTests extends FlatSpec with ScalatestRouteTest with MockitoSyrup
     Get("/my/library") ~> Authorization(OAuth2BearerToken(accessToken)) ~> routes ~> check {
       assert(status == OK)
       assert(mediaType == `application/vnd.blinkbox.books.v2+json`)
-      assert(body.asString == libraryJson)
+      assert(responseAs[Map[String, List[BookDetails]]] == Map("items" -> List(testBook, testBook2)))
     }
   }
 
@@ -178,14 +179,26 @@ class ReadingApiTests extends FlatSpec with ScalatestRouteTest with MockitoSyrup
     Get("/my/library") ~> Authorization(OAuth2BearerToken(accessToken)) ~> routes ~> check {
       assert(status == OK)
       assert(mediaType == `application/vnd.blinkbox.books.v2+json`)
-      assert(body.asString == """{"items":[]}""")
+      assert(responseAs[Map[String, List[BookDetails]]] == Map("items" -> List.empty))
     }
   }
 
-  class TestFixture extends HttpService with TestData {
+  class TestFixture extends HttpService {
+    val clock = StoppedClock()
 
     val accessToken = "accessToken"
     implicit val authenticatedUser = User(accessToken, claims = Map("sub" -> "urn:blinkbox:zuul:user:1", "sso/at" -> "ssoToken"))
+
+    val images = List(Image(CoverImage, new URI("http://media.blinkboxbooks.com/cover.png")))
+    val links = List(
+      Link(FullEpub, new URI("http://media.blinkboxbooks.com/full.epub")),
+      Link(SampleEpub, new URI("http://media.blinkboxbooks.com/sample.epub")),
+      Link(EpubKey, new URI("https://keys.mobcastdev.com/epub.key"))
+    )
+
+    val unreadBook = BookDetails("9780141909836", "Title", "Author", "Sortable Author", clock.now(), Owned, NotStarted, ReadingPosition(None, 0), images, links)
+    val testBook = BookDetails("9780141909837", "Title", "Author", "Sortable Author", clock.now(), Owned, Reading, ReadingPosition(Some(Cfi("someCfi")), 15), images, links)
+    val testBook2 = BookDetails("9780234123501", "Other Title", "Other Author", "Author, Other", clock.now(), Owned, Reading, ReadingPosition(Some(Cfi("someCfi")), 30), images, links)
 
     val apiConfig = mock[ApiConfig]
     when(apiConfig.localUrl).thenReturn(new URL("http://localhost"))
@@ -199,53 +212,5 @@ class ReadingApiTests extends FlatSpec with ScalatestRouteTest with MockitoSyrup
     def routes = testService.routes
 
     override implicit def actorRefFactory: ActorRefFactory = system
-  }
-}
-
-trait TestData {
-  import org.json4s.JsonDSL._
-  import org.json4s.jackson.JsonMethods._
-
-  val clock = StoppedClock()
-  val formats = JsonFormats.blinkboxFormat()
-
-  val images = List(Image(CoverImage, new URI("http://media.blinkboxbooks.com/cover.png")))
-  val links = List(
-    Link(FullEpub, new URI("http://media.blinkboxbooks.com/full.epub")),
-    Link(SampleEpub, new URI("http://media.blinkboxbooks.com/sample.epub")),
-    Link(EpubKey, new URI("https://keys.mobcastdev.com/epub.key"))
-  )
-
-  val unreadBook = BookDetails("9780141909836", "Title", "Author", "Sortable Author", clock.now(), Owned, NotStarted, ReadingPosition(None, 0), images, links)
-  val testBook = BookDetails("9780141909837", "Title", "Author", "Sortable Author", clock.now(), Owned, Reading, ReadingPosition(Some(Cfi("someCfi")), 15), images, links)
-  val testBook2 = BookDetails("9780234123501", "Other Title", "Other Author", "Author, Other", clock.now(), Owned, Reading, ReadingPosition(Some(Cfi("someCfi")), 30), images, links)
-
-  val unreadBookJson = convertToJson(unreadBook)
-  val testBookJson = convertToJson(testBook)
-  val testBook2Json = convertToJson(testBook2)
-
-  val libraryJson = s"""{"items":[$testBookJson,$testBook2Json]}"""
-
-  def convertToJson(details: BookDetails): String = {
-    val formats = JsonFormats.blinkboxFormat()
-    val json =
-      ("isbn" -> details.isbn) ~
-        ("title" -> details.title) ~
-        ("author" -> details.author) ~
-        ("sortableAuthor" -> details.sortableAuthor) ~
-        ("addedDate" -> ISODateTimeSerializer.serialize(formats)(details.addedDate)) ~
-        ("ownership" -> OwnershipSerializer.serialize(formats)(details.ownership)) ~
-        ("readingStatus" -> ReadingStatusSerializer.serialize(formats)(details.readingStatus)) ~
-        ("readingPosition" -> ReadingPositionSerializer.serialize(formats)(details.readingPosition)) ~
-        ("images" -> details.images.map { img =>
-          ("rel" -> MediaTypeSerializer.serialize(formats)(img.rel)) ~
-          ("url" -> img.url.toString)
-        }) ~
-        ("links" -> details.links.map { link =>
-          ("rel" -> MediaTypeSerializer.serialize(formats)(link.rel)) ~
-          ("url" -> link.url.toString)
-        })
-
-    compact(render(json))
   }
 }
