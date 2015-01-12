@@ -1,16 +1,17 @@
 package com.blinkbox.books.reading
 
-import akka.actor.{ActorSystem, Props}
+import akka.actor.{ActorContext, ActorSystem, Props}
 import com.blinkbox.books.auth.{ZuulElevationChecker, ZuulTokenDecoder, ZuulTokenDeserializer}
 import com.blinkbox.books.clients.catalogue.{DefaultCatalogueV1Service, DefaultClient}
 import com.blinkbox.books.config.{ApiConfig, Configuration}
 import com.blinkbox.books.logging.Loggers
 import com.blinkbox.books.reading.persistence.{DbLibraryStore, DefaultDatabaseComponent}
 import com.blinkbox.books.slick.MySQLDatabaseSupport
-import com.blinkbox.books.spray.{BearerTokenAuthenticator, HttpServer, url2uri}
+import com.blinkbox.books.spray.{HealthCheckHttpService, BearerTokenAuthenticator, HttpServer, url2uri}
 import com.blinkbox.books.time.SystemTimeSupport
 import com.typesafe.scalalogging.StrictLogging
 import spray.can.Http
+import spray.http.Uri.Path
 import spray.routing.HttpServiceActor
 
 import scala.util.control.ControlThrowable
@@ -24,7 +25,12 @@ class WebService(
 
   val readingApi = new ReadingApi(config, authenticator, libraryService)
 
-  override def receive: Receive = runRoute(readingApi.routes)
+  val healthService = new HealthCheckHttpService {
+    override implicit def actorRefFactory: ActorContext = WebService.this.actorRefFactory
+    override val basePath = Path("/")
+  }
+
+  override def receive: Receive = runRoute(healthService.routes ~ readingApi.routes)
 }
 
 object Main extends App with Configuration with Loggers with StrictLogging with SystemTimeSupport {
