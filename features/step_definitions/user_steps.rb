@@ -7,22 +7,17 @@ Given(/^I am authenticated as a user(?: with (no|#{CAPTURE_INTEGER}) library ite
 
   username = random_email
   password = random_password
-
   u = Blinkbox::User.new(username: username, password: password, server_uri: test_env.servers['auth'])
   u.register
   u.authenticate
   @access_token = get_access_token_for(username: username, password: password)
 
   unless count.nil? || count == "no"
-    (1...count).each {
       # adding samples for now until we have add book
-      books = [*data_for_a(:book, which: "is currently available as sample", instances: count)]
-      books.each do |book|
-        add_sample(book)
+      @books = [*data_for_a(:book, which: "is currently available as sample", instances: count.to_i)]
+      @books.each  { |b| add_sample(b) }
       end
-    }
-  end
-  Cucumber::Rest::Status.ensure_status_class(:success)
+     Cucumber::Rest::Status.ensure_status_class(:success)
 end
 
 Given(/^I am not authenticated$/) do
