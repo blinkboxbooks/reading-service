@@ -28,7 +28,6 @@ Feature: Get library details
     | two   |
     | four  |
 
-
   Scenario: Using a valid user with no books
     Given I am authenticated as a user with no library items
     When I request my library
@@ -40,5 +39,3 @@ Feature: Get library details
     Given I am not authenticated
     When I request my library
     Then the request fails because I am unauthorised
-
-
