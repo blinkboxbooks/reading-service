@@ -12,7 +12,9 @@ Given(/^I am authenticated as a user(?: with (\d+) library items?)?$/) do |count
   @access_token = get_access_token_for(username: username, password: password)
   # adding samples for now until we have add book
   @books = data_for_a(:book, which: "is currently available as sample", instances: count.to_i)
-  @books.each { |b| add_sample(b) }
+  @books.each { |b| add_sample(b)
+  Cucumber::Rest::Status.ensure_status_class(:success)
+  }
 end
 
 Given(/^I am not authenticated$/) do
