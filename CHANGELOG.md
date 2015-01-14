@@ -1,5 +1,13 @@
 # Change log
 
+## 0.8.3 ([#34](https://git.mobcastdev.com/Agora/reading-service/pull/34) 2015-01-14 11:42:25)
+
+Fix typo
+
+### Patch
+
+- Fixed typo in spec
+
 ## 0.8.2 ([#32](https://git.mobcastdev.com/Agora/reading-service/pull/32) 2015-01-12 10:40:07)
 
 Add health endpoints to public service
