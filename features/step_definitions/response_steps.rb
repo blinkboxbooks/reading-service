@@ -2,7 +2,7 @@ Then(/^the error reason is "(.*?)"$/) do |state|
   expect(@response_data['code']).to match(/#{state.gsub(" ", "_")}$/)
 end
 
-Then(/^each (\w+) (?:has|includes) the following attributes:$/) do |_item, table|
+Then(/^(?:each|the) (\w+) (?:has|includes) the following attributes:$/) do |_item, table|
   expected_keys = table.rows.map { |r| r[0] }
   table.rows.each do |attribute|
     @response_data['items'].each do |i|

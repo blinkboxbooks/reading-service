@@ -1,14 +1,14 @@
 Feature: Get library details
 
   As a books app user
-  I want one API call to retrieve my library the first time I open my app
+  I want one API call to retrieve my library
   So that I can have access to my library and books
 
-  Scenario: Using a valid user with one or more books
-    Given I am authenticated as a user with two library items
+  Scenario Outline: A user with one or more books which are samples
+    Given I am authenticated as a user with <count> library items
     When I request my library
     Then the request is successful
-    And the response is a list containing two library items
+    And the response is a list containing <count> library items
     And each item has the following attributes:
       | attribute       | type     |
       | isbn            | String   |
@@ -22,8 +22,14 @@ Feature: Get library details
       | images          | Array    |
       | links           | Array    |
 
-  Scenario: Using a valid user with no books
-    Given I am authenticated as a user with no library items
+  Examples:
+    | count |
+    | 1     |
+    | 2     |
+    | 4     |
+
+  Scenario: A valid user with no books
+    Given I am authenticated as a user with 0 library items
     When I request my library
     Then the request is successful
     And the response is a list that is empty
