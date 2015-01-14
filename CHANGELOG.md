@@ -1,5 +1,15 @@
 # Change log
 
+## 0.8.4 ([#33](https://git.mobcastdev.com/Agora/reading-service/pull/33) 2015-01-14 16:44:38)
+
+Get library - basic details
+
+Test improvement
+
+Tests for http://jira.blinkbox.local/jira/browse/PT-376
+
+Currently only for book samples, will add tests for full books and mixed sample/full library once implementing add book tests. 
+
 ## 0.8.3 ([#34](https://git.mobcastdev.com/Agora/reading-service/pull/34) 2015-01-14 11:42:25)
 
 Fix typo
