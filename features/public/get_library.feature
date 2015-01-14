@@ -4,7 +4,7 @@ Feature: Get library details
   I want one API call to retrieve my library
   So that I can have access to my library and books
 
-  Scenario Outline: Using a valid user with one or more books which are samples
+  Scenario Outline: A user with one or more books which are samples
     Given I am authenticated as a user with <count> library items
     When I request my library
     Then the request is successful
@@ -24,12 +24,12 @@ Feature: Get library details
 
   Examples:
     | count |
-    | one   |
-    | two   |
-    | four  |
+    | 1     |
+    | 2     |
+    | 4     |
 
-  Scenario: Using a valid user with no books
-    Given I am authenticated as a user with no library items
+  Scenario: A valid user with no books
+    Given I am authenticated as a user with 0 library items
     When I request my library
     Then the request is successful
     And the response is a list that is empty
