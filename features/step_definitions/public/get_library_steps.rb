@@ -3,6 +3,5 @@ When(/^I request my library$/) do
 end
 
 Then(/^the response is a list (?:that is empty|containing (\d+) library items)$/) do |count|
-  count ||= 0
   expect(@response_data['items'].size).to eq(count.to_i)
 end
