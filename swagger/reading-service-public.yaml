@@ -202,7 +202,7 @@ paths:
         401:
           description: Not authenticated.
         404:
-          descriptino: The book is not in the library.
+          description: The book is not in the library.
         409:
           description: Full book already in the library. User cannot delete full books.
 definitions:
