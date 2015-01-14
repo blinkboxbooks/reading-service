@@ -3,7 +3,7 @@ Given(/^I am authenticated as a user with the (\w+) role$/) do |role|
   @access_token = get_access_token_for(username: @user['username'], password: @user['password'])
 end
 
-Given(/^I am authenticated as a user(?: with (\w+) library items?)?$/) do |count|
+Given(/^I am authenticated as a user(?: with (\d+) library items?)?$/) do |count|
   username = random_email
   password = random_password
   u = Blinkbox::User.new(username: username, password: password, server_uri: test_env.servers['auth'])
