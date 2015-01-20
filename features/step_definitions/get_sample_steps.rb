@@ -1,11 +1,11 @@
 When(/^I request (?:a|the) sample book's details$/) do
-  sample_isbn =
+  sample =
     if @samples.size >= 1
       @samples.shuffle
     else # request a sample that isn't in the user's library
       data_for_a(:book, which: "is currently available as sample", instances: 1)
     end
-  get_library_item(sample_isbn.first['isbn'])
+  get_library_item(sample.first['isbn'])
 end
 
 And(/^the response contains the following items$/) do |table|
