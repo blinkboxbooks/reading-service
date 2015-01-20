@@ -1,5 +1,13 @@
 # Change log
 
+## 0.8.5 ([#37](https://git.mobcastdev.com/Agora/reading-service/pull/37) 2015-01-20 14:12:53)
+
+PT-372: PT-402 automated tests for get sample
+
+patch 
+
+- PT-372: PT-402 automated tests for get sample
+
 ## 0.8.4 ([#33](https://git.mobcastdev.com/Agora/reading-service/pull/33) 2015-01-14 16:44:38)
 
 Get library - basic details
