@@ -1,6 +1,7 @@
 package com.blinkbox.books.reading
 
 import akka.actor.ActorRefFactory
+import akka.event.Logging
 import com.blinkbox.books.auth.Elevation.Unelevated
 import com.blinkbox.books.auth.User
 import com.blinkbox.books.clients.catalogue.LibraryItemConflictException
@@ -12,9 +13,11 @@ import com.blinkbox.books.spray.v2.RejectionHandler.ErrorRejectionHandler
 import com.blinkbox.books.spray.v2.Relation
 import com.blinkbox.books.spray.{ElevatedContextAuthenticator, JsonFormats, url2uri, v2}
 import com.typesafe.scalalogging.StrictLogging
+import spray.http.HttpHeaders.Location
 import spray.http.StatusCodes._
-import spray.http.{IllegalRequestException, StatusCodes}
+import spray.http.{Uri, IllegalRequestException, StatusCodes}
 import spray.routing._
+import spray.routing.directives.DebuggingDirectives
 
 import scala.concurrent.ExecutionContext.Implicits.global
 
@@ -58,7 +61,10 @@ class ReadingApi(
           validate(Isbn.pattern.matcher(req.isbn).matches, "Isbn must be 13 digits long and start with the number 9") {
             onSuccess(libraryService.addSample(req.isbn)) {
               case SampleAlreadyExists => complete(OK)
-              case SampleAdded => complete(StatusCodes.Created)
+              case SampleAdded =>
+                respondWithHeader(Location(Uri(s"/my/library/${req.isbn}"))) {
+                  complete(StatusCodes.Created)
+                }
             }
           }
         }

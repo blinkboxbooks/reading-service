@@ -18,9 +18,9 @@ import org.mockito.Matchers.any
 import org.mockito.Mockito._
 import org.scalatest.FlatSpec
 import org.scalatest.junit.JUnitRunner
-import spray.http.HttpHeaders.{Authorization, `WWW-Authenticate`}
+import spray.http.HttpHeaders.{Location, Authorization, `WWW-Authenticate`}
 import spray.http.StatusCodes._
-import spray.http.{GenericHttpCredentials, OAuth2BearerToken, StatusCodes}
+import spray.http.{Uri, GenericHttpCredentials, OAuth2BearerToken, StatusCodes}
 import spray.routing.AuthenticationFailedRejection.CredentialsRejected
 import spray.routing.{AuthenticationFailedRejection, HttpService, RequestContext}
 import spray.testkit.ScalatestRouteTest
@@ -64,13 +64,14 @@ class ReadingApiTests extends FlatSpec with ScalatestRouteTest with MockitoSyrup
     }
   }
   
-  it should "return a 201 when adding a new sample book to the library" in new TestFixture {
+  "Library samples endpoint" should "return a 201 when adding a new sample book to the library" in new TestFixture {
     when(libraryService.addSample(testBook.isbn)).thenReturn(Future.successful(SampleAdded))
     when(authenticator.apply(any[RequestContext])).thenReturn(Future.successful(Right(authenticatedUser)))
 
     val request = LibraryItemIsbn(testBook.isbn)
     Post(s"/my/library/samples", request) ~> Authorization(OAuth2BearerToken(accessToken)) ~> routes ~> check {
       assert(status == StatusCodes.Created)
+      assert(header[`Location`] == Some(Location(Uri(s"/my/library/${testBook.isbn}"))))
     }
   }
 
@@ -81,6 +82,7 @@ class ReadingApiTests extends FlatSpec with ScalatestRouteTest with MockitoSyrup
     val request = LibraryItemIsbn(testBook.isbn)
     Post(s"/my/library/samples", request) ~> Authorization(OAuth2BearerToken(accessToken)) ~> routes ~> check {
       assert(status == OK)
+      assert(header[`Location`] == None)
     }
   }
 
