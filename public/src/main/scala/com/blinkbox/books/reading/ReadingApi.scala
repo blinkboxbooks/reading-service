@@ -1,7 +1,6 @@
 package com.blinkbox.books.reading
 
 import akka.actor.ActorRefFactory
-import akka.event.Logging
 import com.blinkbox.books.auth.Elevation.Unelevated
 import com.blinkbox.books.auth.User
 import com.blinkbox.books.clients.catalogue.LibraryItemConflictException
@@ -17,7 +16,6 @@ import spray.http.HttpHeaders.Location
 import spray.http.StatusCodes._
 import spray.http.{Uri, IllegalRequestException, StatusCodes}
 import spray.routing._
-import spray.routing.directives.DebuggingDirectives
 
 import scala.concurrent.ExecutionContext.Implicits.global
 
