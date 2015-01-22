@@ -1,5 +1,13 @@
 # Change log
 
+## 0.8.6 ([#38](https://git.mobcastdev.com/Agora/reading-service/pull/38) 2015-01-22 17:59:08)
+
+Location headers
+
+### Bugfix
+
+- Added `Location` header to the response of `POST /my/library/samples/`.
+
 ## 0.8.5 ([#37](https://git.mobcastdev.com/Agora/reading-service/pull/37) 2015-01-20 14:12:53)
 
 PT-372: PT-402 automated tests for get sample
