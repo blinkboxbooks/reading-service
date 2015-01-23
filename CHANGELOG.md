@@ -1,5 +1,13 @@
 # Change log
 
+## 0.8.7 ([#39](https://git.mobcastdev.com/Agora/reading-service/pull/39) 2015-01-23 10:45:07)
+
+Remove body from Add Sample responses
+
+### Bugfix
+
+- Removed bodies from "Add Sample" endpoint responses (http://jira.blinkbox.local/jira/browse/PT-570).
+
 ## 0.8.6 ([#38](https://git.mobcastdev.com/Agora/reading-service/pull/38) 2015-01-22 17:59:08)
 
 Location headers
