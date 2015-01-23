@@ -2,7 +2,6 @@ package com.blinkbox.books.reading
 
 import java.net.{URI, URL}
 
-import akka.actor.ActorRefFactory
 import com.blinkbox.books.auth.{Elevation, User}
 import com.blinkbox.books.clients.catalogue.{CatalogueInfoMissingException, LibraryItemConflictException}
 import com.blinkbox.books.config.ApiConfig
@@ -22,7 +21,7 @@ import spray.http.HttpHeaders.{Location, Authorization, `WWW-Authenticate`}
 import spray.http.StatusCodes._
 import spray.http.{Uri, GenericHttpCredentials, OAuth2BearerToken, StatusCodes}
 import spray.routing.AuthenticationFailedRejection.CredentialsRejected
-import spray.routing.{AuthenticationFailedRejection, HttpService, RequestContext}
+import spray.routing.{AuthenticationFailedRejection, RequestContext}
 import spray.testkit.ScalatestRouteTest
 
 import scala.concurrent.Future
@@ -71,6 +70,7 @@ class ReadingApiTests extends FlatSpec with ScalatestRouteTest with MockitoSyrup
     val request = LibraryItemIsbn(testBook.isbn)
     Post(s"/my/library/samples", request) ~> Authorization(OAuth2BearerToken(accessToken)) ~> routes ~> check {
       assert(status == StatusCodes.Created)
+      assert(entity.isEmpty)
       assert(header[`Location`] == Some(Location(Uri(s"/my/library/${testBook.isbn}"))))
     }
   }
@@ -82,6 +82,7 @@ class ReadingApiTests extends FlatSpec with ScalatestRouteTest with MockitoSyrup
     val request = LibraryItemIsbn(testBook.isbn)
     Post(s"/my/library/samples", request) ~> Authorization(OAuth2BearerToken(accessToken)) ~> routes ~> check {
       assert(status == OK)
+      assert(entity.isEmpty)
       assert(header[`Location`] == None)
     }
   }
@@ -185,7 +186,7 @@ class ReadingApiTests extends FlatSpec with ScalatestRouteTest with MockitoSyrup
     }
   }
 
-  class TestFixture extends HttpService {
+  class TestFixture {
     val clock = StoppedClock()
 
     val accessToken = "accessToken"
@@ -212,7 +213,5 @@ class ReadingApiTests extends FlatSpec with ScalatestRouteTest with MockitoSyrup
     val testService = new ReadingApi(apiConfig, authenticator, libraryService)(system)
 
     def routes = testService.routes
-
-    override implicit def actorRefFactory: ActorRefFactory = system
   }
 }
