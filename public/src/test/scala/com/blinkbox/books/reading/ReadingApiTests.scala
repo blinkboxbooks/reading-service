@@ -70,6 +70,7 @@ class ReadingApiTests extends FlatSpec with ScalatestRouteTest with MockitoSyrup
     val request = LibraryItemIsbn(testBook.isbn)
     Post(s"/my/library/samples", request) ~> Authorization(OAuth2BearerToken(accessToken)) ~> routes ~> check {
       assert(status == StatusCodes.Created)
+      assert(entity.isEmpty)
       assert(header[`Location`] == Some(Location(Uri(s"/my/library/${testBook.isbn}"))))
     }
   }
@@ -81,6 +82,7 @@ class ReadingApiTests extends FlatSpec with ScalatestRouteTest with MockitoSyrup
     val request = LibraryItemIsbn(testBook.isbn)
     Post(s"/my/library/samples", request) ~> Authorization(OAuth2BearerToken(accessToken)) ~> routes ~> check {
       assert(status == OK)
+      assert(entity.isEmpty)
       assert(header[`Location`] == None)
     }
   }

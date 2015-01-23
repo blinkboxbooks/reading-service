@@ -58,10 +58,10 @@ class ReadingApi(
         entity(as[LibraryItemIsbn]) { req =>
           validate(Isbn.pattern.matcher(req.isbn).matches, "Isbn must be 13 digits long and start with the number 9") {
             onSuccess(libraryService.addSample(req.isbn)) {
-              case SampleAlreadyExists => complete(OK)
+              case SampleAlreadyExists => complete(OK, None)
               case SampleAdded =>
                 respondWithHeader(Location(Uri(s"/my/library/${req.isbn}"))) {
-                  complete(StatusCodes.Created)
+                  complete(StatusCodes.Created, None)
                 }
             }
           }
