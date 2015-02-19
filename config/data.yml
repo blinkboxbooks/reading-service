@@ -1,0 +1,20 @@
+# This file details information for data-dependent tests
+user:
+  has the csr role:
+    username: "tm-books-test-csr@blinkbox.com"
+    password: "snip"
+  has the csm role:
+    username: "tm-books-itops@blinkbox.com"
+    password: "snip"
+book:
+  is currently available for purchase:
+    - isbn: "9781476755427"
+    - isbn: "9781448171194"
+  is currently available as sample:
+    - isbn: "9781476755427"
+    - isbn: "9781405529518"
+    - isbn: "9781409089650"
+    - isbn: "9781451679731"
+  is not in library:
+    - isbn: "9780297859406"
+    - isbn: "9780007197545"
